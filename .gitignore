@@ -1,8 +1,3 @@
-Chars74K/EnglishHnd/
-Chars74K/images/
-Chars74K/Lists/
-HMI/
 .idea/
-images.txt
-Chars74K/images.txt
-data/*
+data/
+__pycache__/
