@@ -1,10 +1,11 @@
 import time as t
 import numpy as np
 import tensorflow as tf
-from scipy import misc  # used for interacting with images, need pillow dependency
 from sklearn.utils import shuffle
 from CharacterRecognition import graphics as gr
 import settings
+import cv2
+from CharacterRecognition import utils
 
 '''
 For this project we use the Chars74K dataset. It contains 62 classes, with about 3.4K handwritten characters.
@@ -35,11 +36,24 @@ def open_images():
     data = np.zeros((length, SIZE, SIZE, 1), dtype=np.float32)
     i = 0
     for name in file_names:
-        img = misc.imread(name)
-        img = np.divide(img, 255)  # Scaling to [0,1]
-        data[i] = np.reshape(img, settings.IMG_SHAPE)
+        data[i] = read_image(name)
         i += 1
     return labels, data, length
+
+
+def read_image(file_name):
+    """
+    Read an image.
+    :param invert: Indicates if color values should be inverted.
+    :param file_name: The path to an image
+    :return: A normalized np array with correct dimensions
+    """
+    img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+    # Data normalisation and inverting color values
+    if img.shape != settings.SHAPE:
+        img = cv2.resize(src=img, dsize=settings.SHAPE)
+    img = np.subtract(1, np.divide(img, 255))
+    return np.reshape(img, settings.IMG_SHAPE)
 
 
 def label2vector(label):
@@ -52,32 +66,34 @@ def vector2label(vector):
     return 1 + vector.index(1)
 
 
-def new_weights(name, shape):
-    w = tf.get_variable('W' + name, shape, initializer=tf.truncated_normal_initializer(stddev=.1))
+def new_weights(shape):
+    w = tf.get_variable('weights', shape, initializer=tf.truncated_normal_initializer(stddev=.1))
     weights.append(w)
     return w
 
 
-def new_biases(name, length):
-    return tf.get_variable('B' + name, shape=[length], initializer=tf.constant_initializer(0.1))
+def new_biases(length):
+    return tf.get_variable('biases', shape=[length], initializer=tf.constant_initializer(0.1))
 
 
 def new_conv_layer(name, input, filter_size, num_filters, num_in_channels, use_pooling=True):
-    shape = [filter_size, filter_size, num_in_channels, num_filters]
-    weights = new_weights(name, shape)
-    biases = new_biases(name, num_filters)
-    layer = tf.nn.conv2d(input=input, filter=weights, strides=[1, 1, 1, 1], padding='SAME') + biases
-    if use_pooling:
-        # ksize -> size of window
-        # strides -> distance to move window
-        layer = tf.nn.max_pool(value=layer, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
-    return tf.nn.relu(layer)
+    with tf.variable_scope("conv_layer_" + str(name)):
+        shape = [filter_size, filter_size, num_in_channels, num_filters]
+        weights = new_weights(shape)
+        biases = new_biases(num_filters)
+        layer = tf.nn.conv2d(input=input, filter=weights, strides=[1, 1, 1, 1], padding='SAME') + biases
+        if use_pooling:
+            # ksize -> size of window
+            # strides -> distance to move window
+            layer = tf.nn.max_pool(value=layer, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+        return tf.nn.relu(layer)
 
 
 def new_fc_layer(name, input, num_in, num_out):
-    weights = new_weights(name, shape=[num_in, num_out])
-    biases = new_biases(name, length=num_out)
-    return tf.nn.relu(tf.matmul(input, weights) + biases)
+    with tf.variable_scope("fc_layer_" + str(name)):
+        weights = new_weights(shape=[num_in, num_out])
+        biases = new_biases(length=num_out)
+        return tf.nn.relu(tf.matmul(input, weights) + biases)
 
 
 def show_progress(session, x, y, test_set):
@@ -121,21 +137,20 @@ def create_neural_net(base=1):
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values. 
     """
-
     x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
     y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
     base1 = base * 8
     base2 = base * 1024
-    h1 = new_conv_layer(name='1', input=x, filter_size=FILTER_SIZE, num_filters=base1, num_in_channels=NUM_CHANNELS,
+    h1 = new_conv_layer(name=1, input=x, filter_size=FILTER_SIZE, num_filters=base1, num_in_channels=NUM_CHANNELS,
                         use_pooling=True)
-    h2 = new_conv_layer(name='2', input=h1, filter_size=FILTER_SIZE, num_filters=2 * base1, num_in_channels=base1,
+    h2 = new_conv_layer(name=2, input=h1, filter_size=FILTER_SIZE, num_filters=2 * base1, num_in_channels=base1,
                         use_pooling=True)
-    h3 = new_conv_layer(name='3', input=h2, filter_size=FILTER_SIZE, num_filters=3 * base1, num_in_channels=2 * base1,
+    h3 = new_conv_layer(name=3, input=h2, filter_size=FILTER_SIZE, num_filters=3 * base1, num_in_channels=2 * base1,
                         use_pooling=True)
     h4 = tf.contrib.layers.flatten(h3)
-    h5 = new_fc_layer(name='5', input=h4, num_in=h4.shape[1], num_out=base2)
+    h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2)
     h6 = tf.nn.dropout(h5, keep_prob=KEEP_PROB)
-    h7 = new_fc_layer(name='7', input=h6, num_in=base2, num_out=base2 / 2)
+    h7 = new_fc_layer(name=7, input=h6, num_in=base2, num_out=base2 / 2)
     h8 = tf.nn.dropout(h7, keep_prob=KEEP_PROB)
     final_h = new_fc_layer(name='final', input=h8, num_in=base2 / 2, num_out=NUM_CLASSES)
 
@@ -239,6 +254,7 @@ def restore_session(session):
     saver.restore(session, settings.SAVE_PATH)
     return session
 
+
 def restore_train_save(epochs):
     """
     Helper method to continue training easily
@@ -247,5 +263,30 @@ def restore_train_save(epochs):
     """
     save_session(train_net(epochs))
 
-#restore_train_save(500)
 
+def img_to_cls_pred(file_name):
+    """
+    Converts an image to a character probabilities.
+    This function assumes there is a Model subdirectory with a trained network model.
+    :param file_name: Path to an image which contains a character.
+    :return: A list containing the probabilities
+    of the image being a certain class (representing a letter or number).
+    """
+    img = read_image(file_name)
+    x, y, predicted_y = create_neural_net()
+    session = create_session()
+    y_pred_cls = tf.argmax(predicted_y, 1)
+    # Initialize variables of neural network
+    session.run(tf.global_variables_initializer())
+    restore_session(session)
+    return session.run(predicted_y, feed_dict={x: [img]})[0]
+
+
+def img_to_text(file_name):
+    return utils.cls2str(np.argmax(img_to_cls_pred(file_name)))
+
+
+start = ord('a')
+end = ord('n')
+for x in range(start, end + 1):
+    print(img_to_text(settings.EXAMPLE_PATH + chr(x) + '.jpg'))

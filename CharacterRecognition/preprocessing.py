@@ -112,35 +112,44 @@ def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, ad
     return images
 
 
-# Opening files
-in_file_names = open(settings.CHAR_DATA_TXT_PATH, 'r').read().splitlines()
-out_file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'w')
-
-i = 0
-for file_name in in_file_names:
-    # Input
-    label = int(file_name.split('/')[1][-2:]) - 1
-    file_name = settings.CHAR_DATA_PATH + file_name
+def read_image(file_name):
+    """
+    Read an image.
+    :param invert: Indicates if color values should be inverted.
+    :param file_name: The path to an image
+    :return: A normalized np array with correct dimensions
+    """
     img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
-    # Data normalisation and inverting values
+    # Data normalisation and inverting color values
     img = np.subtract(1, np.divide(img, 255))
+    return cv2.resize(src=img, dsize=settings.SHAPE)
 
-    # Data scaling
-    img = cv2.resize(src=img, dsize=settings.SHAPE)
 
-    # Data augmentation
-    images = augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True)
+def preprocess():
+    # Opening files
+    in_file_names = open(settings.CHAR_DATA_TXT_PATH, 'r').read().splitlines()
+    out_file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'w')
 
-    # Output
-    for aug_img in images:
-        aug_img = np.multiply(aug_img, 255)  # Temporary for testing purposes (TODO)
-        new_file_name = settings.PREPROCESSED_CHARS_PATH + 'image-{}-{}.png'.format(label, i)
-        cv2.imwrite(new_file_name, aug_img)
-        out_file_names.write(new_file_name + '\n')
-        i += 1
-        # Keeping track of time...
-        if i % 250 == 0:
-            print('({}) - {}: About {} seconds have passed...'.format(file_name, i, t.time() - start))
+    i = 0
+    for file_name in in_file_names:
+        # Input
+        label = int(file_name.split('/')[1][-2:]) - 1
+        file_name = settings.CHAR_DATA_PATH + file_name
+        img = read_image(file_name)
 
-end = t.time()
-print('\nThe execution time is {}'.format(end - start))
+        # Data augmentation
+        images = augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True)
+
+        # Output
+        for aug_img in images:
+            aug_img = np.multiply(aug_img, 255)  # Temporary for testing purposes (TODO)
+            new_file_name = settings.PREPROCESSED_CHARS_PATH + 'image-{}-{}.png'.format(label, i)
+            cv2.imwrite(new_file_name, aug_img)
+            out_file_names.write(new_file_name + '\n')
+            i += 1
+            # Keeping track of time...
+            if i % 250 == 0:
+                print('({}) - {}: About {} seconds have passed...'.format(file_name, i, t.time() - start))
+
+    end = t.time()
+    print('\nThe execution time is {}'.format(end - start))
