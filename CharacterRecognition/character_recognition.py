@@ -286,7 +286,4 @@ def img_to_text(file_name):
     return utils.cls2str(np.argmax(img_to_cls_pred(file_name)))
 
 
-start = ord('a')
-end = ord('n')
-for x in range(start, end + 1):
-    print(img_to_text(settings.EXAMPLE_PATH + chr(x) + '.jpg'))
+restore_train_save(1000)
