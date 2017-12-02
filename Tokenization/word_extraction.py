@@ -1,4 +1,7 @@
 # http://blog.ayoungprogrammer.com/2013/01/equation-ocr-part-1-using-contours-to.html/
+# https://www.bytefish.de/blog/extracting_contours_with_opencv/
+# http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_contours/py_contour_features/py_contour_features.html
+# https://codereview.stackexchange.com/questions/31352/overlapping-rectangles
 
 import cv2
 import numpy as np
@@ -40,9 +43,20 @@ def rectangle_follows_rectangle(rectangle1, rectangle2, distance):
                 return True;
     return False
 
-def check_same_line (rectangle1, rectangle2, distance):
+WORDSPACING = -200;
+def check_same_line (rectangle1, rectangle2):
+    return rectangle_follows_rectangle(rectangle1, rectangle2, WORDSPACING) or rectangle_follows_rectangle(rectangle2, rectangle1, WORDSPACING)
+
+def vertical_overlap_rectangle(rectangle1, rectangle2):
     ((x1, y1, w1, h1), (x2, y2, w2, h2)) = (rectangle1, rectangle2)
 
+    hoverlaps = True
+    voverlaps = True
+    if (x1 > x2 + w2) or (x1 + w1 < x2):
+        hoverlaps = False
+    if (y1 + h1 < y2) or (y1 > y2 + h2):
+        voverlaps = False
+    return hoverlaps and voverlaps
 
 # rectangle 2 is right of rectangle 1
 def create_new_rectangle( rectangle1, contour1, rectangle2, contour2 ):
@@ -54,11 +68,11 @@ def create_new_rectangle( rectangle1, contour1, rectangle2, contour2 ):
     h3 = abs( max(y1 + h1, y2 + h2) - min(y1, y2) )
     rectangle3 = (x3, y3, w3, h3)
 
-    #TODO::
     contour3 = np.concatenate((contour1, contour2))
     return ( rectangle3 , contour3 )
 
-for file in os.listdir(filepath):
+
+for file in sorted(os.listdir(filepath)):
     print(file)
 
     #PREPROCESSING
@@ -71,16 +85,20 @@ for file in os.listdir(filepath):
 
     # 2. Thresholding image (maybe?)
 
-    blur = cv2.GaussianBlur(img,(5,5),0)
+    #blur = cv2.GaussianBlur(img,(5,5),0)
 
-    thresh = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,3,4)
+    #thresh = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,3,4)
+
+
+    blur = cv2.GaussianBlur(img,(1,1),0)
+    ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     #cv2.imwrite(path + "words/text.png", img)
 
     #cv2.imwrite(path + "words/text1.png", blur)
 
     threshold_directory_path = os.path.join(dir, outputpath + 'thresholds')
-    thresholdpath = os.path.join(dir, outputpath + 'thresholds/image' + str(fileindex) + 'threshold.png')
+    thresholdpath = os.path.join(dir, outputpath + 'thresholds/image' + str(fileindex).zfill(3) + 'threshold.png')
     if not os.path.exists(threshold_directory_path):
         os.makedirs(threshold_directory_path)
 
@@ -187,70 +205,154 @@ for file in os.listdir(filepath):
 
     # ordering the found words in lines
     lines = list()
-    rectangles_copy = rectangles_contours.keys()
-    sorted_rectangles_copy = sorted(rectangles_copy, key=lambda x: (x[1], x[0]))
+    rectangles_copy = list(rectangles_contours.keys())
+
+
     linesleft = len(rectangles_copy) != 0
     iteration = 0;
+    lastline = list();
     while (linesleft):
-        highestrectangle = (0, 20000, 0, 0);
 
+
+        highestrectangle = (0, 20000, 0, 0);
+        line = list();
         #search the highest remaining rectangle
         for rectangle in rectangles_copy:
             if (rectangle[1] < highestrectangle[1]):
                 highestrectangle = rectangle
 
-        # finding rest of the line
-        for rectangle in rectangles_copy:
-                if (rectangle[0] < highestrectangle[0] and rectangle_follows_rectangle(rectangle, highestrectangle):
-                        lines[iteration].append(rectangle)
-                if (rectangle[0] >= highestrectangle[0] and rectangle_follows_rectangle(highestrectangle, rectangle):
-                        lines[iteration].append(rectangle)
-        (x, y, w, h) = highestrectangle
-        xmin = x
-        ymin = y
-        xmax = x + w
-        ymax = y + h
-        highestrect = img[ymin:ymax, xmin:xmax]
-        cv2.imwrite(thresholdpath, highestrect)
-        #linesleft = len(rectangles_copy) != 0
-        linesleft = False
+        if (highestrectangle) == (0, 20000, 0, 0):
+            break
+
+        line.append(highestrectangle)
+
+        for rect in rectangles_copy:
+            if check_same_line(highestrectangle, rect) and rect != highestrectangle:
+                line.append(rect)
+
+        # check if line overlaps with last line.
+        if len(lines) > 0:
+
+            average = 0;
+            average_height = 0;
+            for rect in line:
+                average += rect[1] + (rect[3] / 2)      # get average height
+                average_height += rect[3]
+            average /= len(line)
+            average_height /= len(line)
+
+            average_old = 0
+            average_height_old = 0
+            for rect in lines[-1]:
+                average_old += rect[1] + (rect[3] / 2)
+                average_height_old += rect[3]
+            average_old /= len(lines[-1])
+            average_height_old /= len(lines[-1])
 
 
+            if abs(average - average_old) < max(average_height, average_height_old):
+                lastline = lines.pop()
+                for rect in line:
+                    lastline.append(rect)
+                line = lastline
 
+        busy = True
+        while busy:
+            busy = False
+            removals = set()
+            additions = list()
+            interrupted = False
+            for rect in line:
+                if not interrupted:
+                    for rect2 in line:
+                        if not interrupted:
+                            if (rect != rect2 and vertical_overlap_rectangle(rect, rect2)):
+                                busy = True
+                                removals.add(rect)
+                                removals.add(rect2)
 
+                                #hacky way to add the new rerctangle with the correct contours
+                                newrectangle = create_new_rectangle( rect, rectangles_contours[rect], rect2, rectangles_contours[rect2] )
+                                rectangles_contours[newrectangle[0]] = newrectangle[1]
+                                additions.append( newrectangle[0] )
+                                interrupted = True
+
+            print("removals")
+            print(removals)
+            print("additions")
+            print(additions)
+
+            for element in removals:
+                print('removing')
+                print(element)
+                if element in line:
+                    line.remove(element)
+                if element in rectangles_copy:
+                    rectangles_copy.remove(element)
+
+            for element in additions:
+                line.append(element)
+                print("appending")
+                print(element)
+
+        sortedline = sorted(line, key=lambda tup: tup[0])
+
+        lines.append(sortedline)
+
+        for element in sortedline:
+            if (element in rectangles_copy):
+                rectangles_copy.remove(element)
+
+        linesleft = len(rectangles_copy) != 0
 
     # saving the found rectangles
     ind = 0;
-    for rectangle in rectangles_contours:
-        (x, y, w, h) = rectangle
-        xmin = x
-        ymin = y
-        xmax = x + w
-        ymax = y + h
-        extracted_word = img[ymin:ymax, xmin:xmax]
+    for line in lines:
+        for rectangle in line:
+            contour = rectangles_contours[rectangle]
+            (x, y, w, h) = rectangle
+            xmin = x
+            ymin = y
+            xmax = x + w
+            ymax = y + h
+            extracted_word = img[ymin:ymax, xmin:xmax]
 
-        word_directory_path = os.path.join(dir, outputpath + 'text' + str(fileindex) + '/words/')
-        wordpath = os.path.join(dir, outputpath + 'text' + str(fileindex) + '/words/word' + str(ind) + '.png')
-        if not os.path.exists(word_directory_path):
-            os.makedirs(word_directory_path)
+            #TODO:: fill the contours on a white image, and copy the masked image as a result
 
-        cv2.imwrite(wordpath, extracted_word)
-        ind += 1
+            #newImg = np.ones( (ymax,xmax) ) * 255
 
-        #cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
+            #filledImg = cv2.fillPoly(newImg, contour, 0)
 
-    finalcontours = list()
-    for key in rectangles_contours:
-        finalcontours.append(rectangles_contours[key])
+            #filledImg = cv2.fillConvexPoly(newImg, contour,  0)
+
+
+            #extracted_word2 = filledImg[ymin:ymax, xmin:xmax]
+
+            word_directory_path = os.path.join(dir, outputpath + 'text' + str(fileindex).zfill(3) + '/words/')
+            wordpath = os.path.join(dir, outputpath + 'text' + str(fileindex).zfill(3) + '/words/word' + str(ind).zfill(4) + '.png')
+            if not os.path.exists(word_directory_path):
+                os.makedirs(word_directory_path)
+
+            cv2.imwrite(wordpath, extracted_word)
+            ind += 1
+
+            #cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
+
 
     # this draws the final contours
 
     # cv2.drawContours(img, finalcontours, -1, (0,255,0), 1)
 
     parsed_text_directory = os.path.join(dir, outputpath + 'parsed_texts/')
-    parsedtextpath = os.path.join(dir, outputpath + 'parsed_texts/text' + str(fileindex) + ".png")
+    parsedtextpath = os.path.join(dir, outputpath + 'parsed_texts/text' + str(fileindex).zfill(3) + ".png")
     if not os.path.exists(parsed_text_directory):
         os.makedirs(parsed_text_directory)
+
+
+    for line in lines:
+        for word in line:
+            (x, y, w, h) = word
+            cv2.rectangle(img, (x,y),(x+w,y+h),(0,255,0),2)
 
     cv2.imwrite(parsedtextpath, img)
 

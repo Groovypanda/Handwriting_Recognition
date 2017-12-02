@@ -1,3 +1,5 @@
+# https://github.com/bsdnoobz/zhang-suen-thinning
+# https://ac.els-cdn.com/S1877050913001464/1-s2.0-S1877050913001464-main.pdf?_tid=23580d56-d5c6-11e7-b3de-00000aab0f27&acdnat=1512043449_af48c0c94bee8350a664995a634d9317
 
 import cv2
 import numpy as np
@@ -16,7 +18,7 @@ def rotateImage(image, angle):
     return rotated
 
 
-fileindex = 6;
+fileindex = 4;
 outputpath = os.path.join(dir, '../data/output/')
 filepath = os.path.join(dir, '../data/texts/')
 for index in range(0, 1):# len(os.listdir(filepath))):
