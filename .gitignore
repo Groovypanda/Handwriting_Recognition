@@ -1,3 +1,5 @@
 .idea/
-data/
+Data/
 __pycache__/
+*.jpg
+*.png
