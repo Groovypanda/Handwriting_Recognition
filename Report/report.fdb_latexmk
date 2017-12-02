@@ -1,0 +1,11 @@
+# Fdb version 3
+["latex"] 1512242312 "report.tex" "report.dvi" "report" 1512242312
+  "/home/jarre/.cache/texlive/texmf-var/web2c/pdftex/latex.fmt" 1512242313 3507969 0f7c589eba821661d0e56e41c4e21c41 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls" 1459635588 19821 310da678527a7dfe2a02c88af38079b7 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo" 1459635588 8292 e897c12e1e886ce77fe26afc5d470886 ""
+  "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1501961251 31949 3ae02a131d161fd383f5b89f8ad0930c ""
+  "report.aux" 1512242312 8 a94a2480d3289e625eea47cd1b285758 ""
+  "report.tex" 1512241037 47 eb9d694e19b0d89b8132a1b55559e2e9 ""
+  (generated)
+  "report.dvi"
+  "report.log"
