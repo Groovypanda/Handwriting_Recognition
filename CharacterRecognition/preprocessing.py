@@ -46,9 +46,9 @@ def inBounds(x):
     return SIZE > x >= 0
 
 
-def noisyImage(image, stddev):
+def noisyImage(img, stddev):
     noise = np.random.normal(loc=0, scale=stddev, size=img.shape)
-    aug_img = image + noise.reshape(img.shape)
+    aug_img = img + noise.reshape(img.shape)
     aug_img[aug_img < 0] = 0.0
     aug_img[aug_img > 1] = 1.0
     return aug_img
@@ -76,7 +76,6 @@ def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, ad
     # Array with augmented images
     images = [img]
     up, down, left, right = imageBorders(img)
-
     ## Addition of Gaussian noise
     if addNoise:
         images.append(noisyImage(img, stddev=0.05))
@@ -125,7 +124,7 @@ def read_image(file_name):
     return cv2.resize(src=img, dsize=settings.SHAPE)
 
 
-def preprocess():
+def preprocess(addNoise=True, addRotations=True, addTranslations=True, addScales=True):
     # Opening files
     in_file_names = open(settings.CHAR_DATA_TXT_PATH, 'r').read().splitlines()
     out_file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'w')
@@ -133,12 +132,12 @@ def preprocess():
     i = 0
     for file_name in in_file_names:
         # Input
-        label = int(file_name.split('/')[1][-2:]) - 1
+        label = int(file_name.split('/')[1][-2:])
         file_name = settings.CHAR_DATA_PATH + file_name
         img = read_image(file_name)
 
         # Data augmentation
-        images = augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True)
+        images = augmentImage(img, addNoise=addNoise, addRotations=addRotations, addTranslations=addTranslations, addScales=addScales)
 
         # Output
         for aug_img in images:
@@ -153,3 +152,5 @@ def preprocess():
 
     end = t.time()
     print('\nThe execution time is {}'.format(end - start))
+
+preprocess()
