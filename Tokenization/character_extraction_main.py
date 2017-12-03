@@ -11,8 +11,8 @@ import imutils
 from matplotlib import pyplot as plt
 
 #searched for a better skeletonizer and found this library
+# Scikit-image dependency! (https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-image)
 from skimage.morphology import skeletonize
-
 dir = os.path.dirname(__file__)
 
 

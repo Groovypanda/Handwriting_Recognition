@@ -105,7 +105,6 @@ def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, ad
         for sx in np.arange(min_scale_x, max_scale_x + step, step):
             for sy in np.arange(min_scale_y, max_scale_y + step, step):
                 if not sy == 1 and not sy == 1:
-                    # Todo: translate if not in bounds.
                     if inBounds(down * sy) and inBounds(right * sx):
                         images.append(scaleImage(img, sx, sy))
     return images
@@ -119,8 +118,10 @@ def read_image(file_name):
     :return: A normalized np array with correct dimensions
     """
     img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
-    # Data normalisation and inverting color values
-    img = np.subtract(1, np.divide(img, 255))
+    # Contrast normalisation and inverting color values
+    retVal, img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
+    # Data normalisation
+    img = np.divide(img, 255)
     return cv2.resize(src=img, dsize=settings.SHAPE)
 
 

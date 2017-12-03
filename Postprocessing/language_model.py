@@ -41,9 +41,8 @@ Punctuation needs spaces.
 
 
 def n_gram_model(sentence, words, n=3):
-    previous_words = ' '.join(sentence.split(' ')[-n:])
+    previous_words = ' '.join(sentence[-n:])
     query = previous_words + ' ' + ' / '.join(words)
-    print(query)
     '''
     Give a default value of 0 as probability.
     If Google dataset doesn't contain the given n-gram then the probability will remain 0. 
@@ -58,7 +57,7 @@ def n_gram_model(sentence, words, n=3):
             results[word] = phrase.score
     return results
 
-print(n_gram_model('She loves the', ['girl', 'boy', 'sheep'], n=3))
-print(n_gram_model('He loves the', ['girl', 'boy', 'sheep'], n=3))
-print(n_gram_model('She loves the', ['woman', 'man', 'sheep'], n=2))
+#print(n_gram_model(['She', 'loves', 'the'], ['girl', 'boy', 'sheep'], n=3))
+#print(n_gram_model('He loves the', ['girl', 'boy', 'sheep'], n=3))
+#print(n_gram_model('She loves the', ['woman', 'man', 'sheep'], n=2))
 

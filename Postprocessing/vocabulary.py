@@ -89,12 +89,3 @@ def rand(not_indices, amount):
     else:
         return []
 
-
-# A   p   p   l   e
-# 10 52 52  48  41
-A_pred = rand_array([10])
-p_pred = rand_array([51])
-l_pred = rand_array([47])
-e_pred = rand_array([40])
-
-print(most_likely_words([A_pred, p_pred, p_pred, l_pred, e_pred]))

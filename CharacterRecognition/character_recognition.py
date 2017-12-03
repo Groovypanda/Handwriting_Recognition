@@ -312,6 +312,6 @@ def examples():
     for ex in reversed(examples):
         for i in range(4):
             print(ex,
-                  img_to_text(settings.EXAMPLE_PATH + ex + '_' + str(i) + ".png", n=62, session=session, _x=_x, _y=_y,
+                  img_to_text(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", n=62, session=session, _x=_x, _y=_y,
                               h=h))
 
