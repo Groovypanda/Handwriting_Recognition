@@ -152,5 +152,3 @@ def preprocess(addNoise=True, addRotations=True, addTranslations=True, addScales
 
     end = t.time()
     print('\nThe execution time is {}'.format(end - start))
-
-preprocess()

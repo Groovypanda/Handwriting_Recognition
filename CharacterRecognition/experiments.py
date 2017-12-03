@@ -12,8 +12,8 @@ for recognising characters.
 """
 
 # Increase this for actual experiments.
-ITERATIONS = 2
-EPOCHS = 30
+ITERATIONS = 4
+EPOCHS = 200
 
 
 def compare_base():
@@ -44,7 +44,7 @@ def compare_filter_size():
     """
     sizes = [3, 5, 7]
     for x in sizes:
-        print("Running experiments with learning rate " + str(x))
+        print("Running experiments with filter_size " + str(x))
         run_experiment("filtersize_" + str(x), filter_size=x)
 
 
@@ -91,7 +91,7 @@ def compare_epochs():
     :return: 
     """
     epochs = [100, 250, 500, 1000]
-    for x in sizes:
+    for x in epochs:
         print("Running experiments with " + str(x) + " iterations")
         run_experiment("epochs_" + str(x), batch_size=x)
 
@@ -236,4 +236,10 @@ def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, base=1, learn
             save_output(name, accuracy, time, start + i)
 
 
-compare_base()
+#compare_base()
+#compare_learning_rate()
+#compare_filter_size()
+#compare_keep_prob()
+#compare_weight_decay()
+#compare_batch_size()
+compare_preprocessing_params()
