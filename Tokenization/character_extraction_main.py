@@ -15,7 +15,6 @@ from matplotlib import pyplot as plt
 from skimage.morphology import skeletonize
 dir = os.path.dirname(__file__)
 
-
 def rotateImage(image, angle):
     #inverted = cv2.bitwise_not(image)
     rotated = imutils.rotate_bound(image, angle)
@@ -102,9 +101,6 @@ def extract_characters(word, index=0):
 
         #for line in skel:
         #    print(line)
-
-        for line in resultnpy:
-            print(line)
 
         skel = resultnpy
 

@@ -1,11 +1,11 @@
 from Tokenization.character_extraction_main import extract_characters
 from Tokenization.word_extraction import preprocess_image
-from CharacterRecognition.character_recognition import img_to_text
-from CharacterRecognition.character_recognition import img_to_prob
 from Postprocessing.language_model import n_gram_model
 from Postprocessing.vocabulary import most_likely_words
 import settings
-
+import cv2
+import tensorflow as tf
+import CharacterRecognition.character_recognition as cr
 '''
 Postprocessing consists of 2 steps:
 1) Find the most likely word given a list of probabilities for every character in the word. 
@@ -18,6 +18,10 @@ Postprocessing consists of 2 steps:
 These 2 techniques are often used for voice recognition and other techniques, but can be applied for this project aswell
 to handle the high error rate of character recognition (+/- 20%).
 '''
+
+
+def read_image(file_name):
+    return cv2.imread(file_name, 0)
 
 
 def predict_actual_word(cls_pred_list):
@@ -36,20 +40,25 @@ def sentence_img_to_text(image):
     :param images: Image of a sentence
     :return: Text of the sentence
     """
+    alpha = 0.7 # Indicates importance of correct vocabulary
+    beta = 0.3 # Indicates importance of language model
     words = preprocess_image(image)
     text = [] #Converted image into list of words
+    # Network for recognising individual characters.
+    # These variables need to be this high up in the python project.
+    # In order to avoid initialising multiple sessions or neural networks.
+    session, _x, _y, h = cr.init_session()
     for word in words:
         # Find a list of possible words using the vocabularium
-        likey_words = word_img_to_most_likely_words(word)
-        # Find the most likely word using the language model
-        most_likely_word = max(n_gram_model(text, likey_words), key=lambda x: x[1])
+        voc_words = word_img_to_most_likely_words(word, session, _x, _y, h)
+        # Find the most likely words using the language model
+        lang_words = n_gram_model(text, voc_words.keys())
+        most_likely_word = max([(word, alpha*voc_words[word] + beta*prob) for word,prob in lang_words.items()], key=lambda x: x[0])[0]
         text.append(most_likely_word)
+        print(most_likely_word)
     return ' '.join(text)
 
-
-
-
-def word_img_to_most_likely_words(image):
+def word_img_to_most_likely_words(image, session=None, _x=None, _y=None, h=None):
     """
     Algorithm:
 
@@ -62,10 +71,11 @@ def word_img_to_most_likely_words(image):
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
     char_imgs = extract_characters(image)
-    cls_pred_list = []
-    for img in char_imgs:
-        cls_pred_list.append(img_to_prob(img))
+    if session==None:
+        session, _x, _y, h = cr.init_session()
+    cls_pred_list = cr.imgs_to_prob_list(char_imgs, session, _x, _y, h)
     return most_likely_words(cls_pred_list)
 
 
-print(sentence_img_to_text(settings.EXAMPLE_TEXT_PATH + 'text1.jpg'))
+
+print(sentence_img_to_text(read_image(settings.EXAMPLE_TEXT_PATH + 'text1.jpg')))

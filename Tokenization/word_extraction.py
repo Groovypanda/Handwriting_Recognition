@@ -83,12 +83,9 @@ def preprocess_image(img, file_index = 0):
 
     file_number = str(file_index).zfill(3)
 
-    print("processing file: " + str(file_number))
-
     #PREPROCESSING
 
     # 1. reading image in greyscale // NO LONGER APPLICABLE
-
     height, width = img.shape[:2]
 
     # 2. Thresholding image (maybe?)

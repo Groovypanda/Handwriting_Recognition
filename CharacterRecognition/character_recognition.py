@@ -274,7 +274,7 @@ def train_save(epochs):
     save_session(train_net(epochs, restore=False))
 
 
-def img_to_prob(file_name, session=None, _x=None, _y=None, h=None):
+def img_to_prob(img, session=None, _x=None, _y=None, h=None):
     """
     Converts an image to a character probabilities.
     This function assumes there is a Model subdirectory with a trained network model.
@@ -282,7 +282,10 @@ def img_to_prob(file_name, session=None, _x=None, _y=None, h=None):
     :return: A list containing the probabilities
     of the image being a certain class (representing a letter or number).
     """
-    img = read_image(file_name, invert=True)
+    # img = read_image(file_name, invert=True)
+    if (img.shape != settings.SHAPE):
+        img = cv2.resize(src=img, dsize=settings.SHAPE)
+        img = np.reshape(img, settings.IMG_SHAPE)
     if session is None:
         _x, _y, h = create_neural_net(train=False)
         session = create_session()
@@ -290,6 +293,13 @@ def img_to_prob(file_name, session=None, _x=None, _y=None, h=None):
         restore_session(session)
     # Initialize variables of neural network
     return session.run(tf.nn.softmax(h), feed_dict={_x: [img]})[0]
+
+
+def imgs_to_prob_list(images, session, _x, _y, h):
+    prob_list = []
+    for img in images:
+        prob_list.append(img_to_prob(img, session, _x, _y, h))
+    return prob_list
 
 
 def img_to_text(file_name, n=1, session=None, _x=None, _y=None, h=None):
@@ -302,6 +312,19 @@ def img_to_text(file_name, n=1, session=None, _x=None, _y=None, h=None):
 def most_probable_chars(cls_pred, n):
     return list(reversed(sorted([(utils.index2str(i), x) for i, x in enumerate(cls_pred)], key=lambda x: x[1])[-n:]))
 
+
+def init_session():
+    """
+    Fully creates an initialised session and returns an initialized neural network. 
+    :return: 
+    """
+    session = tf.Session()
+    _x, _y, h = create_neural_net(train=False)
+    session.run(tf.global_variables_initializer())
+    restore_session(session)
+    return session, _x, _y, h
+
+
 ### VERY IMPORTANT NOTE: IMAGES NEED TO BE INVERTED IN ORDER TO BE CORRECTLY CLASSIFIED. FURTHER EXPERIMENTS ARE REQUIRED.
 def examples():
     session = tf.Session()
@@ -312,6 +335,6 @@ def examples():
     for ex in reversed(examples):
         for i in range(4):
             print(ex,
-                  img_to_text(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", n=62, session=session, _x=_x, _y=_y,
+                  img_to_text(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", n=62, session=session, _x=_x,
+                              _y=_y,
                               h=h))
-
