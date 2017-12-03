@@ -7,16 +7,6 @@ import cv2
 import numpy as np
 import os
 import shutil
-dir = os.path.dirname(__file__)
-
-
-fileindex = 1;
-outputpath = os.path.join(dir, '../data/output/')
-filepath = os.path.join(dir, '../data/texts/')
-
-# clear previous output
-shutil.rmtree(outputpath)
-os.makedirs(outputpath)
 
 # checks if rectangle 2 inside rectangle 1
 def rectangle_contains_rectangle(rectangle1, rectangle2):
@@ -72,14 +62,34 @@ def create_new_rectangle( rectangle1, contour1, rectangle2, contour2 ):
     return ( rectangle3 , contour3 )
 
 
-for file in sorted(os.listdir(filepath)):
-    print(file)
+
+    # img = cv2.imread(filepath + file, 0)
+    # Please pass image as greyscale
+    # the file index passed is for output purposes
+def preprocess_image(img, file_index = 0):
+
+
+    dir = os.path.dirname(__file__)
+
+
+    fileindex = 1;
+    outputpath = os.path.join(dir, '../data/output/')
+    filepath = os.path.join(dir, '../data/texts/')
+    datapath = os.path.join(dir, '../data/')
+    # clear previous output
+
+    if not os.path.exists(datapath):
+        os.makedirs(datapath)
+
+    if not os.path.exists(outputpath):
+        os.makedirs(outputpath)
+
+    file_number = str(file_index).zfill(3)
+
 
     #PREPROCESSING
 
-    # 1. reading image in greyscale
-
-    img = cv2.imread(filepath + file, 0)
+    # 1. reading image in greyscale // NO LONGER APPLICABLE
 
     height, width = img.shape[:2]
 
@@ -90,7 +100,7 @@ for file in sorted(os.listdir(filepath)):
     #thresh = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,3,4)
 
 
-    blur = cv2.GaussianBlur(img,(1,1),0)
+    blur = cv2.GaussianBlur(img,(3,3),0)
     ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     #cv2.imwrite(path + "words/text.png", img)
@@ -98,7 +108,7 @@ for file in sorted(os.listdir(filepath)):
     #cv2.imwrite(path + "words/text1.png", blur)
 
     threshold_directory_path = os.path.join(dir, outputpath + 'thresholds')
-    thresholdpath = os.path.join(dir, outputpath + 'thresholds/image' + str(fileindex).zfill(3) + 'threshold.png')
+    thresholdpath = os.path.join(dir, outputpath + 'thresholds/image' + file_number + 'threshold.png')
     if not os.path.exists(threshold_directory_path):
         os.makedirs(threshold_directory_path)
 
@@ -328,8 +338,8 @@ for file in sorted(os.listdir(filepath)):
 
             #extracted_word2 = filledImg[ymin:ymax, xmin:xmax]
 
-            word_directory_path = os.path.join(dir, outputpath + 'text' + str(fileindex).zfill(3) + '/words/')
-            wordpath = os.path.join(dir, outputpath + 'text' + str(fileindex).zfill(3) + '/words/word' + str(ind).zfill(4) + '.png')
+            word_directory_path = os.path.join(dir, outputpath + 'text' + sfile_number + '/words/')
+            wordpath = os.path.join(dir, outputpath + 'text' + file_number + '/words/word' + str(ind).zfill(4) + '.png')
             if not os.path.exists(word_directory_path):
                 os.makedirs(word_directory_path)
 
@@ -344,7 +354,7 @@ for file in sorted(os.listdir(filepath)):
     # cv2.drawContours(img, finalcontours, -1, (0,255,0), 1)
 
     parsed_text_directory = os.path.join(dir, outputpath + 'parsed_texts/')
-    parsedtextpath = os.path.join(dir, outputpath + 'parsed_texts/text' + str(fileindex).zfill(3) + ".png")
+    parsedtextpath = os.path.join(dir, outputpath + 'parsed_texts/text' + file_number + ".png")
     if not os.path.exists(parsed_text_directory):
         os.makedirs(parsed_text_directory)
 
@@ -356,7 +366,9 @@ for file in sorted(os.listdir(filepath)):
 
     cv2.imwrite(parsedtextpath, img)
 
-    fileindex += 1
+    
+    return (lines)
+
 
 
 
