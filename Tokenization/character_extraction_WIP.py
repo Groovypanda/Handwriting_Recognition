@@ -43,6 +43,8 @@ def skeletonize_alternative(img):
             break
     return skel
 
+
+
 fileindex = 4;
 outputpath = os.path.join(dir, '../data/output/')
 filepath = os.path.join(dir, '../data/texts/')
@@ -56,7 +58,9 @@ for index in range(0, 1):# len(os.listdir(filepath))):
         img = cv2.imread(wordpath + word, 0)
         inverted = cv2.bitwise_not(img)
 
-        for angle in (-12, -6, 0, 6, 12):
+        angeled_splits = list()
+
+        for angle in (-7, -3, 0, 3, 7):
             rotatedimg = rotateImage(inverted, angle)
 
             height, width = rotatedimg.shape
@@ -68,10 +72,23 @@ for index in range(0, 1):# len(os.listdir(filepath))):
             #skel = skeletonize_alternative(thresh)
 
 
+
+            #inv = cv2.bitwise_not(thresh)
+            #im2, contours, hierarchy = cv2.findContours(inv,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+            #res = cv2.drawContours(inv, contours, -1, (123,123,123), 1)
+            #print(contours)
+            #print(hierarchy)
+            #cv2.imshow ("contours", inv)
+            #cv2.waitKey(0)
+
+
+
+
+
             skel2 = skeletonize(thresh/255)
             result = list()
 
-            resultnpy = np.copy(skel)
+            resultnpy = np.copy(thresh)#skel)
             resultnpy.dtype = np.uint8
 
             index1 = 0
@@ -85,8 +102,8 @@ for index in range(0, 1):# len(os.listdir(filepath))):
                     index2 += 1
                 index1 += 1
 
-            for line in skel:
-                print(line)
+            #for line in skel:
+            #    print(line)
 
             for line in resultnpy:
                 print(line)
@@ -94,52 +111,16 @@ for index in range(0, 1):# len(os.listdir(filepath))):
             skel = resultnpy
 
 
-            #row_means = cv2.reduce(skel, 1, cv2.REDUCE_AVG)
-
-            #highest_average_row = 0
-            #highes_row_index = 0;
-            #for index, row_mean in row_means:
-            #    if highest_average_row < row_mean:
-            #        highest_average_row = row_mean
-            #        highes_row_index = index
-            #total = sum(row_means)
-
-            #currentcount = highest_average_row;
-            #currentlines = list()
-            #currentlines.append(index)
-            #busy = True;
-
-            #while(currentcount < total // 2 && busy):
-            #    busy = False;
-            #    lowestline = min(currentlines)
-            #    highestline = max(currentlines)
-            #    underlowestvalue = row_means[lowestline - 1]
-            #    abovehighestvalue = row_means[highestline + 1]
-
-            #    if(underlowestvalue > row_means[lowestline] // 2):
-            #        currentlines.append(lowestline - 1)
-            #        currentcount += underlowestvalue
-            #        busy = True
-
-
-            #    if(abovehighestvalue > row_means[highestline] // 2):
-            #        currentlines.append(highes_row_index + 1)
-            #        currentcount += abovehighestvalue
-            #        busy = True
-
-            #lowestline = min(currentlines)
-            #highestline = max(currentlines)
-
-
-            # col_means = cv2.reduce(thresh, 0, cv2.REDUCE_AVG);
             col_means = cv2.reduce(skel, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
 
             col_means_list = col_means[0].tolist()
 
 
             # remove trailing zeros so that no unnecessary splits are performed
+            croppedLeft = 0;
             while col_means_list[-1] == 0:
                 col_means_list.pop()
+                croppedLeft += 1;
 
             x_start_index = 0;
             while col_means_list[0] == 0:
@@ -152,34 +133,115 @@ for index in range(0, 1):# len(os.listdir(filepath))):
             xvals = list(range (0, len(col_means_list)))
 
 
-            # Find potential split collumns
+            # Find potential split collumnsk;
             potential_cuts = list()
 
             for indx in range(0, len(col_means_list)):
                 col = col_means_list[indx]
                 if (col == 0):
                     potential_cuts.append((indx, 0))
-                if(col == 1):
+                if(col > 0):
                     potential_cuts.append((indx, 1))
 
+            # combining the potential split collumns
+
+            ending = len(potential_cuts)-1
+
+            while potential_cuts[-1][0] == ending:
+                potential_cuts.pop()
+                ending -= 1;
+
+            startpoint = 0;
+            while potential_cuts[0][0] == startpoint:
+                potential_cuts.pop(0)
+                startpoint += 1
 
 
-            plt.figure(1)
-            #plt.plot(xvals, list(col_means_list))
-            plt.axis([0, len(col_means_list)-1, 0, height-1])
+            sorted_potential_cuts = sorted(potential_cuts, key=lambda tup: tup[0])
 
-            for (index, number) in potential_cuts:
-                if (number == 0):
-                    plt.plot([index, index], [0, height], color='r', linestyle='-', linewidth=1)
-                if (number == 1):
-                    plt.plot([index, index], [0, height], color='g', linestyle='-', linewidth=1)
+            splitranges = list()
 
-            plt.imshow(np.flipud(skel), origin='lower')
+            searchindex = 1
+            startindex = 0;
 
-            #plt.figure(2)
-            #plt.imshow(np.flipud(img), origin='lower')
-            #plt.plot(row_sum_mean)
-            plt.show()
+            currentsplit = list()
+
+            index = 0
+            for (col, pix) in sorted_potential_cuts:
+                if index + 1 < len(sorted_potential_cuts) and sorted_potential_cuts[index + 1][0] == col + 1:
+                    currentsplit.append((col, pix))
+                else:
+                    currentsplit.append((col, pix))
+
+                    #undo single line splits
+                    if len(currentsplit) > 1:
+                        splitranges.append(currentsplit)
+                    currentsplit = list()
+                index += 1
+
+
+            finalsplits = list()
+            for splits in splitranges:
+
+                zero_splits = list()
+                one_splits = list()
+                for split in splits:
+                    if split[1] > 0:
+                        zero_splits.append(split)
+                    else:
+                        one_splits.append(split)
+
+                if(len(zero_splits) > 0):
+                    finalsplits.append(zero_splits[ len(zero_splits) // 2 ])
+                else:
+                    finalsplits.append(one_splits[ len(one_splits) // 2 ])
+
+
+            rotatedimgcropped = rotatedimg[0:height, x_start_index:x_start_index+len(col_means_list)]
+
+            final_realigned_splits = list()
+            for split in finalsplits:
+                newsplit = (split[0] + croppedLeft, split[1])
+                final_realigned_splits.append(newsplit)
+
+            angeled_splits.append((final_realigned_splits, rotatedimg))
+
+
+        # We have the rotated image and the splits for each of the chosen angles
+
+        most_splits = len( angeled_splits[ len(angeled_splits) // 2 ][0] )
+        chosen_split = angeled_splits[ len(angeled_splits) // 2 ]
+        for angled_split in angeled_splits:
+            if len(angled_split[0]) > most_splits:
+                chosen_split = angled_split
+
+        if (chosen_split == None):
+            chosen_split = angeled_splits[ len(angeled_splits) // 2 ]
+
+        im = chosen_split[1]
+        finalsplits = chosen_split[0]
+
+        height, width = im.shape
+
+        plt.figure(1)
+        #plt.plot(xvals, list(col_means_list))
+        plt.axis([0, width-1, 0, height-1])
+
+
+
+
+        for (index, number) in finalsplits:
+            if (number == 0):
+                plt.plot([index, index], [0, height], color='r', linestyle='-', linewidth=1)
+            if (number > 0):
+                plt.plot([index, index], [0, height], color='g', linestyle='-', linewidth=1)
+
+        plt.imshow(np.flipud(im), origin='lower')
+
+        #plt.figure(2)
+        #plt.imshow(np.flipud(img), origin='lower')
+        #plt.plot(row_sum_mean)
+        plt.show()
 
 
 
