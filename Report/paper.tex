@@ -1,0 +1,127 @@
+\documentclass{article}
+
+\usepackage{times}
+\usepackage{graphicx} 
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{hyperref}
+\usepackage{icml2016} 
+\usepackage{amsmath}
+\usepackage{subcaption}
+
+\begin{document} 
+\twocolumn[\icmltitle{Handwriting Recognition}
+\icmlauthor{Jarre Knockaert}{Jarre.Knockaert@UGent.be}
+\icmlauthor{Ruben Dedecker}{Ruben.Dedecker@UGent.be}
+
+\vskip 0.3in
+]
+
+\begin{abstract} 
+  
+\end{abstract} 
+
+\section{Introduction}
+
+\section{Handwriting Recognition}
+
+\subsection{Character Recognition}
+The smallest distinguishable token in a text is a character. These handwritten characters are uniquely 
+written by each individual and there's even variation when written by the same individual. These variations include the inclination of characters, i.e., the slant, orientation and size. These variations can be removed by preprocessing the image. We however take another, more general approach. Instead of adding rules to minimize variation we made a deep neural net which can recognise any character with a certain probability. The architecture of this deep neural network is described in \ref{sec:dnn}. In order to make the deep neural network recognise characters in images with these variations, we augmented the dataset to include images which have these variations. We discuss this in \ref{sec:preproc}. The dataset of handwritten character is described in \ref{sec:data}.
+
+\subsubsection{Data}
+\label{sec:data}
+A good data dataset with many examples, enough variation, and which is balanced between classes is very important to train the neural network. We use the Chars74K dataset for this purpose. It has 62 classes (0-9, A-Z, a-z) and 3410 handwritten images. This dataset contains both very easily recognisable images of characters but also characters which are even hard to recognise for humans, as shown in figure \ref{fig:char}. 3410 input images is quite low for a neural network to be effectively trained. To overcome this problem we use some data augmentation techniques discussed in \ref{par:aug}. 
+
+\begin{figure}
+\begin{subfigure}{.15\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{images/bad_char1}
+  \caption{Picture of a 'z' which resembles a 7.}
+\end{subfigure}
+\begin{subfigure}{.15\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{images/bad_char2}
+  \caption{Picture of a 'z' which resembles a 3.}
+\end{subfigure}
+\begin{subfigure}{0.15\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{images/good_char}
+  \caption{Picture of a 'z' which resembles a 3.}
+\end{subfigure}
+\caption{Examples of written 'z' characters.}
+\label{fig:char}
+\end{figure}
+
+
+\subsubsection{Preliminary steps}
+\label{sec:preproc}
+We make use of 2 types of preprocessing steps: normalization of the data (\ref{par:norm}) and augmentation of the data (\ref{par:aug}). Normalization of data adjusts the original data and data augmentation takes the data and uses augmentation techniques to create variations of the original data.
+
+\paragraph{Normalizing data} 
+\label{par:norm}
+Theoretically feeding normalized data to the neural network returns the same output as before. 
+In reality however, it's better to normalize data to avoid getting stuck in local optima and to increase training speed of the model \cite{NormGoal}. We normalize the data by reducing the size from 1200x900x3 to 32x32x1 (width x height x number of color channels).
+
+%TODO BINARIZATION -> INCREASE CONTRAST BETWEEN BACKGROUND AND FOREGROUND
+%This might solve our problem that handwriting isn't recognised.
+
+%TODO INVERTING -> We still need to check influence of inverting color values. 
+%This surely helps for augmenting the data.
+
+% Size / Contrast
+\paragraph{Augmenting data}
+\label{par:aug}
+Data augmentation serves 2 purposes. It makes the dataset more robust to different kinds of handwriting as we add variations of the original data to the input data. The second purpose is to increase the size of our dataset. As our dataset only contains images of about 3400 images with handwritten characters, we need more data for the neural network to function to its fullest extend. Increasing the size of our dataset has great impact on the performance of the neural network as discussed in \ref{sec:expres}. Now we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there. 
+
+\subparagraph{Adding noise to data}
+We add a variant of each image which includes noise troughout the image with the purpose of reducing overfitting of the neural network \cite{DataNoise}. This noise is taken from the Gaussian distribution and summed with the original image.  
+\subparagraph{Translations of data}
+The dataset is also extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the follow transformation matrix: 
+\begin{equation}
+        \begin{bmatrix}
+                1 & 0 & t_x \\
+                0 & 1 & t_y
+        \end{bmatrix}
+\end{equation}
+where $t_x$ is the horizontal shift and $t_y$ is the vertical shift. 
+\subparagraph{Rotations of data}
+Rotations of the image are added to the dataset to make the network more robust to handwritings with different orientations. We rotate by -30 and 30 degrees. We use a builtin python function from the opencv2 library to create the transformation matrix. This matrix is equal to:
+\begin{equation}
+       \begin{bmatrix}
+               \alpha & \beta & (1-\alpha)*center.x - \beta*center.y \\
+               -\beta & \alpha & \beta*center.x + (1-\alpha)*center.y
+       \end{bmatrix}
+\end{equation}
+where $\alpha = cos(angle)$ and $\beta = sin(angle)$. Center is the coordinate in our image around which is rotated and angle describes the amount of degrees to rotate in the clockwise direction. Translated images outside of the 32x32 frame are discarded.
+\subparagraph{Scaling of data}
+With the purpose of making the network more robust to different sizes of handwriting, we add different scalings of the data. We both scale in with and/or in height. The following transformation matrix scales the input image: 
+\begin{equation}
+       \begin{bmatrix}
+               s_x & 0 & 0  \\
+               0 & s_y & 0
+       \end{bmatrix}
+\end{equation}
+where $s_x$ is the horizontal scaling factor and $s_y$ is the vertical scaling factor. 
+\subsubsection{Deep neural network}
+\label{sec:dnn}
+
+\subsection{Tokenization}
+
+\subsection{Natural language processing}
+
+\subsubsection{Vocabularium}
+\subsubsection{Language model}
+
+\section{Experiments and results}
+\label{sec:expres}
+\section{Conclusion}
+
+\section{Future work}
+
+\bibliography{paper}
+\bibliographystyle{icml2016}
+
+
+\end{document} 

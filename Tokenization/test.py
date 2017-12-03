@@ -30,7 +30,7 @@ for index in range(0, 1):# len(os.listdir(filepath))):
     for word in os.listdir(wordpath):
         print(word)
         img = cv2.imread(wordpath + word, 0)
-        
+
         cv2.imshow("img", img)
         cv2.waitKey(0)
 
@@ -55,3 +55,6 @@ for index in range(0, 1):# len(os.listdir(filepath))):
 
         cv2.imshow("skel", skel)
         cv2.waitKey(0)
+
+
+#TODO:: Split and get pixel where split upon, then take contour

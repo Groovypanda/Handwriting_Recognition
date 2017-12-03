@@ -3,3 +3,7 @@ Data/
 __pycache__/
 *.jpg
 *.png
+
+Report/*
+!Report/*.tex
+!Report/*.bib
