@@ -15,8 +15,7 @@ PREPROCESSED_CHARS_PATH = DATA_PATH + 'processed_charset/'
 CHAR_DATA_TXT_PATH = TXT_PATH + 'chars.txt'
 PREPROCESSED_CHAR_DATA_TXT_PATH = TXT_PATH + 'preprocessed_chars.txt'
 
-SAVE_PATH = PROJECT_PATH + 'CharacterRecognition/Model/model.ckpt'
-EXAMPLE_PATH = PROJECT_PATH + 'CharacterRecognition/Examples/'
-
-EXAMPLE_A = EXAMPLE_PATH + 'letter_a.jpg'
-
+CHAR_PATH = PROJECT_PATH + 'CharacterRecognition/'
+SAVE_PATH = CHAR_PATH + 'Model/model.ckpt'
+EXAMPLE_PATH = CHAR_PATH + 'Examples/'
+EXPERIMENTS_CHAR_PATH = CHAR_PATH + 'Experiments/'
