@@ -7,6 +7,7 @@ from CharacterRecognition import graphics as gr
 import settings
 import cv2
 from CharacterRecognition import utils
+import CharacterRecognition.preprocessing as preprocess
 
 '''
 For this project we use the Chars74K dataset. It contains 62 classes, with about 3.4K handwritten characters.
@@ -36,26 +37,9 @@ def open_images():
     data = np.zeros((length, SIZE, SIZE, 1), dtype=np.float32)
     i = 0
     for name in file_names:
-        data[i] = read_image(name)
+        data[i] = preprocess.preprocess_image(preprocess.read_image(name))
         i += 1
     return labels, data, length
-
-
-def read_image(file_name, invert=False):
-    """
-    Read an image.
-    :param invert: Indicates if color values should be inverted.
-    :param file_name: The path to an image
-    :return: A normalized np array with correct dimensions
-    """
-    img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
-    # Data normalisation and inverting color values
-    if img.shape != settings.SHAPE:
-        img = cv2.resize(src=img, dsize=settings.SHAPE)
-    img = np.divide(img, 255)
-    if invert:
-        img = np.subtract(1, img)
-    return np.reshape(img, settings.IMG_SHAPE)
 
 
 def label2vector(label):
@@ -277,20 +261,14 @@ def train_save(epochs):
 def img_to_prob(img, session=None, _x=None, _y=None, h=None):
     """
     Converts an image to a character probabilities.
-    This function assumes there is a Model subdirectory with a trained network model.
-    :param file_name: Path to an image which contains a character.
+    This function assumes there is a Model_500it subdirectory with a trained network model.
+    :param img: Path to an image which contains a character.
     :return: A list containing the probabilities
     of the image being a certain class (representing a letter or number).
     """
-    # img = read_image(file_name, invert=True)
-    if (img.shape != settings.SHAPE):
-        img = cv2.resize(src=img, dsize=settings.SHAPE)
-        img = np.reshape(img, settings.IMG_SHAPE)
+    img = preprocess.preprocess_image(img)
     if session is None:
-        _x, _y, h = create_neural_net(train=False)
-        session = create_session()
-        session.run(tf.global_variables_initializer())
-        restore_session(session)
+        session, _x, _y, h = init_session()
     # Initialize variables of neural network
     return session.run(tf.nn.softmax(h), feed_dict={_x: [img]})[0]
 
@@ -302,11 +280,22 @@ def imgs_to_prob_list(images, session, _x, _y, h):
     return prob_list
 
 
-def img_to_text(file_name, n=1, session=None, _x=None, _y=None, h=None):
+def img_to_text(image, n=1, session=None, _x=None, _y=None, h=None):
+    """
+    Converts an image into a character.
+    :param Image: The input image
+    :param n: Indicates the amount of results to be returned. 
+              If n is higher than 1, the most probable characters and their probabilities will be returned.
+    :param session: A tensorflow session
+    :param _x: A tensorflow input placeholder
+    :param _y: A tensorflow label placeholder
+    :param h: A tensorflow output placeholder
+    :return: A list of possible characters and their probabilities. Size of this list equals n.
+    """
     if n == 1:
-        return utils.index2str(np.argmax(img_to_prob(file_name, session=session, _x=_x, _y=_y, h=h)))
+        return utils.index2str(np.argmax(img_to_prob(image, session=session, _x=_x, _y=_y, h=h)))
     else:
-        return most_probable_chars(img_to_prob(file_name, session=session, _x=_x, _y=_y, h=h), n)
+        return most_probable_chars(img_to_prob(image, session=session, _x=_x, _y=_y, h=h), n)
 
 
 def most_probable_chars(cls_pred, n):
@@ -327,14 +316,13 @@ def init_session():
 
 ### VERY IMPORTANT NOTE: IMAGES NEED TO BE INVERTED IN ORDER TO BE CORRECTLY CLASSIFIED. FURTHER EXPERIMENTS ARE REQUIRED.
 def examples():
-    session = tf.Session()
-    _x, _y, h = create_neural_net(train=False)
-    session.run(tf.global_variables_initializer())
-    restore_session(session)
+    session, _x, _y, h = init_session()
     examples = ['a', '3', 'g', 'L']
     for ex in reversed(examples):
         for i in range(4):
             print(ex,
-                  img_to_text(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", n=62, session=session, _x=_x,
+                  img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0), n=1,
+                              session=session, _x=_x,
                               _y=_y,
                               h=h))
+
