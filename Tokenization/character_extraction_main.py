@@ -140,12 +140,12 @@ def extract_characters(word, index=0):
         # combining the potential split collumns
 
         ending = len(col_means_list)-1
-        while potential_cuts[-1][0] == ending:
+        while len(potential_cuts) > 1 and potential_cuts[-1][0] == ending:
             potential_cuts.pop()
             ending -= 1;
 
         startpoint = 0;
-        while potential_cuts[0][0] == startpoint:
+        while len(potential_cuts) > 1 and potential_cuts[0][0] == startpoint:
             potential_cuts.pop(0)
             startpoint += 1
 
@@ -197,7 +197,7 @@ def extract_characters(word, index=0):
             newsplit = (split[0] + croppedLeft, split[1])
             final_realigned_splits.append(newsplit)
 
-        angeled_splits.append((final_realigned_splits, rotatedimg))
+        angeled_splits.append((final_realigned_splits, rotatedimg, thresh))
 
 
     # We have the rotated image and the splits for each of the chosen angles
@@ -220,15 +220,17 @@ def extract_characters(word, index=0):
     height, width = reinverted_img.shape
 
     #cv2.imshow("img", reinverted_img)
-    cv2.waitKey(0)
+    #cv2.waitKey(0)
+
+    reinverted_rotated_threshold = cv2.bitwise_not(chosen_split[2])
 
     last_x_val = 0
     for (xval, val) in finalsplits:
-        character = reinverted_imgextracted_word = img[0:height, last_x_val:xval]
+        character = reinverted_imgextracted_word = reinverted_rotated_threshold[0:height, last_x_val:xval]
         splitcharacters.append(character)
         last_x_val = xval
 
-    character = reinverted_imgextracted_word = img[0:height, last_x_val:width-1]
+    character = reinverted_imgextracted_word = reinverted_rotated_threshold[0:height, last_x_val:width-1]
     splitcharacters.append(character)
 
     return splitcharacters

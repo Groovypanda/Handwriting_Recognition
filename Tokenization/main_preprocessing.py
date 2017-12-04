@@ -1,6 +1,7 @@
 
 import word_extraction
 import character_extraction_main
+import character_normalizer
 import cv2
 import os
 
@@ -12,6 +13,9 @@ index1 = 0
 for file in sorted(os.listdir(filepath)):
 
     img = cv2.imread(filepath + file, 0)
+
+    cv2.imshow("img", img)
+    cv2.waitKey(0)
 
     words = word_extraction.preprocess_image(img, index1)
 
@@ -28,6 +32,15 @@ for file in sorted(os.listdir(filepath)):
         for character in characters:
             cv2.imshow("character", character)
             cv2.waitKey(0)
+
+            newlist = list()
+            newlist.append(character)
+            finalchar = character_normalizer.normalize_character(newlist)
+
+
+            cv2.imshow("finalchar", finalchar)
+            cv2.waitKey(0)
+
 
         index2 += 1
     index1 += 1
