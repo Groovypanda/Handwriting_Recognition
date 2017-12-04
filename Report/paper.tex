@@ -9,6 +9,7 @@
 \usepackage{icml2016} 
 \usepackage{amsmath}
 \usepackage{subcaption}
+\usepackage{qtree}
 
 \begin{document} 
 \twocolumn[\icmltitle{Handwriting Recognition}
@@ -104,16 +105,45 @@ With the purpose of making the network more robust to different sizes of handwri
        \end{bmatrix}
 \end{equation}
 where $s_x$ is the horizontal scaling factor and $s_y$ is the vertical scaling factor. 
+\subparagraph{Shearing of data}
+In order to deal with different kinds of slants we add sheared versions of the image to the dataset. 
+Shearing displaces each point in a fixed direction, by an amount proportional to its signed distance from a line that is parallel to that direction \cite{Shear}. We used the following shear mapping to achieve this: 
+\begin{equation}
+        \begin{bmatrix}
+                1 & s & 0 \\
+                0 & 1 & 0
+        \end{bmatrix}
+\end{equation}
 \subsubsection{Deep neural network}
 \label{sec:dnn}
+Humans have millions of connected neurons in the visual cortices which are capable of image processing. We, humans, can recognise most characters without any thought because of this complex neural network. For computers, character recognition is a more difficult task. We could try to write rule-based systems and define how every character should look like. This solution isn't flexible at all and is very hard to define. We use a neural network, inspired by how the brain processes images. These deep neural networks contain several layers of connected perceptrons, where each connection is defined by weight and each perceptron is defined by a bias. The perceptrons take an input, and calculate their output by calculating the activation function with the weights, input and bias. Images can be fed to the neural network, which then propagate trough several layers in the neural network and eventually produce as output the probabiliy that the input has a certain class, one of the possible characters. 
 
+% I will add a discussion of the neural network once the neural network is finalized and not subject tot change. 
 \subsection{Tokenization}
 
 \subsection{Natural language processing}
+To cope with some of the high error rates as discussed in section \ref{sec:expres}, there needs to be some kind of correction, in order to produce possibble written text even when a step of the larger algorithm fails. In order to do this we adapt popural natural language processing techniques as postprocessing steps. Natural language techniques can often be found in speech recognition, language generation and other systems, but this can be helpful here aswell to correct mistakes made in the previous steps of the algorithm. As a first step we match words against a dictionary to find out if they make sense, this is discussed in section \ref{sec:voc}. The second step checks if those given words make sense in the context, this is discussed in section \ref{sec:lm}.
 
 \subsubsection{Vocabularium}
+\label{sec:voc}
+The neural network does not only produce which character is recognised, but rather a list of probabilities indicating the chance of an image to be a certain character. We can use all of this information in this postprocessing step instead of throwing that information away and naively returning the most likely character as the actual character. 
+We make a tree, as shown in \ref{fig:wordtree}, where every node is a tuple with a word (sequence of characters) and a probability (likeliness of that word based on the probabilities of individual characters). The probability is calculated as a product of probability for each character.  
+\begin{figure}
+        %\Tree[.Y [.e [.s] [.5] [.l [.s] [.5]]]]
+        %\Tree[.Y]
+        \Tree [.{(Y, 0.9)} 
+        [.{(Ye , 0.72)} {(Yes, 0.432)} {(Ye5 , 0.288)} ] 
+        [.{(Yl , 0.18)} {(Yls, 0.108)} {(Yl5 , 0.072)} ]
+            ] 
+        \Tree [.{(T, 0.1)} 
+        [.{(Te , 0.08)} {(Tes, 0.048)} {(Te5 , 0.032)} ] 
+        [.{(Tl , 0.02)} {(Tls, 0.012)} {(Tl5 , 0.008)} ]
+            ] 
+\label{fig:wordtree} 
+\caption{A list of the trees for the word 'Yes' with branching factor 2. The characters have the following probabilities: $P(Y)=0.9, P(T)=0.1, P(e)=0.8, P(l)=0.2, P(s)=0.6, P(5)=0.4$. Other characters have probabilities which are neglible.}
+\end{figure} 
 \subsubsection{Language model}
-
+\label{sec:lm}
 \section{Experiments and results}
 \label{sec:expres}
 \section{Conclusion}
