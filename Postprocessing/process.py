@@ -1,5 +1,11 @@
+from Tokenization.character_extraction_main import extract_characters
+from Tokenization.word_extraction import preprocess_image
+from Postprocessing.language_model import n_gram_model
 from Postprocessing.vocabulary import most_likely_words
-
+import settings
+import cv2
+import tensorflow as tf
+import CharacterRecognition.character_recognition as cr
 
 '''
 Postprocessing consists of 2 steps:
@@ -15,12 +21,17 @@ to handle the high error rate of character recognition (+/- 20%).
 '''
 
 
+def read_image(file_name):
+    return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+
+
 def predict_actual_word(cls_pred_list):
     words = most_likely_words(cls_pred_list)
     print(words)
 
-def sentence_img_to_text():
-    '''
+
+def sentence_img_to_text(image):
+    """
     Algorithm:
 
     1) Split the sentence in images of words.
@@ -30,11 +41,29 @@ def sentence_img_to_text():
 
     :param images: Image of a sentence
     :return: Text of the sentence
-    '''
-    pass
+    """
+    alpha = 0.7  # Indicates importance of correct vocabulary
+    beta = 0.3  # Indicates importance of language model
+    words = preprocess_image(image)
+    text = []  # Converted image into list of words
+    # Network for recognising individual characters.
+    # These variables need to be this high up in the python project.
+    # In order to avoid initialising multiple sessions or neural networks.
+    session, _x, _y, h = cr.init_session()
+    for word in words:
+        # Find a list of possible words using the vocabularium
+        voc_words = word_img_to_most_likely_words(word, session, _x, _y, h)
+        # Find the most likely words using the language model
+        lang_words = n_gram_model(text, voc_words.keys())
+        most_likely_word = \
+        max([(word, alpha * voc_words[word] + beta * prob) for word, prob in lang_words.items()], key=lambda x: x[0])[0]
+        text.append(most_likely_word)
+        print(most_likely_word)
+    return ' '.join(text)
 
-def word_img_to_most_likely_words(image):
-    '''
+
+def word_img_to_most_likely_words(image, session=None, _x=None, _y=None, h=None):
+    """
     Algorithm:
 
     1) Split the sentence in images of characters.
@@ -42,21 +71,14 @@ def word_img_to_most_likely_words(image):
     3) Find the most likely words given the cls_pred_list. Now we have a list of words and their probabilities.
     (These probabilities are based on word distances with actual words in the English dictionary)
 
-
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
-    '''
-    pass
+    """
+    char_imgs = extract_characters(image)
+    if session is None:
+        session, _x, _y, h = cr.init_session()
+    cls_pred_list = cr.imgs_to_prob_list(char_imgs, session, _x, _y, h)
+    return most_likely_words(cls_pred_list)
 
-def character_to_cls_pred(image):
-    '''
-    Algorithm:
 
-    1) Feed the image to the trained neural network
-
-    :param image: Image of a character
-    :return: A list of class prediction probabilities.
-    As there are 62 classes, this list will be of length 62.
-    The index in this list represent the class. The value represents the probability of the character being that class.
-    '''
-    pass
+print(sentence_img_to_text(read_image(settings.EXAMPLE_TEXT_PATH + 'text1.jpg')))

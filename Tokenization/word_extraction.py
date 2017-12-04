@@ -70,9 +70,6 @@ def preprocess_image(img, file_index = 0):
 
 
     dir = os.path.dirname(__file__)
-
-
-    fileindex = 1;
     outputpath = os.path.join(dir, '../data/output/')
     filepath = os.path.join(dir, '../data/texts/')
     datapath = os.path.join(dir, '../data/')
@@ -86,11 +83,9 @@ def preprocess_image(img, file_index = 0):
 
     file_number = str(file_index).zfill(3)
 
-
     #PREPROCESSING
 
     # 1. reading image in greyscale // NO LONGER APPLICABLE
-
     height, width = img.shape[:2]
 
     # 2. Thresholding image (maybe?)
@@ -287,14 +282,9 @@ def preprocess_image(img, file_index = 0):
                                 additions.append( newrectangle[0] )
                                 interrupted = True
 
-            print("removals")
-            print(removals)
-            print("additions")
-            print(additions)
+
 
             for element in removals:
-                print('removing')
-                print(element)
                 if element in line:
                     line.remove(element)
                 if element in rectangles_copy:
@@ -302,8 +292,6 @@ def preprocess_image(img, file_index = 0):
 
             for element in additions:
                 line.append(element)
-                print("appending")
-                print(element)
 
         sortedline = sorted(line, key=lambda tup: tup[0])
 
@@ -316,6 +304,9 @@ def preprocess_image(img, file_index = 0):
         linesleft = len(rectangles_copy) != 0
 
     # saving the found rectangles
+
+    extracted_words = list()
+
     ind = 0;
     for line in lines:
         for rectangle in line:
@@ -338,7 +329,7 @@ def preprocess_image(img, file_index = 0):
 
             #extracted_word2 = filledImg[ymin:ymax, xmin:xmax]
 
-            word_directory_path = os.path.join(dir, outputpath + 'text' + sfile_number + '/words/')
+            word_directory_path = os.path.join(dir, outputpath + 'text' + file_number + '/words/')
             wordpath = os.path.join(dir, outputpath + 'text' + file_number + '/words/word' + str(ind).zfill(4) + '.png')
             if not os.path.exists(word_directory_path):
                 os.makedirs(word_directory_path)
@@ -348,7 +339,7 @@ def preprocess_image(img, file_index = 0):
 
             #cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
 
-
+            extracted_words.append(extracted_word)
     # this draws the final contours
 
     # cv2.drawContours(img, finalcontours, -1, (0,255,0), 1)
@@ -359,15 +350,15 @@ def preprocess_image(img, file_index = 0):
         os.makedirs(parsed_text_directory)
 
 
-    for line in lines:
-        for word in line:
-            (x, y, w, h) = word
-            cv2.rectangle(img, (x,y),(x+w,y+h),(0,255,0),2)
+    #for line in lines:
+    #    for word in line:
+    #        (x, y, w, h) = word
+    #        cv2.rectangle(img, (x,y),(x+w,y+h),(0,255,0),2)
 
     cv2.imwrite(parsedtextpath, img)
 
-    
-    return (lines)
+
+    return (extracted_words)
 
 
 

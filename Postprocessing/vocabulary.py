@@ -4,7 +4,7 @@ from difflib import get_close_matches
 from difflib import SequenceMatcher
 from CharacterRecognition import utils
 
-nltk.download('words')
+# nltk.download('words')
 
 word_list = nltk.corpus.words.words()
 length = len(word_list)
@@ -16,25 +16,23 @@ def correct_written_words(word, amount=3):
     for match in get_close_matches(word.lower(), word_list, n=amount):
         score = SequenceMatcher(None, word, match).ratio()
         close_matches.append((match, score))
-    return close_matches
+    if len(close_matches) == 0:
+        # Fail safe mechanism. If a word does not exist in the vocabulary, we still have to return the possible words.
+        return [(word, 0)]
+    else:
+        return close_matches
 
 
-# Returns array of indices and value of 'amount' max values in list.
-def max_x(list, amount):
-    copy = list[:]
-    maxs = []
-    for i in range(amount):
-        max_value = max(copy)
-        max_index = copy.index(max_value)
-        del copy[max_index]
-        maxs.append((max_index, max_value))
-    return maxs
-
-
-# cls_pred_list:  list of list with probabilities for each character (62 classes) per character in the word.
-# Returns a list of pairs with words and their probabilities
 def possible_written_characters(cls_pred_list, branching_factor=3):
-    cls_preds = max_x((cls_pred_list[0]), branching_factor)
+    """
+    We find the most likely words based purely on character probabilities. This making a tree of possible words. 
+    The depth indicates the length of the word. The leafs are full words. Each node contains a pair with the word and its 
+    probability. 
+    :param cls_pred_list:  list of list with probabilities for each character (62 classes) per character in the word.
+    :param branching_factor:  Decides how many possibilities to check for each character
+    :return: a list of pairs with words and their probabilities
+    """
+    cls_preds = sorted([(i, x) for (i, x) in enumerate(cls_pred_list[0])], reverse=True)[:branching_factor]
     possibilities = []
     for cls_pred_i, cls_pred_p in cls_preds:  # Go trough most likely characters (index and probability)
         if len(cls_pred_list) > 1:
@@ -46,13 +44,18 @@ def possible_written_characters(cls_pred_list, branching_factor=3):
 
 
 def most_likely_words(cls_pred_list):
+    """
+    Finds the most likely words given the cls_pred_list using a vocabularium.
+    :param cls_pred_list: 
+    :return: A dictionary with words as keys and probabilities as values. 
+    """
     most_possible_characters = possible_written_characters(cls_pred_list)
     most_possible_characters.sort(key=lambda x: x[1])
-    words = []
+    words = {}
     for characters, probability in most_possible_characters[-3:]:
         for word, score in correct_written_words(characters):
-            words.append((word, probability * score))
-    return sorted(words, key=lambda x: x[1], reverse=True)
+            words[word] = probability
+    return words
 
 
 '''
@@ -88,13 +91,3 @@ def rand(not_indices, amount):
             return rands
     else:
         return []
-
-
-# A   p   p   l   e
-# 10 52 52  48  41
-A_pred = rand_array([10])
-p_pred = rand_array([51])
-l_pred = rand_array([47])
-e_pred = rand_array([40])
-
-print(most_likely_words([A_pred, p_pred, p_pred, l_pred, e_pred]))

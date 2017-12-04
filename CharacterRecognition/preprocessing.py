@@ -70,9 +70,14 @@ def scaleImage(image, sx, sy):
     return cv2.warpAffine(image, scale_matrix, settings.SHAPE)
 
 
+def shearImage(image, s):
+    shear_matrix = np.float32([[1, s, 0], [0, 1, 0]])
+    return cv2.warpAffine(image, shear_matrix, settings.SHAPE)
+
+
 # Expects a normalized image as input.
 # Returns an array of augmented images.
-def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True):
+def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True, addShearing=True):
     # Array with augmented images
     images = [img]
     up, down, left, right = imageBorders(img)
@@ -105,26 +110,42 @@ def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, ad
         for sx in np.arange(min_scale_x, max_scale_x + step, step):
             for sy in np.arange(min_scale_y, max_scale_y + step, step):
                 if not sy == 1 and not sy == 1:
-                    # Todo: translate if not in bounds.
                     if inBounds(down * sy) and inBounds(right * sx):
                         images.append(scaleImage(img, sx, sy))
+    if addShearing:
+        # Shear images to make the dataset more robust to different slant when writing.
+        # The character seems slightly translated after the shearing operation. So we place the character back in the center
+        # with a translate.
+        shearedl = translateImage(shearImage(img, 0.2), -5, 0)
+        shearedr = translateImage(shearImage(img, -0.2), 5, 0)
+        images.append(shearedl)
+        images.append(shearedr)
+        # images.append(sheared)
+
     return images
 
 
 def read_image(file_name):
     """
     Read an image.
-    :param invert: Indicates if color values should be inverted.
     :param file_name: The path to an image
     :return: A normalized np array with correct dimensions
     """
-    img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
-    # Data normalisation and inverting color values
-    img = np.subtract(1, np.divide(img, 255))
-    return cv2.resize(src=img, dsize=settings.SHAPE)
+    return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 
-def preprocess(addNoise=True, addRotations=True, addTranslations=True, addScales=True):
+def preprocess_image(img, inverse=False):
+    if img.shape != settings.SHAPE:
+        img = cv2.resize(src=img, dsize=settings.SHAPE)
+    # Contrast normalisation and inverting color values
+    # We add a simple threshold for distinguishing the foreground and background.
+    # Maybe this should actually be done before character recognition and not in preprocessing.
+    conf = cv2.THRESH_BINARY if not inverse else cv2.THRESH_BINARY_INV
+    thr, img = cv2.threshold(img, 127, 1, conf)
+    return np.reshape(img, settings.IMG_SHAPE)
+
+
+def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_scales=True, add_shearing=True):
     # Opening files
     in_file_names = open(settings.CHAR_DATA_TXT_PATH, 'r').read().splitlines()
     out_file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'w')
@@ -134,14 +155,15 @@ def preprocess(addNoise=True, addRotations=True, addTranslations=True, addScales
         # Input
         label = int(file_name.split('/')[1][-2:])
         file_name = settings.CHAR_DATA_PATH + file_name
-        img = read_image(file_name)
+        img = preprocess_image(read_image(file_name), inverse=True)
 
         # Data augmentation
-        images = augmentImage(img, addNoise=addNoise, addRotations=addRotations, addTranslations=addTranslations, addScales=addScales)
+        images = augmentImage(img, addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
+                              addScales=add_scales, addShearing=add_shearing)
 
         # Output
         for aug_img in images:
-            aug_img = np.multiply(aug_img, 255)  # Temporary for testing purposes (TODO)
+            aug_img = np.multiply(np.subtract(1, aug_img), 255)  # Save augmented images as images without inverted color values.
             new_file_name = settings.PREPROCESSED_CHARS_PATH + 'image-{}-{}.png'.format(label, i)
             cv2.imwrite(new_file_name, aug_img)
             out_file_names.write(new_file_name + '\n')
@@ -152,5 +174,3 @@ def preprocess(addNoise=True, addRotations=True, addTranslations=True, addScales
 
     end = t.time()
     print('\nThe execution time is {}'.format(end - start))
-
-preprocess()
