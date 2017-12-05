@@ -54,7 +54,7 @@ def most_likely_words(cls_pred_list):
     words = {}
     for characters, probability in most_possible_characters[-3:]:
         for word, score in correct_written_words(characters):
-            words[word] = probability
+            words[word] = probability * score
     return words
 
 
