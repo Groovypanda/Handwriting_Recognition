@@ -226,11 +226,11 @@ def extract_characters(word, index=0):
 
     last_x_val = 0
     for (xval, val) in finalsplits:
-        character = reinverted_imgextracted_word = reinverted_rotated_threshold[0:height, last_x_val:xval]
+        character = reinverted_rotated_threshold[0:height, last_x_val:xval]
         splitcharacters.append(character)
         last_x_val = xval
 
-    character = reinverted_imgextracted_word = reinverted_rotated_threshold[0:height, last_x_val:width-1]
+    character = reinverted_rotated_threshold[0:height, last_x_val:width-1]
     splitcharacters.append(character)
 
     return splitcharacters
