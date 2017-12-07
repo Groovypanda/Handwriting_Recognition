@@ -318,16 +318,6 @@ def preprocess_image(img, file_index = 0):
             ymax = y + h
             extracted_word = img[ymin:ymax, xmin:xmax]
 
-            #TODO:: fill the contours on a white image, and copy the masked image as a result
-
-            #newImg = np.ones( (ymax,xmax) ) * 255
-
-            #filledImg = cv2.fillPoly(newImg, contour, 0)
-
-            #filledImg = cv2.fillConvexPoly(newImg, contour,  0)
-
-
-            #extracted_word2 = filledImg[ymin:ymax, xmin:xmax]
 
             word_directory_path = os.path.join(dir, outputpath + 'text' + file_number + '/words/')
             wordpath = os.path.join(dir, outputpath + 'text' + file_number + '/words/word' + str(ind).zfill(4) + '.png')
@@ -350,23 +340,7 @@ def preprocess_image(img, file_index = 0):
         os.makedirs(parsed_text_directory)
 
 
-    #for line in lines:
-    #    for word in line:
-    #        (x, y, w, h) = word
-    #        cv2.rectangle(img, (x,y),(x+w,y+h),(0,255,0),2)
-
     cv2.imwrite(parsedtextpath, img)
 
 
     return (extracted_words)
-
-
-
-
-# TODO
-# Step 1: removing boxes inside other boxes -> done
-# Step 2; dividing multi line in two. -> see TODO, maybe use blob detection, or other binarization ?
-# Step 3: adding squares that are next to each other    -> problem with vertical overlap ->  check if horizontal half of the one before
-#                                                       -> problem with words after each other -> fix overlap with italic text
-
-# Only save pixel points and create new image from pixel points in original image

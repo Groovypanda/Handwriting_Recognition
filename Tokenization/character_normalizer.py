@@ -58,4 +58,3 @@ def normalize_character(charlist):
     ret3,thresh = cv2.threshold(blur,120,255,cv2.THRESH_BINARY)
 
     return (thresh)
-    # We want to revert the character to 32 x 32

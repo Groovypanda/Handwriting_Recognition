@@ -1,5 +1,6 @@
 from Tokenization.character_extraction_main import extract_characters
 from Tokenization.word_extraction import preprocess_image
+from Tokenization.character_combinator import evaluate_character_combinations
 from Postprocessing.language_model import n_gram_model
 from Postprocessing.vocabulary import most_likely_words
 import settings
@@ -9,13 +10,13 @@ import CharacterRecognition.character_recognition as cr
 
 '''
 Postprocessing consists of 2 steps:
-1) Find the most likely word given a list of probabilities for every character in the word. 
-   This list contains the probability for a character (image) to be equal to that given character. 
-   We use an English dictionary to find possible likely words.  
-2) Find the most likely word in a certain context. 
-   Given a list of likely words (see previous step), we can find the most likely word based on the context.  
-   We use Markov models, n-gram models in particular to solve this problem. 
-   
+1) Find the most likely word given a list of probabilities for every character in the word.
+   This list contains the probability for a character (image) to be equal to that given character.
+   We use an English dictionary to find possible likely words.
+2) Find the most likely word in a certain context.
+   Given a list of likely words (see previous step), we can find the most likely word based on the context.
+   We use Markov models, n-gram models in particular to solve this problem.
+
 These 2 techniques are often used for voice recognition and other techniques, but can be applied for this project aswell
 to handle the high error rate of character recognition (+/- 20%).
 '''
@@ -77,8 +78,12 @@ def word_img_to_most_likely_words(image, session=None, _x=None, _y=None, h=None)
     char_imgs = extract_characters(image)
     if session is None:
         session, _x, _y, h = cr.init_session()
+
+    #Call character_combinator
+
+    sessionargs = (session, _x, _y, h)
+
+    evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs)
+
     cls_pred_list = cr.imgs_to_prob_list(char_imgs, session, _x, _y, h)
     return most_likely_words(cls_pred_list)
-
-
-print(sentence_img_to_text(read_image(settings.EXAMPLE_TEXT_PATH + 'text1.jpg')))
