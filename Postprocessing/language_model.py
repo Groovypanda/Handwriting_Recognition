@@ -17,6 +17,14 @@ query: query string
 
 
 def query_google(query, topk=100, nmin=1, nmax=5):
+    """
+    Queries the google n-grams with API calls to Phrasefinder.
+    :param query: The query
+    :param topk: Max amount of results
+    :param nmin: Minimum length of matching phrases
+    :param nmax: Maximum length of matching phrases
+    :return: A list of Phrase instances. Each phrase has a probability score.
+    """
     options = phrasefinder.Options()
     options.nmin = nmin
     options.nmax = nmax
@@ -27,20 +35,21 @@ def query_google(query, topk=100, nmin=1, nmax=5):
     if result.status != phrasefinder.Status.Ok:
         print('Request was not successful: {}'.format(result.status))
         return
-
     return result.phrases
 
 
-'''
-Calculate the probabilities of every word given the n previous words in the sentence.
-Example usage 
-n_gram_model('The bridesman loves the', ['girl', 'man', 'sheep'], n=2) 
-Returns: [('man', 0.56), ('girl', 0.39), ('sheep', 0.05)]
-Punctuation needs spaces.
-'''
-
-
 def n_gram_model(sentence, words, n=3):
+    """
+    Calculate the probabilities of every word given the n previous words in the sentence.
+    Example usage:
+    n_gram_model('The bridesman loves the', ['girl', 'man', 'sheep'], n=2)
+    Returns: [('man', 0.56), ('girl', 0.39), ('sheep', 0.05)]
+    Punctuation needs spaces.
+    :param sentence: A sequence of previous words.
+    :param words: A list of possible words which follow the sentence.
+    :param n: The amount of previous words to consider.
+    :return: A dictionary with words as key and score as value.
+    """
     previous_words = ' '.join(sentence[-n:])
     query = previous_words + ' ' + ' / '.join(words)
     '''

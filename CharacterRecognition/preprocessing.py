@@ -20,7 +20,8 @@ def imageBorders(image):
     threshold = SIZE / 16  # Allow a smart part of the letter to be outside of the image after translation.
     # Note, this threshold could give errors with empty images...
     # Count written pixels per row and per column
-    written_pixels_x, written_pixels_y = np.where(image != EMPTY_VALUE)
+    written_pixels = np.where(image != EMPTY_VALUE)
+    written_pixels_x, written_pixels_y = written_pixels[0], written_pixels[1]
     amount_hor = np.zeros(SIZE)
     amount_ver = np.zeros(SIZE)
     for x in np.nditer(written_pixels_x):
@@ -74,10 +75,15 @@ def shearImage(image, s):
     shear_matrix = np.float32([[1, s, 0], [0, 1, 0]])
     return cv2.warpAffine(image, shear_matrix, settings.SHAPE)
 
+def erodeImage(image):
+    element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+    return cv2.erode(image, kernel=element)
+
 
 # Expects a normalized image as input.
 # Returns an array of augmented images.
 def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True, addShearing=True):
+    img = erodeImage(img)
     # Array with augmented images
     images = [img]
     up, down, left, right = imageBorders(img)
@@ -141,7 +147,7 @@ def preprocess_image(img, inverse=False):
     # We add a simple threshold for distinguishing the foreground and background.
     # Maybe this should actually be done before character recognition and not in preprocessing.
     conf = cv2.THRESH_BINARY if not inverse else cv2.THRESH_BINARY_INV
-    thr, img = cv2.threshold(img, 127, 1, conf)
+    thr, img = cv2.threshold(img, 127, 255, conf)
     return np.reshape(img, settings.IMG_SHAPE)
 
 
@@ -156,14 +162,14 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         label = int(file_name.split('/')[1][-2:])
         file_name = settings.CHAR_DATA_PATH + file_name
         img = preprocess_image(read_image(file_name), inverse=True)
-
+        erodeImage(img)
         # Data augmentation
         images = augmentImage(img, addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
                               addScales=add_scales, addShearing=add_shearing)
 
         # Output
         for aug_img in images:
-            aug_img = np.multiply(np.subtract(1, aug_img), 255)  # Save augmented images as images without inverted color values.
+            aug_img = np.subtract(255, aug_img)  # Save augmented images as images without inverted color values.
             new_file_name = settings.PREPROCESSED_CHARS_PATH + 'image-{}-{}.png'.format(label, i)
             cv2.imwrite(new_file_name, aug_img)
             out_file_names.write(new_file_name + '\n')
@@ -174,3 +180,6 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
 
     end = t.time()
     print('\nThe execution time is {}'.format(end - start))
+
+# Run this function for augmentation...
+# augment_data()

@@ -4,7 +4,7 @@ from difflib import get_close_matches
 from difflib import SequenceMatcher
 from CharacterRecognition import utils
 
-# nltk.download('words')
+nltk.download('words')
 
 word_list = nltk.corpus.words.words()
 length = len(word_list)

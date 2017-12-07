@@ -92,6 +92,9 @@ def visualise_experiment_configuration(experiment_name, conf, save=False):
     visualise(accuracies, times, save=save, name='_'.join([experiment_name, conf]))
 
 
-for exp in experiments:
-    visualise_experiment(exp, max=True, save=True)
-# visualise_experiment_configuration("preprocess", conf="all", save=True)
+#for exp in experiments:
+    #visualise_experiment(exp, max=True, save=True)
+#visualise_experiment_configuration("preprocess", conf="all", save=False)
+
+visualise_experiment("preprocess", max=False, save=False)
+

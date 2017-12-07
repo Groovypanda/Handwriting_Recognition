@@ -4,7 +4,6 @@ from Postprocessing.language_model import n_gram_model
 from Postprocessing.vocabulary import most_likely_words
 import settings
 import cv2
-import tensorflow as tf
 import CharacterRecognition.character_recognition as cr
 
 '''

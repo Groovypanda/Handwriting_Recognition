@@ -5,14 +5,29 @@ import sys
 
 
 def recognise_character(file_name):
+    """
+    Convert an image to a character.
+    :param file_name: File name of the image
+    :return: The character
+    """
     return pro.sentence_img_to_text(pro.read_image(file_name))
 
 
 def recognise_word(file_name):
+    """
+    Convert an image to a word.
+    :param file_name: File name of the word
+    :return: The word
+    """
     return pro.word_img_to_most_likely_words(pro.read_image(file_name))
 
 
 def recognise_text(file_name):
+    """
+    Convert an image to text.
+    :param file_name: File name of the text
+    :return: The text
+    """
     return c.img_to_text(pre.read_image(file_name))
 
 
@@ -46,3 +61,5 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+

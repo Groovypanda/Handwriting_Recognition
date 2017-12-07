@@ -1,6 +1,12 @@
 import os
 
-SIZE = 32
+"""
+File with global variables. 
+This file mainly contains paths. 
+"""
+
+
+SIZE = 64
 NUM_CHANNELS = 1
 IMG_SHAPE = (SIZE, SIZE, NUM_CHANNELS)
 SHAPE = (SIZE, SIZE)

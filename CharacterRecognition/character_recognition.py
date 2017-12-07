@@ -15,10 +15,10 @@ For this project we use the Chars74K dataset. It contains 62 classes, with about
 
 # Global constants
 LEARNING_RATE = 1e-4
-DECAY = 1e-4
+DECAY = 1e-3
 KEEP_PROB = 0.5
-BATCH_SIZE = 512
-FILTER_SIZE = 3
+BATCH_SIZE = 128
+FILTER_SIZE = 5
 NUM_CLASSES = 62
 SIZE = settings.SIZE
 NUM_CHANNELS = settings.NUM_CHANNELS
@@ -29,6 +29,10 @@ weights = []
 
 # Helper functions
 def open_images():
+    """
+    Opens the dataset and preprocesses the images.
+    :return: The labels of images, numpy pixel arrays with the image data, amount of images
+    """
     file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'r').read().splitlines()
     print("Reading dataset of {} images".format(len(file_names)))
     file_names = shuffle(file_names)
@@ -43,12 +47,22 @@ def open_images():
 
 
 def label2vector(label):
+    """
+    Converts a label into one-hot encoding
+    :param label:
+    :return:
+    """
     vector = np.zeros(NUM_CLASSES, dtype=np.int)
     vector[label - 1] = 1
     return vector
 
 
 def vector2label(vector):
+    """
+    Converts the one-hot encoding into labels
+    :param vector: The one-hot encoding
+    :return: A label
+    """
     return 1 + vector.index(1)
 
 
@@ -314,7 +328,6 @@ def init_session():
     return session, _x, _y, h
 
 
-### VERY IMPORTANT NOTE: IMAGES NEED TO BE INVERTED IN ORDER TO BE CORRECTLY CLASSIFIED. FURTHER EXPERIMENTS ARE REQUIRED.
 def examples():
     session, _x, _y, h = init_session()
     examples = ['a', '3', 'g', 'L']
