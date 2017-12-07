@@ -6,7 +6,7 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{hyperref}
-\usepackage{icml2016} 
+\usepackage[accepted]{icml2016} 
 \usepackage{amsmath}
 \usepackage{subcaption}
 \usepackage{qtree}
@@ -51,7 +51,7 @@ A good data dataset with many examples, enough variation, and which is balanced 
 \begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/good_char}
-  \caption{Picture of a 'z' which resembles a 3.}
+  \caption{Picture of a clean 'z'.}
 \end{subfigure}
 \caption{Examples of written 'z' characters.}
 \label{fig:char}
@@ -145,15 +145,80 @@ We make a tree, as shown in figure \ref{fig:wordtree}, where every node is a tup
 Now we have a list of words and their probabilities (every leaf). We can calculate the closest matches in the dictionary for each word. For this purpose we use the function \lstinline{get_close_matches} from the python library difflib. We use function to find close matches in the English dictionary and their corresponding score. We multiply this score with our previously calculated probability. This leaves us with a list of correct English words and a score for every word. If we only want to convert the image of one word into text, we can just return the word with the highest score. 
 \subsubsection{Language model}
 \label{sec:lm}
-Besides checking the syntax of words, we can also look at the context. This is were language models are useful. We can check the previous words and calculate the likeness of a word to be the next word. N-gram models are used to calculate probabilities given n previous words. 
-% TODO: More elaborate explanation of n-gram models. I need the internetz for this. 
-In order for these n-gram models to be useful. We need a dataset. Google has published n-gram corpora to the public and is free to use. Querying these datasets takes several minutes, and this needs to happen for every word. Instead we use a python library phrasefinder to make online queries to these corpora. This greatly increases speed but has the disadvantage of requiring internet connection. 
-Now we can make queries such as "I like dogs / cats / sheep". Using the Google corpora probabilities are calculated with n-gram models for each of the 3 words. Now we have a probability for every word based on the context. 
+Besides checking the syntax of words, we can also look at the context. This is were language models are useful. We can check the previous words and calculate the likeness of a word to be the next word in the context. N-gram models are used to calculate probabilities given n-1 previous words. The probability is computed as $P(w_i | w_{i-n},...,w_{i-1})$. We use the Markov assumption here, we can approximate the probability of a word so the word only depends on the previous n-1 words. This probability is calculated as follows: 
+\begin{equation}
+        P(w_i | w_{i-n},...,w_{i-1}) = \frac{count(w_{i-n},...,w_{i-1},w_{i})}{count(w_{i-n},...,w_i)}
+\end{equation}
+where $w_i$ is the word of which we want to calculate the probability and $count(w_i,...w_{i+k})$ counts the amount of occurences of the sequence of words $w_i,...,w_{i+k}$. That amount of occurences is the same as counting the amount of n-grams with that sequence of words. An n-gram is a contiguous sequence of n items from a given sequence of text or speech. \cite{ngram}
+We use the n-grams from the Google dataset for this purpose. Querying these datasets locally takes several minutes, and this happens for every word. Instead we use a Python library phrasefinder to make online queries to these corpora. This greatly increases speed but has the disadvantage of requiring internet connection. 
+Now we can make queries such as "I like dogs / cats / sheep". Using the Google corpora probabilities are calculated with n-gram models for each of the 3 words. This gives us a probability for every word based on the context. 
 Combining the results with the probabilities calculated in section \ref{sec:voc}, we can 
 calculate a new score. The word with the highest score is accepted as written word. By iterating over all of the words, we now have converted the image with written text into text. In the next section we will
 further discuss the results of these techniques and some experiments to check the performance and impact of optimizations. 
 \section{Experiments and results}
+%TODO
+\subsection{Character Recognition}
 \label{sec:expres}
+We tested a lot of different configurations for the deep neural network in order to find a good functioning neural network given the low amounts of data. A problem which arrised when trying to test many diffeent configurations was the long time it takes to train a neural network. In order to keep these experiments from running several months, we added some small constraints. Next it's important to note that a lot of non-determinism is part of these neural networks. When running the neural network twice with the same configuration, it could have completely different results. 
+In order to have meaningful results which run in a reasonable amount of time we ran every experiment 4 times but limited the amount of epochs to 200. This setup is important to note, as some results might be quite different if we run more tests or use more iterations. When discussing these results we take the best result of the 4 training results. We use this result as we are only interested in the potential of the neural network. If we'd let those experiments run for more iterations, they would reach the same accuracy because of the noise added to the neural network. The different configurations and results will be discussed next. 
+\subsubsection{Experiments}
+\paragraph{Preprocessing techniques}
+Figure \ref{fig:preprocess} shows that preprocessing techniques have great influence on the performance of the neural network. We can see that the accuracy is much higher when using all of the preprocessing techniques.  We achieve 72\% accuracy with all of the preprocessing techniques versus 35\% without any preprocessing techniques, which is a huge difference. We can also see the individual impact of preprocessing in the figure. Adding shearing (64\%) to handle different amounts of slant, adding noise (58\%) to cope to make the recognition more robust and adding scaling (59\%) to handle different handwriting sizes was the most effective to increase performance. Adding rotations (40\%) and translations (50\%) was less effective (but still effective). Adding these preprocessing techniques increased the amount of data greatly from 3410 examples to 37000 examples. This improves the performance but also increases the training time of our network significantly. One remarkable result is that the training time of preprocessing with all techniques enabled, takes less long than some other results. When we look at the average however, the training time is the highest for this case. 
+\paragraph{Filter amount}
+% Not sure if I should discuss this, pretty boring results. 
+\paragraph{Filter size}
+In this experiment we check the influence of choosing different sizes of filters for the convolutional network. The filter size determines the size of our filters for convolving the input images. In figure \ref{fig:filtersize} we can see the time increases greatly, because more surrounding values have to be considered. The accuracy increases slightly when using bigger filters. Using different filter sizes allow other type of features to be extracted. 
+% TODO: this is hard to explain..., maybe just leave this one out.
+% Convolutation layers allow extracting features from the image. 
+% Go over this again: good explanation: (See: http://www.deeplearningbook.org/)
+% Pixels far away from eachother are less correlated. This is why we subsample filter responses.
+\paragraph{Learning rate}
+Figure \ref{fig:learningrate} shows the impact of learning rate on the training of our neural network. 
+For this experiment we do have to note that we're using the Adam optimizer to train our neural network which computes individual learning rates for every parameter every training step. The learning rate which we pass is the initial learning rate. Choosing a high learning rate $10^-3$ allows the neural network to converge to a high accuracy (76 \%) very fast, but once reached the accuracy fails to grow any more.
+This in contrast to higher learning rates which reach a good accuracy more slowly but find a more optimal solution. Learning rate $10^-4$ reaches an accuracy of 68\% after 200 iterations but is still growing. Learning rate $10^-5$ only reaches an accuracy of 5\% after 200 iterations but should find a better solution eventually than the other two configurations. 
+\paragraph{Batch size}
+In figure \ref{fig:batchsize} we can see the impact of choosing different batch sizes which are fed to the neural network. In order to increase to speed at which the neural network is trained, we feed batches of input images to the neural network instead of one image at a time. The backpropagation in order to calculate the weight adjustment only happens after every batch is fed. In the figure we can see bigger batch sizes increase the execution speed. However these differences are quites small. The configuration with batch size executes 200 iterations in one minute less than a configuration with batch size 128. These batch sizes also have an effect on our performance. When using small batch sizes backpropagation happens more frequently, which implies our weights will be more finetuned. The configuration with batch size 128 obtains an accuracy of 10\% higher than batch size 1024.
+\paragraph{Weight decay}
+In order to regulize the neural network we add weight decay to the network loss function in order to penalize big weights. The impact of different decays can be seen in \ref{fig:decay}. A high decay functions best (71\% accuracy) because we have a small amount of training examples. Without decay we only reach an accuracy of 65\%. 
+%TODO: higher decay -> higher accuracy
+\paragraph{Optimizer}
+% Only useful optimizer is Adam. I'm not sure why, or if we shoul compare these at all. 
+\paragraph{Dropout}
+% Maybe redo this experiment? It's not clear at all at this time whether dropout has an actual effect on the accuracy. I believe it helps find a better global solution, but often the accuracy will be lower as we're only using half of the weights. Further research is required. 
+\begin{figure}
+\centering
+    \includegraphics[width=\linewidth]{../CharacterRecognition/Graphs/preprocess.png}
+    \caption{Impact of various preprocessing techniques.}
+    \label{fig:preprocess}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../CharacterRecognition/Graphs/filtersize.png}
+    \caption{Impact of various filter sizes.}
+    \label{fig:filtersize}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../CharacterRecognition/Graphs/learningrate.png}
+    \caption{Impact of different learning rates.}
+    \label{fig:learningrate}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../CharacterRecognition/Graphs/batchsize.png}
+    \caption{Impact of different batch sizes.}
+    \label{fig:batchsize}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../CharacterRecognition/Graphs/decay.png}
+    \caption{Impact of weight decay regularisation.}
+    \label{fig:decay}
+\end{figure}
+\subsubsection{Final results}
+% Add graph with several runs of the final network. Discuss which parameters we took. 
+% Maybe some more visualisation of mispredicted characters? Oh this isn't part of char recognition...
+% TODO TODO
 \section{Conclusion}
 
 \section{Future work}
