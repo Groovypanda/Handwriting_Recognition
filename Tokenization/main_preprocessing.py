@@ -14,8 +14,8 @@ for file in sorted(os.listdir(filepath)):
 
     img = cv2.imread(filepath + file, 0)
 
-    cv2.imshow("img", img)
-    cv2.waitKey(0)
+    #cv2.imshow("img", img)
+    #cv2.waitKey(0)
 
     words = word_extraction.preprocess_image(img, index1)
 

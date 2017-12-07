@@ -190,7 +190,7 @@ def extract_characters(word, index=0):
                 finalsplits.append(one_splits[ len(one_splits) // 2 ])
 
 
-        rotatedimgcropped = rotatedimg[0:height, x_start_index:x_start_index+len(col_means_list)]
+        rotatedimgcropped = rotatedimg[0:height, x_start_index:x_start_index + len(col_means_list)]
 
         final_realigned_splits = list()
         for split in finalsplits:
@@ -226,49 +226,11 @@ def extract_characters(word, index=0):
 
     last_x_val = 0
     for (xval, val) in finalsplits:
-        character = reinverted_imgextracted_word = reinverted_rotated_threshold[0:height, last_x_val:xval]
+        character = reinverted_rotated_threshold[0:height, last_x_val:xval]
         splitcharacters.append(character)
         last_x_val = xval
 
-    character = reinverted_imgextracted_word = reinverted_rotated_threshold[0:height, last_x_val:width-1]
+    character = reinverted_rotated_threshold[0:height, last_x_val:width-1]
     splitcharacters.append(character)
 
     return splitcharacters
-
-
-
-
-    # PLOTTING IMAGE AND SPLITTING LINES
-
-
-    #plt.figure(1)
-    #plt.plot(xvals, list(col_means_list))
-    #plt.axis([0, width-1, 0, height-1])
-
-    #for (index, number) in finalsplits:
-    #    if (number == 0):
-    #        plt.plot([index, index], [0, height], color='r', linestyle='-', linewidth=1)
-    #    if (number == 1):
-    #        plt.plot([index, index], [0, height], color='g', linestyle='-', linewidth=1)
-
-    #plt.imshow(np.flipud(reinverted_img), origin='lower')
-
-    #plt.figure(2)
-    #plt.imshow(np.flipud(img), origin='lower')
-    #plt.plot(row_sum_mean)
-    #plt.show()
-
-
-
-    #os.listdir(wordpath)[1]
-
-
-    #fileindex += 1
-
-    # TODO::
-    # 1. Juiste slant zoeken
-    # 2. knip punten bepalen (zoeken op col sum average, )
-    # 3. knippunten kleur van achtergrond geven
-    # 4. zoeken naar nieuwe contouren
-    # 5. nieuwe contouren opslaan als karakter en normaliseren.
-    # 6. Manier vinden om opeenvolgende terug aaneen te kunnen plakken =>

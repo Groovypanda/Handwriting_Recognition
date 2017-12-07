@@ -25,9 +25,9 @@ def correct_written_words(word, amount=3):
 
 def possible_written_characters(cls_pred_list, branching_factor=3):
     """
-    We find the most likely words based purely on character probabilities. This making a tree of possible words. 
-    The depth indicates the length of the word. The leafs are full words. Each node contains a pair with the word and its 
-    probability. 
+    We find the most likely words based purely on character probabilities. This making a tree of possible words.
+    The depth indicates the length of the word. The leafs are full words. Each node contains a pair with the word and its
+    probability.
     :param cls_pred_list:  list of list with probabilities for each character (62 classes) per character in the word.
     :param branching_factor:  Decides how many possibilities to check for each character
     :return: a list of pairs with words and their probabilities
@@ -46,8 +46,8 @@ def possible_written_characters(cls_pred_list, branching_factor=3):
 def most_likely_words(cls_pred_list):
     """
     Finds the most likely words given the cls_pred_list using a vocabularium.
-    :param cls_pred_list: 
-    :return: A dictionary with words as keys and probabilities as values. 
+    :param cls_pred_list:
+    :return: A dictionary with words as keys and probabilities as values.
     """
     most_possible_characters = possible_written_characters(cls_pred_list)
     most_possible_characters.sort(key=lambda x: x[1])
