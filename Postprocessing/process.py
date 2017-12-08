@@ -1,12 +1,11 @@
-from Tokenization.character_extraction_main import extract_characters
-from Tokenization.word_extraction import preprocess_image
-from Tokenization.character_combinator import evaluate_character_combinations
+import cv2
+
+import CharacterRecognition.character_recognition as cr
 from Postprocessing.language_model import n_gram_model
 from Postprocessing.vocabulary import most_likely_words
-import settings
-import cv2
-import tensorflow as tf
-import CharacterRecognition.character_recognition as cr
+from Tokenization.character_combinator import evaluate_character_combinations
+from Tokenization.character_extraction_main import extract_characters
+from Tokenization.word_extraction import preprocess_image
 
 '''
 Postprocessing consists of 2 steps:

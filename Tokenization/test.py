@@ -1,13 +1,10 @@
 #http://opencvpython.blogspot.be/2012/05/skeletonization-using-opencv-python.html
 
-import cv2
-import numpy as np
 import os
-import shutil
+
+import cv2
 import imutils
-from matplotlib import pyplot as plt
-
-
+import numpy as np
 
 dir = os.path.dirname(__file__)
 

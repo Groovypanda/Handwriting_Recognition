@@ -1,13 +1,10 @@
 import definitions
 import cv2
-import numpy as np
 import Tokenization.character_extraction_main as chrextr
 from pathlib import Path
 import sys
 import pickle
 
-WINDOW_SIZE = 5
-MATRIX_DX = 5
 START_LINE = 18
 
 
@@ -76,43 +73,6 @@ def start_training(requested_start=0):
     create_training_data(start + 1)
 
 
-def read_training_data():
-    with open(definitions.CHAR_SEGMENTATION_TRAINING_OUT_PATH, "rb") as in_file:
-        entries = []
-        EOF = False
-        while not EOF:  # Non ideal way of reading files... But easiest way to make program fool proof.
-            try:
-                entry = pickle.load(in_file)
-                entries.append(entry)
-            except EOFError:
-                EOF = True
-        for (i, file_name, split_data) in entries:
-            print(i, file_name, split_data)
-            # file_entries = [x.split(' ') for x in
-            # open(definitions.CHAR_SEGMENTATION_TRAINING_OUT_PATH, 'r').read().splitlines()]
-        '''
-        start = file_entries[0][0]
-        print(start)
-        print("Reading new dataset of {} images".format(len(file_entries),))
-        for entry in file_entries:
-            print(entry)
-            i = entry[0]
-            file_name = entry[1]
-            split_data = entry[2]
-            print(i, file_name, split_data)
-        '''
-
-
-def feature_extractor(img, x):
-    # This matrix has the shape: (2*MATRIX_DX, IMG_HEIGHT)
-    # Where IMG_HEIGHT is the height of the image
-    # Pixel matrix has reduced dimensions (color channels reduced to 1, grayscale)
-
-    # Normalize the pixel_matrix
-    pixel_matrix = img[:, x - MATRIX_DX:x + MATRIX_DX, 0]
-    return pixel_matrix
-
-
 """
 Source: https://research-repository.griffith.edu.au/bitstream/handle/10072/15242/11185.pdf%3Bsequence=1
 For each segmentation point in a particular word (given by its xcoordinate),
@@ -130,9 +90,6 @@ window are presented.
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         arg = sys.argv[1]
-        if arg == '-t' or arg == '--test':
-            read_training_data()
-        else:
-            start_training(int(arg))
+        start_training(int(arg))
     else:
         start_training(0)

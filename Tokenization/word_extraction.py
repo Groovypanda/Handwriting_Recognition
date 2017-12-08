@@ -3,10 +3,11 @@
 # http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_contours/py_contour_features/py_contour_features.html
 # https://codereview.stackexchange.com/questions/31352/overlapping-rectangles
 
+import os
+
 import cv2
 import numpy as np
-import os
-import shutil
+
 
 # checks if rectangle 2 inside rectangle 1
 def rectangle_contains_rectangle(rectangle1, rectangle2):

@@ -4,7 +4,7 @@ import tensorflow as tf
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from CharacterRecognition import graphics as gr
-import settings
+import definitions
 import cv2
 from CharacterRecognition import utils
 import CharacterRecognition.preprocessing as preprocess
@@ -20,11 +20,8 @@ KEEP_PROB = 0.5
 BATCH_SIZE = 128
 FILTER_SIZE = 5
 NUM_CLASSES = 62
-SIZE = settings.SIZE
-NUM_CHANNELS = settings.NUM_CHANNELS
-
-# Global variable
-weights = []
+SIZE = definitions.SIZE
+NUM_CHANNELS = definitions.NUM_CHANNELS
 
 
 # Helper functions
@@ -33,7 +30,7 @@ def open_images():
     Opens the dataset and preprocesses the images.
     :return: The labels of images, numpy pixel arrays with the image data, amount of images
     """
-    file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'r').read().splitlines()
+    file_names = open(definitions.PREPROCESSED_CHAR_DATA_TXT_PATH, 'r').read().splitlines()
     print("Reading dataset of {} images".format(len(file_names)))
     file_names = shuffle(file_names)
     labels = [int(x.split('-')[1]) for x in file_names]
@@ -241,7 +238,7 @@ def save_session(session):
     :return: None 
     """
     saver = tf.train.Saver()
-    saver.save(session, settings.SAVE_PATH)
+    saver.save(session, definitions.SAVE_PATH)
     session.close()
 
 
@@ -250,7 +247,7 @@ def restore_session(session):
     Create a session initialized with the session as defined in the SAVE_PATH.
     :return: None
     """
-    tf.train.Saver().restore(session, settings.SAVE_PATH)
+    tf.train.Saver().restore(session, definitions.SAVE_PATH)
 
 
 def restore_train_save(epochs):
@@ -330,7 +327,7 @@ def examples():
     for ex in reversed(examples):
         for i in range(4):
             print(ex,
-                  img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
+                  img_to_text(cv2.imread(definitions.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
                               sessionargs, n=1))
 
 train_net(200, restore=False)

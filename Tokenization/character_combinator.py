@@ -1,4 +1,3 @@
-import CharacterRecognition.character_recognition as crj
 import Tokenization.character_normalizer as normalizer
 
 

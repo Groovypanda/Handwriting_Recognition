@@ -1,4 +1,4 @@
-from Postprocessing.lib import phrasefinder
+from Postprocessing import phrasefinder
 
 '''
 See: http://phrasefinder.io/documentation

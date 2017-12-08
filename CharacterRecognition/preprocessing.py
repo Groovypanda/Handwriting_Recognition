@@ -3,7 +3,7 @@ import time as t
 import cv2
 import numpy as np
 
-import settings
+import definitions
 
 '''
 For this project we use the Chars74K dataset. It contains 64 classes, with about 74K images.
@@ -11,7 +11,7 @@ For this project we use the Chars74K dataset. It contains 64 classes, with about
 
 # Global constants
 start = t.time()
-SIZE = settings.SIZE
+SIZE = definitions.SIZE
 EMPTY_VALUE = 0.0
 WRITE_VALUE = 1.0
 
@@ -62,22 +62,22 @@ def noisyImage(img, stddev):
 # Helper functions
 def rotateImage(image, angle):
     rotation_matrix = cv2.getRotationMatrix2D(center=(SIZE / 2, SIZE / 2), angle=angle, scale=1.0)
-    return cv2.warpAffine(image, rotation_matrix, settings.SHAPE)
+    return cv2.warpAffine(image, rotation_matrix, definitions.SHAPE)
 
 
 def translateImage(image, tx, ty):
     translation_matrix = np.float32([[1, 0, tx], [0, 1, ty]])
-    return cv2.warpAffine(image, translation_matrix, settings.SHAPE)
+    return cv2.warpAffine(image, translation_matrix, definitions.SHAPE)
 
 
 def scaleImage(image, sx, sy):
     scale_matrix = np.float32([[sx, 0, 0], [0, sy, 0]])
-    return cv2.warpAffine(image, scale_matrix, settings.SHAPE)
+    return cv2.warpAffine(image, scale_matrix, definitions.SHAPE)
 
 
 def shearImage(image, s):
     shear_matrix = np.float32([[1, s, 0], [0, 1, 0]])
-    return cv2.warpAffine(image, shear_matrix, settings.SHAPE)
+    return cv2.warpAffine(image, shear_matrix, definitions.SHAPE)
 
 def erodeImage(image):
     element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
@@ -144,26 +144,26 @@ def read_image(file_name):
 
 
 def preprocess_image(img, inverse=False):
-    if img.shape != settings.SHAPE:
-        img = cv2.resize(src=img, dsize=settings.SHAPE)
+    if img.shape != definitions.SHAPE:
+        img = cv2.resize(src=img, dsize=definitions.SHAPE)
     # Contrast normalisation and inverting color values
     # We add a simple threshold for distinguishing the foreground and background.
     # Maybe this should actually be done before character recognition and not in preprocessing.
     conf = cv2.THRESH_BINARY if not inverse else cv2.THRESH_BINARY_INV
     thr, img = cv2.threshold(img, 127, 255, conf)
-    return np.reshape(img, settings.IMG_SHAPE)
+    return np.reshape(img, definitions.IMG_SHAPE)
 
 
 def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_scales=True, add_shearing=True):
     # Opening files
-    in_file_names = open(settings.CHAR_DATA_TXT_PATH, 'r').read().splitlines()
-    out_file_names = open(settings.PREPROCESSED_CHAR_DATA_TXT_PATH, 'w')
+    in_file_names = open(definitions.CHAR_DATA_TXT_PATH, 'r').read().splitlines()
+    out_file_names = open(definitions.PREPROCESSED_CHAR_DATA_TXT_PATH, 'w')
 
     i = 0
     for file_name in in_file_names:
         # Input
         label = int(file_name.split('/')[1][-2:])
-        file_name = settings.CHAR_DATA_PATH + file_name
+        file_name = definitions.CHAR_DATA_PATH + file_name
         img = preprocess_image(read_image(file_name), inverse=True)
         erodeImage(img)
         # Data augmentation
@@ -175,7 +175,7 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         # Output
         for aug_img in images:
             aug_img = np.subtract(255, aug_img)  # Save augmented images as images without inverted color values.
-            new_file_name = settings.PREPROCESSED_CHARS_PATH + 'image-{}-{}.png'.format(label, i)
+            new_file_name = definitions.PREPROCESSED_CHARS_PATH + 'image-{}-{}.png'.format(label, i)
             cv2.imwrite(new_file_name, aug_img)
             out_file_names.write(new_file_name + '\n')
             i += 1

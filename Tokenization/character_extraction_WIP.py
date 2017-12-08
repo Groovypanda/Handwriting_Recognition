@@ -3,14 +3,13 @@
 # https://gist.github.com/jsheedy/3913ab49d344fac4d02bcc887ba4277d
 
 
-import cv2
-import numpy as np
 import os
-import shutil
-import imutils
-from matplotlib import pyplot as plt
 
-#searched for a better skeletonizer and found this library
+import cv2
+import imutils
+import numpy as np
+from matplotlib import pyplot as plt
+# searched for a better skeletonizer and found this library
 from skimage.morphology import skeletonize
 
 dir = os.path.dirname(__file__)

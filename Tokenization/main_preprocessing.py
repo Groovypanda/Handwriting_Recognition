@@ -1,7 +1,7 @@
 
-import word_extraction
-import character_extraction_main
-import character_normalizer
+import Tokenization.word_extraction as word_extraction
+import Tokenization.character_extraction_main as character_extraction_main
+import Tokenization.character_normalizer as character_normalizer
 import cv2
 import os
 

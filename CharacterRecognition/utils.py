@@ -1,4 +1,3 @@
-import sklearn
 
 def cls2str(x):
     if(x<11):
