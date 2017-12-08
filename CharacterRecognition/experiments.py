@@ -1,4 +1,4 @@
-import definitions
+import settings
 from numpy import savetxt
 from CharacterRecognition import character_recognition
 from CharacterRecognition import preprocessing
@@ -168,7 +168,7 @@ def save_output(name, accuracies, time, iteration=None):
     extension = '.txt'
     if iteration is not None:
         extension = '_' + str(iteration) + extension
-    out_path = definitions.EXPERIMENTS_CHAR_PATH + name + '/'
+    out_path = settings.EXPERIMENTS_CHAR_PATH + name + '/'
     try:
         os.makedirs(out_path)
     except OSError:

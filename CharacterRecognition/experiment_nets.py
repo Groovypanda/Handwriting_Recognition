@@ -1,4 +1,4 @@
-import definitions
+import settings
 import tensorflow as tf
 from CharacterRecognition.character_recognition import new_conv_layer
 from CharacterRecognition.character_recognition import new_fc_layer
@@ -16,8 +16,8 @@ KEEP_PROB = 0.5
 BATCH_SIZE = 512
 FILTER_SIZE = 3
 NUM_CLASSES = 62
-SIZE = definitions.SIZE
-NUM_CHANNELS = definitions.NUM_CHANNELS
+SIZE = settings.SIZE
+NUM_CHANNELS = settings.NUM_CHANNELS
 
 f = 'fully connected layer'
 fx = 'fully connected layer with dropout'

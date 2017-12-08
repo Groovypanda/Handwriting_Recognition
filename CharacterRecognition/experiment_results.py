@@ -1,4 +1,4 @@
-import definitions
+import settings
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -50,7 +50,7 @@ def get_configuration_results(experiment_name, conf):
 
 
 def find_experiment_location(experiment_name):
-    return [(x[0].split('/')[-1], x[0]) for x in os.walk(definitions.EXPERIMENTS_CHAR_PATH) if experiment_name in x[0]]
+    return [(x[0].split('/')[-1], x[0]) for x in os.walk(settings.EXPERIMENTS_CHAR_PATH) if experiment_name in x[0]]
 
 
 def find_experiment_conf_location(experiment_name, conf):
@@ -76,7 +76,7 @@ def visualise(accuracies, times, name='', show=True, save=False, labels=None):
     axes = plt.gca()
     axes.set_ylim([0, 0.9])
     if save and name != '':
-        savefig(os.path.join(definitions.EXPERIMENTS_CHAR_GRAPHS_PATH, name + '.png'))
+        savefig(os.path.join(settings.EXPERIMENTS_CHAR_GRAPHS_PATH, name + '.png'))
     if show:
         plt.show()
 

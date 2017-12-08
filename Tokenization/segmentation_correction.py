@@ -1,4 +1,4 @@
-import definitions
+import settings
 import cv2
 import numpy as np
 import Tokenization.character_extraction_main as chrextr
@@ -13,7 +13,7 @@ START_LINE = 18
 
 def open_images(start=0, amount=1000):
     file_entries = [x.split(' ') for x in
-                    open(definitions.CHAR_SEGMENTATION_DATA_TXT_PATH, 'r').read().splitlines()[
+                    open(settings.CHAR_SEGMENTATION_DATA_TXT_PATH, 'r').read().splitlines()[
                     start + START_LINE:START_LINE + start + amount]]
     print("Reading new dataset of {} images, starting at image {}".format(len(file_entries), start))
     images = []
@@ -21,13 +21,13 @@ def open_images(start=0, amount=1000):
     for file_name in files:
         parts = file_name.split('-')
         file_path = '/'.join([parts[0], parts[0] + '-' + parts[1], file_name + '.png'])
-        images.append((file_path, cv2.imread(definitions.CHAR_SEGMENTATION_DATA_PATH + file_path)))
+        images.append((file_path, cv2.imread(settings.CHAR_SEGMENTATION_DATA_PATH + file_path)))
     return images
 
 
 def find_start(file_name):
     file_entries = [x.split(' ') for x in
-                    open(definitions.CHAR_SEGMENTATION_DATA_TXT_PATH, 'r').read().splitlines()[START_LINE:]]
+                    open(settings.CHAR_SEGMENTATION_DATA_TXT_PATH, 'r').read().splitlines()[START_LINE:]]
     for (i, entry) in enumerate(file_entries):
         if entry[0] + '.png' == file_name:
             return i
@@ -38,7 +38,7 @@ def create_training_data(start=0, amount=1000):
     show_range = 1
     images = open_images(start, amount)
     n = len(images)
-    with open(definitions.CHAR_SEGMENTATION_TRAINING_OUT_PATH, "ab") as out_file:
+    with open(settings.CHAR_SEGMENTATION_TRAINING_TXT_PATH, "ab") as out_file:
         for (i, (img_path, img)) in enumerate(images):
             print("Showing image number {} of {}".format(i, n))
             split_data = []
@@ -54,7 +54,6 @@ def create_training_data(start=0, amount=1000):
                     split = True
                     # Create pixel matrix around splitpoint
                 elif key == 27:  # escape
-                    pickle.dump(i, out_file)  # Write length to pickle
                     return
                 else:  # user decides x is not a splitpoint
                     pass
@@ -63,21 +62,17 @@ def create_training_data(start=0, amount=1000):
 
 
 def start_training(requested_start=0):
-    path = Path(definitions.CHAR_SEGMENTATION_TRAINING_OUT_PATH)
+    path = Path(settings.CHAR_SEGMENTATION_TRAINING_TXT_PATH)
     if path.exists():
-        lines = path.open().readlines()
-        if len(lines) > 0:
-            last_entry = lines[-1].split(' ')[0].split('/')[-1]
-            start = find_start(last_entry)
-        else:
-            start = requested_start
+        entries = read_training_data()
+        print(entries)
     else:
         start = requested_start
     create_training_data(start + 1)
 
 
 def read_training_data():
-    with open(definitions.CHAR_SEGMENTATION_TRAINING_OUT_PATH, "rb") as in_file:
+    with open(settings.CHAR_SEGMENTATION_TRAINING_TXT_PATH, "rb") as in_file:
         entries = []
         EOF = False
         while not EOF:  # Non ideal way of reading files... But easiest way to make program fool proof.
@@ -86,21 +81,7 @@ def read_training_data():
                 entries.append(entry)
             except EOFError:
                 EOF = True
-        for (i, file_name, split_data) in entries:
-            print(i, file_name, split_data)
-            # file_entries = [x.split(' ') for x in
-            # open(definitions.CHAR_SEGMENTATION_TRAINING_OUT_PATH, 'r').read().splitlines()]
-        '''
-        start = file_entries[0][0]
-        print(start)
-        print("Reading new dataset of {} images".format(len(file_entries),))
-        for entry in file_entries:
-            print(entry)
-            i = entry[0]
-            file_name = entry[1]
-            split_data = entry[2]
-            print(i, file_name, split_data)
-        '''
+        return entries
 
 
 def feature_extractor(img, x):
