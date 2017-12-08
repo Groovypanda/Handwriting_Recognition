@@ -10,15 +10,24 @@ import shutil
 
 # checks if rectangle 2 inside rectangle 1
 def rectangle_contains_rectangle(rectangle1, rectangle2):
+    """
+    rectangle2 is inside rectangle 1
+    :return: boolean
+    """
+
     ((x1, y1, w1, h1), (x2, y2, w2, h2)) = (rectangle1, rectangle2)
     if x2 + w2 <= x1 + w1 and x2 >= x1 and y2 >= y1 and y2 + h2 <= y1 + h1:
         return True
     else:
         return False
 
-y_overlap_divisor = 2
 # checks if rectangle 1 is left of rectangle right or just next to each other
+y_overlap_divisor = 2
 def rectangle_follows_rectangle(rectangle1, rectangle2, distance):
+    """
+    rectangle2 follows rectangle1 with a y-overlap of at least height / y_overlap_divisor
+    :return: boolean
+    """
     ((x1, y1, w1, h1), (x2, y2, w2, h2)) = (rectangle1, rectangle2)
     # x1 left of x2
     # right side of rect1 less that 1 pixer away from left side rect2 (or inside rect 2)
@@ -35,9 +44,17 @@ def rectangle_follows_rectangle(rectangle1, rectangle2, distance):
 
 WORDSPACING = -200;
 def check_same_line (rectangle1, rectangle2):
+    """
+    Checks if words are on the same y-line.
+    :return: boolean
+    """
     return rectangle_follows_rectangle(rectangle1, rectangle2, WORDSPACING) or rectangle_follows_rectangle(rectangle2, rectangle1, WORDSPACING)
 
 def vertical_overlap_rectangle(rectangle1, rectangle2):
+    """
+    Checks if words overlap vertically
+    :return: boolean
+    """
     ((x1, y1, w1, h1), (x2, y2, w2, h2)) = (rectangle1, rectangle2)
 
     hoverlaps = True
@@ -50,6 +67,10 @@ def vertical_overlap_rectangle(rectangle1, rectangle2):
 
 # rectangle 2 is right of rectangle 1
 def create_new_rectangle( rectangle1, contour1, rectangle2, contour2 ):
+    """
+    Creates new rectangle from two given rectangles and combines the contours of both given contours
+    :return: Rectangle, contours
+    """
     ((x1, y1, w1, h1), (x2, y2, w2, h2)) = (rectangle1, rectangle2)
 
     x3 = min(x1, x2)

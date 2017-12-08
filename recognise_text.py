@@ -8,13 +8,10 @@ from CharacterRecognition.character_recognition import img_to_text
 from Postprocessing.vocabulary import most_likely_words
 import sys
 import cv2
-from pathlib import Path
+
 
 def read_image(file_name):
-    if Path(file_name).is_file():
-        return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
-    else:
-        raise FileNotFoundError
+    return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 
 def recognise_character(file_name):
@@ -32,7 +29,7 @@ def recognise_word(file_name):
     :param file_name: File name of the word
     :return: The word
     """
-    return max(recognise_possible_words(read_image(file_name), init_session()), key=lambda x: x[1])
+    return max(recognise_possible_words(read_image(file_name), init_session), key=lambda x: x[1])
 
 
 def recognise_possible_words(img, sessionargs):
@@ -49,6 +46,7 @@ def recognise_possible_words(img, sessionargs):
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
     char_imgs = extract_characters(img)
+
     # Call character_combinator
 
     evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs)
@@ -90,22 +88,19 @@ def main(argv):
         conf = argv[0]
         file_name = argv[1]
         if conf == '--character' or conf == '-c':
-            print("Hello, my name is Ronald, let me take a quick look at that character you have there.")
             print(recognise_character(file_name))
         elif conf == '--word' or conf == '-w':
-            print("Hello, my name is Jane, and I'll assist you today in reading words.")
             print(recognise_word(file_name))
         elif conf == '--text' or conf == '-t':
-            print("Hello, my name is Gerald, shall I read this text for you?.")
             print(recognise_text(file_name))
     else:
         print(
             '''
             recognise_text.py [options] [file]
-    
+
             Project of Ruben Dedecker and Jarre Knockaert. The goal of this script is to convert images which consist
             of handwritten text into text. It can be called with the following options.
-    
+
             -c, --character : Convert the given image into a character.
             -w, --word: Convert the given image into a word.
             -t, --text: Convert the given image into text. This can be a sentence, a paragraph, ...
@@ -114,7 +109,5 @@ def main(argv):
         )
 
 
-
 if __name__ == "__main__":
-    print(recognise_word("Data/words/a01/a01-000u/a01-000u-02-03.png"))
-    #main(sys.argv[1:])
+    main(sys.argv[1:])

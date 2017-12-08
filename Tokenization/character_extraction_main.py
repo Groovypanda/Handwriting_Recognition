@@ -10,227 +10,189 @@ import shutil
 import imutils
 from matplotlib import pyplot as plt
 
-#searched for a better skeletonizer and found this library
+# Found a good skeltonize-algorithm in the scikit-library
 # Scikit-image dependency! (https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-image)
 from skimage.morphology import skeletonize
+import itertools
 dir = os.path.dirname(__file__)
 
-def rotateImage(image, angle):
-    #inverted = cv2.bitwise_not(image)
-    rotated = imutils.rotate_bound(image, angle)
-    #result = cv2.bitwise_not(rotated)
-    return rotated
+def rotate_image(image, angle):
+    """
+    Returns the image rotated by the angle (angle).
+    """
+    inverted = cv2.bitwise_not(image)
+    rotated = imutils.rotate_bound(inverted, angle)
+    reinverted = cv2.bitwise_not(rotated)
+    return reinverted
 
-def skeletonize_alternative(img):
-    """ OpenCV function to return a skeletonized version of img, a Mat object"""
+def extract_character_separations(word_image):
+    """
+    Calculate the separation points of the characters;
+    :return: A Tuple with the list of chosen separation points, and a thresholded image in the correct rotation of the chosen optimal separation angle.
+    """
 
-    #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+    rotated_splits = list()
 
-    img = img.copy() # don't clobber original
-    skel = img.copy()
+    for angle in chosen_angles:
+        rotated_image = rotate_image(word_image, angle)
+        blur = cv2.GaussianBlur(rotated_image,(1,1),0)
+        ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    skel[:,:] = 0
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+        rotated_splits.append((find_splits_img(rotated_image), rotated_threshold))
 
-    while True:
-        eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
-        temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
-        temp  = cv2.subtract(img, temp)
-        skel = cv2.bitwise_or(skel, temp)
-        img[:,:] = eroded[:,:]
-        if cv2.countNonZero(img) == 0:
-            break
-    return skel
+    '''
+    We have the rotated image and the splits for each of the chosen angles
+    Now we identify the image with the most splits,
+    this will give us oversegmentation probably,
+    but will yield the smallest percentage of undersegmentation.
+    We start with taking the segmentation of the image without rotation as to ensure no unnecessary rotations are picked
+    '''
+    most_splits = len( rotated_splits[ len(rotated_splits) // 2 ][0] )
+    chosen_split_layout = rotated_splits[ len(rotated_splits) // 2 ]
+    for rotated_split in rotated_splits:
+        if len(rotated_split[0]) > most_splits:
+            chosen_split_layout = rotated_split
 
-#fileindex = 4;
-#outputpath = os.path.join(dir, '../data/output/')
-#filepath = os.path.join(dir, '../data/texts/')
-#for index in range(0, 1):# len(os.listdir(filepath))):
+    return chosen_split_layout
 
-    #wordpath = os.path.join(outputpath, 'text' + str(fileindex).zfill(3) + '/words/')
-    #characterpath = os.path.join(outputpath, 'text' + str(fileindex).zfill(3) + '/characters/')
-    #print("#########################")
-    #print(wordpath)
-    #for word in sorted(os.listdir(wordpath)):
+chosen_angles = [-7, -3, 0, 3, 7]
+def extract_characters(word_image, index=0):
+    """
+    Extracts the chracters with segmentation on the word image
+    :return: The labels of images, numpy pixel arrpens the dataset and preprocesses the images.ays with the image data, amount of images
+    """
 
-def extract_characters(word, index=0):
-    #img = cv2.imread(wordpath + word, 0)
-    #img = cv2.imread(word)
+    chosen_split_layout = extract_character_separations(word_image)
 
-    img = word
+    # chosen split layout variables
+    finalsplits = chosen_split_layout[0]
+    threshold = chosen_split_layout[1]
+    height, width = threshold.shape
 
-    inverted = cv2.bitwise_not(img)
-
-    angeled_splits = list()
-
-    for angle in (-7, -3, 0, 3, 7):
-        rotatedimg = rotateImage(inverted, angle)
-
-        height, width = rotatedimg.shape
-
-        blur = cv2.GaussianBlur(rotatedimg,(1,1),0)
-        ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
-        # this skeleton is a bit less good, but saves more of the original image sometimes ...
-        #skel = skeletonize_alternative(thresh)
-
-        #inv = cv2.bitwise_not(thresh)
-        #im2, contours, hierarchy = cv2.findContours(inv,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-        #res = cv2.drawContours(inv, contours, -1, (123,123,123), 1)
-        #print(contours)
-        #print(hierarchy)
-        #cv2.imshow ("contours", inv)
-        #cv2.waitKey(0)
-
-        skel2 = skeletonize(thresh/255)
-        result = list()
-
-        resultnpy = np.copy(thresh)#skel)
-        resultnpy.dtype = np.uint8
-
-        index1 = 0
-        for line in skel2:
-            index2 = 0
-            for element in line:
-                if element == False:
-                    resultnpy[index1][index2] = 0
-                else:
-                    resultnpy[index1][index2] = 255
-                index2 += 1
-            index1 += 1
-
-        #for line in skel:
-        #    print(line)
-
-        skel = resultnpy
-
-
-        col_means = cv2.reduce(skel, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
-
-        col_means_list = col_means[0].tolist()
-
-
-        # remove trailing zeros so that no unnecessary splits are performed
-        croppedLeft = 0;
-        while col_means_list[-1] == 0:
-            col_means_list.pop()
-            croppedLeft += 1;
-
-        x_start_index = 0;
-        while col_means_list[0] == 0:
-            col_means_list.pop(0)
-            x_start_index += 1
-
-
-        skel = skel[0:height, x_start_index:x_start_index+len(col_means_list)]
-
-        xvals = list(range (0, len(col_means_list)))
-
-
-        # Find potential split collumnsk;
-        potential_cuts = list()
-
-        for indx in range(0, len(col_means_list)):
-            col = col_means_list[indx]
-            if (col == 0):
-                potential_cuts.append((indx, 0))
-            if(col == 1):
-                potential_cuts.append((indx, 1))
-
-        # combining the potential split collumns
-
-        ending = len(col_means_list)-1
-        while len(potential_cuts) > 1 and potential_cuts[-1][0] == ending:
-            potential_cuts.pop()
-            ending -= 1;
-
-        startpoint = 0;
-        while len(potential_cuts) > 1 and potential_cuts[0][0] == startpoint:
-            potential_cuts.pop(0)
-            startpoint += 1
-
-
-        sorted_potential_cuts = sorted(potential_cuts, key=lambda tup: tup[0])
-
-        splitranges = list()
-
-        searchindex = 1
-        startindex = 0;
-
-        currentsplit = list()
-
-        index = 0
-        for (col, pix) in sorted_potential_cuts:
-            if index + 1 < len(sorted_potential_cuts) and sorted_potential_cuts[index + 1][0] == col + 1:
-                currentsplit.append((col, pix))
-            else:
-                currentsplit.append((col, pix))
-
-                #undo single line splits
-                if len(currentsplit) > 1:
-                    splitranges.append(currentsplit)
-                currentsplit = list()
-            index += 1
-
-
-        finalsplits = list()
-        for splits in splitranges:
-
-            zero_splits = list()
-            one_splits = list()
-            for split in splits:
-                if split[1] == 1:
-                    zero_splits.append(split)
-                else:
-                    one_splits.append(split)
-
-            if(len(zero_splits) > 0):
-                finalsplits.append(zero_splits[ len(zero_splits) // 2 ])
-            else:
-                finalsplits.append(one_splits[ len(one_splits) // 2 ])
-
-
-        rotatedimgcropped = rotatedimg[0:height, x_start_index:x_start_index + len(col_means_list)]
-
-        final_realigned_splits = list()
-        for split in finalsplits:
-            newsplit = (split[0] + croppedLeft, split[1])
-            final_realigned_splits.append(newsplit)
-
-        angeled_splits.append((final_realigned_splits, rotatedimg, thresh))
-
-
-    # We have the rotated image and the splits for each of the chosen angles
-
-    most_splits = len( angeled_splits[ len(angeled_splits) // 2 ][0] )
-    chosen_split = angeled_splits[ len(angeled_splits) // 2 ]
-    for angled_split in angeled_splits:
-        if len(angled_split[0]) > most_splits:
-            chosen_split = angled_split
-
-    if (chosen_split == None):
-        chosen_split = angeled_splits[ len(angeled_splits) // 2 ]
-
-    im = chosen_split[1]
-    reinverted_img = cv2.bitwise_not(im)
-    finalsplits = chosen_split[0]
-
+    # Splitting the characters on the chosen split locations (finalsplits)
     splitcharacters = list()
-
-    height, width = reinverted_img.shape
-
-    #cv2.imshow("img", reinverted_img)
-    #cv2.waitKey(0)
-
-    reinverted_rotated_threshold = cv2.bitwise_not(chosen_split[2])
-
     last_x_val = 0
     for (xval, val) in finalsplits:
-        character = reinverted_rotated_threshold[0:height, last_x_val:xval]
+        character = threshold[0:height, last_x_val:xval]
         splitcharacters.append(character)
         last_x_val = xval
 
-    character = reinverted_rotated_threshold[0:height, last_x_val:width-1]
+    # Splitting the last character untill the end of the image
+    character = threshold[0:height, last_x_val:width-1]
     splitcharacters.append(character)
 
     return splitcharacters
+
+def skeletonize_thresholded_image(treshold_img):
+    #skeletonize the image. Division is to normalize white to 1 and black to 0.
+    height, width = treshold_img.shape
+    skel2 = skeletonize(treshold_img/255)
+
+    resultnpy = np.copy(treshold_img)  # had a weird bug where newly made np matrix did not work
+    resultnpy.dtype = np.uint8
+
+    # This loop will copy and normalize the values of the skeletization in the resultnpy numpy array
+    index1 = 0
+    for col in skel2:
+        index2 = 0
+        for pixel in col:
+            # Because the scikit-images are black-white they are passed with true-false instead of greyscale values.
+            if pixel == False:
+                # zero value indicates a black pixel
+                resultnpy[index1][index2] = 0
+            else:
+                # 255 indicates a white pixel
+                resultnpy[index1][index2] = 255
+            index2 += 1
+        index1 += 1
+    skel = resultnpy
+    return skel
+
+
+def find_splits_img(image):
+    """
+    :return: A tuple of the rotated image,
+             with a list of the x-coordinates on which we should split the image.
+    """
+
+    # The image is inverted to facilitate working with the colors later on, as now blacks will be 0.
+    inverted = cv2.bitwise_not(image)
+    height, width = inverted.shape
+
+    # Thresholding the image with the OTSU-algorithm
+    blur = cv2.GaussianBlur(inverted,(1,1),0)
+    ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+    skel = skeletonize_thresholded_image(thresh)
+
+    # We reduce each collumn to its summation, and normalize it to 1 for each black pixel in the original threshold image
+    col_summation = cv2.reduce(skel, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
+    col_summation_list = col_summation[0].tolist()
+
+    # remove leading and trailing zeros so that no unnecessary splits are performed
+    col_summation_list_tmp = list(itertools.dropwhile(lambda x: x == 0, col_summation_list))
+    x_end_removed = len(col_summation_list) - len(col_summation_list_tmp)
+    col_summation_list = list(itertools.dropwhile(lambda x: x == 0, col_summation_list_tmp[::-1]))[::-1]
+    x_offset = len(col_summation_list_tmp) - len(col_summation_list)
+
+    # crop the skeletonized image
+    skel = skel[0:height, x_offset:x_offset+len(col_summation_list)]
+
+    """
+    Here we will try to replace the given splices with the final cuts we will be making.
+    Consequent splices will be turned into a single one, and the splices on points with zero pixels in the skeletonized image will take preference above those with one pixel.
+    """
+
+    # We make a list of possible points to split on.
+    # We make a difference between splits on a col with 0 pixels or on a col with 1 pixel
+    potential_cuts = list()
+    for indx in range(0, len(col_summation_list)):
+        col_sum = col_summation_list[indx]
+        if (col_sum == 0):
+            potential_cuts.append((indx, 0))
+        if(col_sum == 1):
+            potential_cuts.append((indx, 1))
+
+    # Rmove the cuts at the end and the start of the word, because they only split off whitespace
+    ending = len(col_summation_list)-1
+    while len(potential_cuts) > 1 and potential_cuts[-1][0] == ending:
+        potential_cuts.pop()
+        ending -= 1;
+
+    startpoint = 0;
+    while len(potential_cuts) > 1 and potential_cuts[0][0] == startpoint:
+        potential_cuts.pop(0)
+        startpoint += 1
+
+    # Add consequent splits with a len > 1 as a list (currentsplit) to a general list (splitranges)
+    sorted_potential_cuts = sorted(potential_cuts, key=lambda tup: tup[0])
+    currentsplit = list()
+    splitranges = list()
+    index = 0
+    for (col, pix) in sorted_potential_cuts:
+        if index + 1 < len(sorted_potential_cuts) and sorted_potential_cuts[index + 1][0] == col + 1:
+            currentsplit.append((col, pix))
+        else:
+            currentsplit.append((col, pix))
+            #undo single line splits
+            if len(currentsplit) > 1:
+                splitranges.append(currentsplit)
+            currentsplit = list()
+        index += 1
+
+    # We make a list with the final splits we will use
+    finalsplits = list()
+    for splits in splitranges:
+        zero_splits = [split for split in splits if split[1] == 0 ]
+        if(len(zero_splits) > 0):
+            finalsplits.append(zero_splits[ len(zero_splits) // 2 ])
+        else:
+            one_splits = [split for split in splits if split[1] != 0]
+            finalsplits.append(one_splits[ len(one_splits) // 2 ])
+
+    final_realigned_splits = list()
+    for split in finalsplits:
+        newsplit = (split[0] + x_end_removed, split[1])
+        final_realigned_splits.append(newsplit)
+
+    return (final_realigned_splits)
