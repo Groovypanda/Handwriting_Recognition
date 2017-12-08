@@ -66,9 +66,10 @@ def vector2label(vector):
     return 1 + vector.index(1)
 
 
-def new_weights(shape):
+def new_weights(shape, weights):
     w = tf.get_variable('weights', shape, initializer=tf.truncated_normal_initializer(stddev=.1))
-    weights.append(w)
+    if weights:
+        weights.append(w)
     return w
 
 
@@ -76,10 +77,10 @@ def new_biases(length):
     return tf.get_variable('biases', shape=[length], initializer=tf.constant_initializer(0.1))
 
 
-def new_conv_layer(name, input, num_filters, filter_size, num_in_channels, use_pooling=True):
+def new_conv_layer(name, input, num_filters, filter_size, num_in_channels, global_weights, use_pooling=True):
     with tf.variable_scope("conv_layer_" + str(name)):
         shape = [filter_size, filter_size, num_in_channels, num_filters]
-        weights = new_weights(shape)
+        weights = new_weights(shape, global_weights)
         biases = new_biases(num_filters)
         layer = tf.nn.conv2d(input=input, filter=weights, strides=[1, 1, 1, 1], padding='SAME') + biases
         if use_pooling:
@@ -89,9 +90,9 @@ def new_conv_layer(name, input, num_filters, filter_size, num_in_channels, use_p
         return tf.nn.relu(layer)
 
 
-def new_fc_layer(name, input, num_in, num_out):
+def new_fc_layer(name, input, num_in, num_out, global_weights):
     with tf.variable_scope("fc_layer_" + str(name)):
-        weights = new_weights(shape=[num_in, num_out])
+        weights = new_weights(shape=[num_in, num_out], weights=global_weights)
         biases = new_biases(length=num_out)
         return tf.nn.relu(tf.matmul(input, weights) + biases)
 
@@ -125,7 +126,7 @@ def get_data():
     return (train_X, train_Y), (validation_X, validation_Y), (test_X, test_Y)
 
 
-def create_neural_net(train=True, base=1, filter_size=FILTER_SIZE, keep_prob=KEEP_PROB):
+def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTER_SIZE, keep_prob=KEEP_PROB):
     """
     Builds a neural network which can be trained with an optimizer to recognise characters.
     :param train: Indicates if the net is used for training.
@@ -139,24 +140,22 @@ def create_neural_net(train=True, base=1, filter_size=FILTER_SIZE, keep_prob=KEE
     base1 = base * 8
     base2 = base * 1024
     h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=base1, num_in_channels=NUM_CHANNELS,
-                        use_pooling=True)
+                        use_pooling=True, global_weights=global_weights)
     h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=2 * base1, num_in_channels=base1,
-                        use_pooling=True)
+                        use_pooling=True, global_weights=global_weights)
     h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=3 * base1, num_in_channels=2 * base1,
-                        use_pooling=True)
+                        use_pooling=True, global_weights=global_weights)
     h4 = tf.contrib.layers.flatten(h3)
     if train:
-        h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2)
+        h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
         h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
-        h7 = new_fc_layer(name=7, input=h6, num_in=base2, num_out=base2 / 2)
+        h7 = new_fc_layer(name=7, input=h6, num_in=base2, num_out=base2 / 2, global_weights=global_weights)
         h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
     else:
-        h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2)
-        h8 = new_fc_layer(name=7, input=h7, num_in=base2, num_out=base2 / 2)
-    h = new_fc_layer(name='final', input=h8, num_in=base2 / 2, num_out=NUM_CLASSES)
-
+        h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
+        h8 = new_fc_layer(name=7, input=h7, num_in=base2, num_out=base2 / 2, global_weights=global_weights)
+    h = new_fc_layer(name='final', input=h8, num_in=base2 / 2, num_out=NUM_CLASSES, global_weights=global_weights)
     return _x, _y, h
-
 
 def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY):
     # Probability of each class (The closer the 0, the more likely it has that class)
@@ -333,3 +332,5 @@ def examples():
             print(ex,
                   img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
                               sessionargs, n=1))
+
+train_net(200, restore=False)

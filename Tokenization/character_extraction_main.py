@@ -6,9 +6,7 @@
 import cv2
 import numpy as np
 import os
-import shutil
 import imutils
-from matplotlib import pyplot as plt
 
 # Found a good skeltonize-algorithm in the scikit-library
 # Scikit-image dependency! (https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-image)
