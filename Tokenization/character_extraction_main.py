@@ -48,6 +48,9 @@ def extract_character_separations(word_image):
     but will yield the smallest percentage of undersegmentation.
     We start with taking the segmentation of the image without rotation as to ensure no unnecessary rotations are picked
     '''
+    print(rotated_splits)
+    if len(rotated_splits) == 0 or len(rotated_splits[0]) == 0:
+        return []
     most_splits = len( rotated_splits[ len(rotated_splits) // 2 ][0] )
     chosen_split_layout = rotated_splits[ len(rotated_splits) // 2 ]
     for rotated_split in rotated_splits:
