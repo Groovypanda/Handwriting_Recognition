@@ -36,12 +36,12 @@ def extract_character_separations(word_image):
 
     rotated_splits = list()
 
-    for angle in chosen_angles:
-        rotated_image = rotate_image(word_image, angle)
-        blur = cv2.GaussianBlur(rotated_image,(1,1),0)
-        ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    #for angle in chosen_angles:
+    #rotated_image = rotate_image(word_image, angle)
+    blur = cv2.GaussianBlur(word_image,(1,1),0)
+    ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-        rotated_splits.append((find_splits_img(rotated_image), rotated_threshold))
+    rotated_splits.append(find_splits_img(word_image))
 
     '''
     We have the rotated image and the splits for each of the chosen angles
@@ -66,9 +66,10 @@ def extract_characters(word_image, index=0):
 
     chosen_split_layout = extract_character_separations(word_image)
 
+    blur = cv2.GaussianBlur(word_image,(1,1),0)
+    ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     # chosen split layout variables
-    finalsplits = chosen_split_layout[0]
-    threshold = chosen_split_layout[1]
+    finalsplits = chosen_split_layout
     height, width = threshold.shape
 
     # Splitting the characters on the chosen split locations (finalsplits)

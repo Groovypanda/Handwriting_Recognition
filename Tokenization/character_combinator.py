@@ -19,9 +19,11 @@ def evaluate_character_combinations2(character_images, session_args):
     busy = True
     while busy:
         busy = False
-     
+
         current_iteration = list()
         #zoek die met beste
+
+        # WHITEBOARD VOOR REST
 
 
 
