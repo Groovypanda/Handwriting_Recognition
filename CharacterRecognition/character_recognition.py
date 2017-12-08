@@ -326,11 +326,10 @@ def init_session():
 
 
 def examples():
-    sessionar = init_session()
+    sessionargs = init_session()
     examples = ['a', '3', 'g', 'L']
     for ex in reversed(examples):
         for i in range(4):
             print(ex,
                   img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
-                              init_session(), n=1))
-
+                              sessionargs, n=1))

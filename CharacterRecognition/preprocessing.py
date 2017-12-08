@@ -17,7 +17,7 @@ WRITE_VALUE = 1.0
 
 
 def imageBorders(image):
-    threshold = SIZE / 16  # Allow a smart part of the letter to be outside of the image after translation.
+    threshold = 2  # Allow a smart part of the letter to be outside of the image after translation.
     # Note, this threshold could give errors with empty images...
     # Count written pixels per row and per column
     written_pixels = np.where(image != EMPTY_VALUE)
@@ -30,6 +30,10 @@ def imageBorders(image):
         amount_ver[y] += 1
     possible_horizontal_borders = np.where(amount_hor >= threshold)[0]
     possible_vertical_borders = np.where(amount_ver >= threshold)[0]
+    if len(possible_horizontal_borders) == 0:  # Fail safe mechanism.
+        possible_horizontal_borders = np.where(amount_hor >= threshold / 2)[0]
+    if len(possible_vertical_borders) == 0:
+        possible_vertical_borders = np.where(amount_ver >= threshold / 2)[0]
     up = np.ndarray.item(possible_horizontal_borders, 0)
     down = np.ndarray.item(possible_horizontal_borders, -1)
     left = np.ndarray.item(possible_vertical_borders, 0)
@@ -82,7 +86,7 @@ def erodeImage(image):
 
 # Expects a normalized image as input.
 # Returns an array of augmented images.
-def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True, addShearing=True):
+def augmentImage(img, addNoise, addRotations, addTranslations, addScales, addShearing):
     # Array with augmented images
     images = [img]
     up, down, left, right = imageBorders(img)
@@ -166,7 +170,7 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         images = augmentImage(erodeImage(img), addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
                               addScales=add_scales, addShearing=add_shearing)
         images2 = augmentImage(img, addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
-                              addScales=add_scales, addShearing=add_shearing)
+                               addScales=add_scales, addShearing=add_shearing)
         images.extend(images2)
         # Output
         for aug_img in images:
@@ -183,4 +187,4 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
     print('\nThe execution time is {}'.format(end - start))
 
 # Run this function for augmentation...
-# augment_data()
+# augment_data(add_translations=False)
