@@ -4,6 +4,7 @@ import numpy as np
 import Tokenization.character_extraction_main as chrextr
 from pathlib import Path
 import sys
+import pickle
 
 np.set_printoptions(threshold=np.nan)
 
@@ -16,7 +17,7 @@ def open_images(start=0, amount=1000):
     file_entries = [x.split(' ') for x in
                     open(settings.CHAR_SEGMENTATION_DATA_TXT_PATH, 'r').read().splitlines()[
                     start + START_LINE:START_LINE + start + amount]]
-    print("Reading new dataset of {} images".format(len(file_entries)))
+    print("Reading new dataset of {} images, starting at image {}".format(len(file_entries), start))
     images = []
     files = [x[0] for x in file_entries]
     for file_name in files:
@@ -39,7 +40,7 @@ def create_training_data(start=0, amount=1000):
     show_range = 1
     images = open_images(start, amount)
     n = len(images)
-    with open(settings.CHAR_SEGMENTATION_TRAINING_OUT_PATH, "a") as out_file:
+    with open(settings.CHAR_SEGMENTATION_TRAINING_OUT_PATH, "ab") as out_file:
         for (i, (img_path, img)) in enumerate(images):
             print("Showing image number {} of {}".format(i, n))
             split_data = []
@@ -55,22 +56,53 @@ def create_training_data(start=0, amount=1000):
                     split = True
                     # Create pixel matrix around splitpoint
                 elif key == 27:  # escape
+                    pickle.dump(i, out_file) # Write length to pickle
                     return
                 else:  # user decides x is not a splitpoint
                     pass
                 split_data.append((x, split))
-            out_file.write(img_path + ' ' + str(split_data) + '\n')
+            pickle.dump((start+i, img_path, split_data), out_file)
 
 
 def start_training(requested_start=0):
     path = Path(settings.CHAR_SEGMENTATION_TRAINING_OUT_PATH)
     if path.exists():
-        last_entry = path.open().readlines()[-1].split(' ')[0].split('/')[-1]
-        start = find_start(last_entry)
+        lines = path.open().readlines()
+        if len(lines) > 0:
+            last_entry = lines[-1].split(' ')[0].split('/')[-1]
+            start = find_start(last_entry)
+        else:
+            start = requested_start
     else:
         start = requested_start
     create_training_data(start + 1)
 
+
+def read_training_data():
+    with open(settings.CHAR_SEGMENTATION_TRAINING_OUT_PATH, "rb") as in_file:
+        entries = []
+        EOF = False
+        while not EOF: # Non ideal way of reading files... But easiest way to make program fool proof.
+            try:
+                entry = pickle.load(in_file)
+                entries.append(entry)
+            except EOFError:
+                EOF = True
+        for (i, file_name, split_data) in entries:
+            print(i, file_name, split_data)
+        #file_entries = [x.split(' ') for x in
+                        #open(settings.CHAR_SEGMENTATION_TRAINING_OUT_PATH, 'r').read().splitlines()]
+        '''
+        start = file_entries[0][0]
+        print(start)
+        print("Reading new dataset of {} images".format(len(file_entries),))
+        for entry in file_entries:
+            print(entry)
+            i = entry[0]
+            file_name = entry[1]
+            split_data = entry[2]
+            print(i, file_name, split_data)
+        '''
 
 def feature_extractor(img, x):
     # This matrix has the shape: (2*MATRIX_DX, IMG_HEIGHT)
@@ -98,7 +130,11 @@ window are presented.
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        requested_start = int(sys.argv[1])
+        arg = sys.argv[1]
+        if arg == '-t' or arg == '--test':
+            read_training_data()
+        else:
+            start_training(int(arg))
     else:
-        requested_start = 0
-    start_training(requested_start)
+        start_training(0)
+
