@@ -27,6 +27,8 @@ for file in sorted(os.listdir(filepath)):
         cv2.imshow("word", word)
         cv2.waitKey(0)
 
+
+        print(character_extraction_main.extract_character_separations(word))
         characters = character_extraction_main.extract_characters(word, index2)
 
         for character in characters:

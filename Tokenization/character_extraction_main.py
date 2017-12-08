@@ -25,6 +25,9 @@ def rotate_image(image, angle):
     reinverted = cv2.bitwise_not(rotated)
     return reinverted
 
+
+#chosen_angles = [-7, -3, 0, 3, 7]
+chosen_angles = [0]
 def extract_character_separations(word_image):
     """
     Calculate the separation points of the characters;
@@ -55,7 +58,6 @@ def extract_character_separations(word_image):
 
     return chosen_split_layout
 
-chosen_angles = [-7, -3, 0, 3, 7]
 def extract_characters(word_image, index=0):
     """
     Extracts the chracters with segmentation on the word image
