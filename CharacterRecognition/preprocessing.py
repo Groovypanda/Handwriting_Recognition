@@ -83,7 +83,6 @@ def erodeImage(image):
 # Expects a normalized image as input.
 # Returns an array of augmented images.
 def augmentImage(img, addNoise=True, addRotations=True, addTranslations=True, addScales=True, addShearing=True):
-    img = erodeImage(img)
     # Array with augmented images
     images = [img]
     up, down, left, right = imageBorders(img)
@@ -164,9 +163,11 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         img = preprocess_image(read_image(file_name), inverse=True)
         erodeImage(img)
         # Data augmentation
-        images = augmentImage(img, addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
+        images = augmentImage(erodeImage(img), addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
                               addScales=add_scales, addShearing=add_shearing)
-
+        images2 = augmentImage(img, addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
+                              addScales=add_scales, addShearing=add_shearing)
+        images.extend(images2)
         # Output
         for aug_img in images:
             aug_img = np.subtract(255, aug_img)  # Save augmented images as images without inverted color values.

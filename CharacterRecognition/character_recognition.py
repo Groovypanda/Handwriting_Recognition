@@ -272,44 +272,41 @@ def train_save(epochs):
     save_session(train_net(epochs, restore=False))
 
 
-def img_to_prob(img, session=None, _x=None, _y=None, h=None):
+def img_to_prob(img, sessionargs):
     """
     Converts an image to a character probabilities.
     This function assumes there is a Model_500it subdirectory with a trained network model.
+    :param sessionargs: Session and the neural network placeholders
     :param img: Path to an image which contains a character.
     :return: A list containing the probabilities
     of the image being a certain class (representing a letter or number).
     """
     img = preprocess.preprocess_image(img)
-    if session is None:
-        session, _x, _y, h = init_session()
+    (session, _x, _y, h) = sessionargs
     # Initialize variables of neural network
     return session.run(tf.nn.softmax(h), feed_dict={_x: [img]})[0]
 
 
-def imgs_to_prob_list(images, session, _x, _y, h):
+def imgs_to_prob_list(images, sessionargs):
     prob_list = []
     for img in images:
-        prob_list.append(img_to_prob(img, session, _x, _y, h))
+        prob_list.append(img_to_prob(img, sessionargs))
     return prob_list
 
 
-def img_to_text(image, n=1, session=None, _x=None, _y=None, h=None):
+def img_to_text(image, sessionargs, n=1):
     """
     Converts an image into a character.
     :param Image: The input image
     :param n: Indicates the amount of results to be returned. 
               If n is higher than 1, the most probable characters and their probabilities will be returned.
-    :param session: A tensorflow session
-    :param _x: A tensorflow input placeholder
-    :param _y: A tensorflow label placeholder
-    :param h: A tensorflow output placeholder
+    :param sessionargs: Session and the neural network placeholders
     :return: A list of possible characters and their probabilities. Size of this list equals n.
     """
     if n == 1:
-        return utils.index2str(np.argmax(img_to_prob(image, session=session, _x=_x, _y=_y, h=h)))
+        return utils.index2str(np.argmax(img_to_prob(image, sessionargs)))
     else:
-        return most_probable_chars(img_to_prob(image, session=session, _x=_x, _y=_y, h=h), n)
+        return most_probable_chars(img_to_prob(image, sessionargs), n)
 
 
 def most_probable_chars(cls_pred, n):
@@ -329,13 +326,11 @@ def init_session():
 
 
 def examples():
-    session, _x, _y, h = init_session()
+    sessionar = init_session()
     examples = ['a', '3', 'g', 'L']
     for ex in reversed(examples):
         for i in range(4):
             print(ex,
-                  img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0), n=1,
-                              session=session, _x=_x,
-                              _y=_y,
-                              h=h))
+                  img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
+                              init_session(), n=1))
 
