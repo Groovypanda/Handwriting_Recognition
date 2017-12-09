@@ -102,9 +102,8 @@ def get_data():
     labels, images, size = open_images()
     vector_labels = [label2vector(x) for x in labels]
     # Split the dataset into 3 parts
-    train_X, rest_X, train_Y, rest_Y = train_test_split(images, vector_labels, train_size=0.8)
-    validation_X, test_X, validation_Y, test_Y = train_test_split(rest_X, rest_Y, train_size=0.5)
-    return (train_X, train_Y), (validation_X, validation_Y), (test_X, test_Y)
+    x_train, x_validation, y_train, y_validation = train_test_split(images, vector_labels, train_size=0.8)
+    return (x_train, y_train), (x_validation, y_validation)
 
 
 def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTER_SIZE, keep_prob=KEEP_PROB):
@@ -164,12 +163,8 @@ def train_net(n, restore=True, min_save=1.0):
 
     # Some variables required for training
     total_epochs = 0
-    training_set, validation_set, test_set = get_data()
+    (x_train, y_train), (x_validation, y_validation) = get_data()
     weights = []
-    x_train = training_set[0]
-    y_train = training_set[1]
-    x_validation = validation_set[0]
-    y_validation = validation_set[1]
     _x, _y, h = create_neural_net(global_weights=weights)
     training_operation = create_training_operation(h, _y, global_weights=weights)
     session = create_session()
