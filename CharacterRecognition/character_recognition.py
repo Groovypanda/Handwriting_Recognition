@@ -231,23 +231,23 @@ def create_session():
     return session
 
 
-def save_session(session):
+def save_session(session, path=settings.SAVE_PATH):
     """
     Save variables of current session. 
     Side effect: closes session
     :return: None 
     """
     saver = tf.train.Saver()
-    saver.save(session, settings.SAVE_PATH)
+    saver.save(session, path)
     session.close()
 
 
-def restore_session(session):
+def restore_session(session, path=settings.SAVE_PATH):
     """
     Create a session initialized with the session as defined in the SAVE_PATH.
     :return: None
     """
-    tf.train.Saver().restore(session, settings.SAVE_PATH)
+    tf.train.Saver().restore(session, path)
 
 
 def restore_train_save(epochs):

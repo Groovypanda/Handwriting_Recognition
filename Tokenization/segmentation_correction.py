@@ -124,16 +124,40 @@ def convert_training_data(images, entries):
     :return: A list of density matrices and their labels
     """
     labels = []
+    pixel_matrices = []
+    for (i, (name, img)) in enumerate(images):
+        _, _, split_data = entries[i]
+        for (splitpoint, is_splitpoint) in split_data:
+            pixel_matrix = img[:, splitpoint - MATRIX_DX:splitpoint + MATRIX_DX, 0]
+            # Normalize the matrix values
+            thr, pixel_matrix = cv2.threshold(pixel_matrix, 127, 1, cv2.THRESH_BINARY)
+            if not pixel_matrix is None:
+                pixel_matrix = cv2.resize(pixel_matrix, dsize=(2 * MATRIX_DX, MATRIX_Y))
+                pixel_matrix = np.reshape(pixel_matrix, (MATRIX_Y, 2*MATRIX_DX, 1))
+                label = [0, 1] if is_splitpoint else [1, 0]
+                labels.append(label)
+                pixel_matrices.append(pixel_matrix)
+    return pixel_matrices, labels
+
+
+def convert_training_data2(images, entries):
+    """
+    Convert the training data into density matrices which can be fed to the neural network
+    :param images: Images of entries
+    :param entries: Corresponding training data entries
+    :return: A list of density matrices and their labels
+    """
+    labels = []
     density_matrices = []
     for (i, (name, img)) in enumerate(images):
         _, _, split_data = entries[i]
         for (splitpoint, is_splitpoint) in split_data:
             density_matrix = feature_extractor(img, splitpoint)
             if not density_matrix is None:
-                label = 0.9 if is_splitpoint else 0.1
+                label = [0, 1] if is_splitpoint else [1, 0]
                 labels.append(label)
                 density_matrices.append(density_matrix)
-    return density_matrices, np.expand_dims(labels, axis=1)
+    return density_matrices, labels
 
 
 def create_neural_net():
@@ -141,7 +165,24 @@ def create_neural_net():
     Builds a neural network which can be trained with an optimizer to decide if potential splitting points are actual splitting points.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the expected values.
     """
-    OUT_SIZE = 1
+    OUT_SIZE = 2
+    NUM_CHANNELS = 1
+    _x = tf.placeholder(tf.float32, (None, MATRIX_Y, 2*MATRIX_DX, NUM_CHANNELS))
+    _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
+    h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5)
+    h2 = tf.contrib.layers.flatten(h1)
+    h3 = net.new_fc_layer(name=2, input=h2, num_in=h2.shape[1], num_out=16)
+    h4 = tf.nn.dropout(h3, keep_prob=0.7)
+    h = net.new_fc_layer(name=3, input=h4, num_in=16, num_out=OUT_SIZE)
+    return _x, _y, h
+
+
+def create_neural_net2():
+    """
+    Builds a neural network which can be trained with an optimizer to decide if potential splitting points are actual splitting points.
+    :return: The input layer x, the output layer with the predicted values and a placeholder for the expected values.
+    """
+    OUT_SIZE = 2
     _x = tf.placeholder(tf.float32, (None, SIZE))
     _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
     h = net.new_fc_layer(name=1, input=_x, num_in=SIZE, num_out=OUT_SIZE)
@@ -151,7 +192,6 @@ def create_neural_net():
 def create_training_operation(h, _y, learning_rate=LEARNING_RATE):
     # Probability of each class (The closer the 0, the more likely it has that class)
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=h, labels=_y)
-    print(cross_entropy)
     loss_operation = tf.reduce_mean(cross_entropy)
     # Optimisation of the neural network
     training_operation = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss_operation)
@@ -179,9 +219,9 @@ def train_net(epochs):
             end = offset + BATCH_SIZE
             batch_x, batch_y = x_train[offset:end], y_train[offset:end]
             session.run(training_operation, feed_dict={_x: batch_x, _y: batch_y})
-        validation_accuracy = session.run(get_error(h, _y), feed_dict={_x: x_validation, _y: y_validation})
+        validation_accuracy = session.run(net.get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
         if i % 4 == 0:
-            print('EPOCH {}: Average error = {:.3f}'.format(i, validation_accuracy))
+            print('EPOCH {}: Validation Accuracy = {:.3f}'.format(i, validation_accuracy))
     print("The training took: " + str(time() - start) + " seconds.")
     return session
 
@@ -195,11 +235,6 @@ def get_data():
     (x, y) = convert_training_data(imgs, entries)
     x_train, x_validation, y_train, y_validation = train_test_split(x, y, train_size=0.8)
     return (x_train, y_train), (x_validation, y_validation)
-
-
-def get_error(h, _y):
-    return tf.reduce_mean(tf.abs(_y-h))
-
 
 
 """
@@ -216,4 +251,4 @@ segmentation points to the ANN, only the densities of each
 window are presented.
 """
 
-train_net(100)
+net.save_session(train_net(300), settings.CHAR_SEGMENTATION_NET_SAVE_PATH)
