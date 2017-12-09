@@ -10,7 +10,7 @@ from vocabulary import most_likely_words
 from word_extraction import preprocess_image
 import splitpoint_decision as sd
 import character_recognition as cr
-
+from character_preprocessing import augment_data
 
 def read_image(file_name):
     return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
@@ -82,7 +82,7 @@ def recognise_text(file_name):
             max([(word, alpha * voc_words[word] + beta * prob) for word, prob in lang_words.items()],
                 key=lambda x: x[0])[0]
         text.append(most_likely_word)
-        print(most_likely_word)
+        print("Found word: " + most_likely_word)
     return ' '.join(text)
 
 
@@ -90,20 +90,22 @@ def main(argv):
     if len(argv) >= 1:
         option = argv[0]
         arg = argv[1] if len(argv) > 1 else None
-        if option == '--character' or option == '-c':
+        if option == '--character' or option == '-c':  # Recognise a character
             print(recognise_character(arg))
         elif option == '--word' or option == '-w':  # Recognise a word
             print(recognise_word(arg))
-        elif option == '--text' or option == '-t':
+        elif option == '--text' or option == '-t':  # Recognise a text
             print(recognise_text(arg))
-        elif option == '--train-rec' or option == '-tc':  # Train a character segmentation model for 'arg' epochs
+        elif option == '--train-rec' or option == '-tr':  # Train a character segmentation model for 'arg' epochs
             epochs = arg if arg is not None else 500
-            cr.train_net(epochs, min_save=0.79)
+            cr.train_net(epochs, min_save=0.78)
         elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
-            epochs = arg if arg is not None else 500
+            epochs = arg if arg is not None else 250
             sd.train_net(epochs, min_save=0.71)
         elif option == '--create-data' or option == '-cd':  # Create new data for the character segmentation training.
             sd.start_data_creation(arg)
+        elif option =='--augment-data' or option == '-ad':  # Augment the character dataset
+            augment_data()
     else:
         print(
             '''

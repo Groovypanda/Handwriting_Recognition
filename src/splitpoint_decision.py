@@ -12,13 +12,14 @@ import character_recognition as net  # Remove this dependency?
 import definitions
 
 WINDOW_SIZE = 5
-MATRIX_DX = 5
-MATRIX_Y = 40
+MATRIX_DX = 6
+MATRIX_Y = 42
 START_LINE = 18
 SIZE = (MATRIX_Y / WINDOW_SIZE) * ((MATRIX_DX * 2) / WINDOW_SIZE)
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 8
 DECAY = 1e-3
+DROPOUT = 0.7
 
 
 def open_images(start=0, amount=-1):
@@ -182,14 +183,12 @@ def create_neural_net(global_weights=None, train=True):
     _x = tf.placeholder(tf.float32, (None, MATRIX_Y, 2 * MATRIX_DX, NUM_CHANNELS))
     _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
     h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5,
-                            global_weights=global_weights)
-    h2 = net.new_conv_layer(name=2, input=h1, num_in_channels=3, num_filters=3, filter_size=3,
-                            global_weights=global_weights)
-    h3 = tf.contrib.layers.flatten(h2)
+                            global_weights=global_weights, use_pooling=False)
+    h3 = tf.contrib.layers.flatten(h1)
     h4 = net.new_fc_layer(name=3, input=h3, num_in=h3.shape[1], num_out=64, global_weights=global_weights)
     if train:
         h6 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
-        h5 = tf.nn.dropout(h6, keep_prob=0.7)
+        h5 = tf.nn.dropout(h6, keep_prob=DROPOUT)
     else:
         h5 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
     h = net.new_fc_layer(name='final', input=h5, num_in=16, num_out=OUT_SIZE, global_weights=global_weights)
@@ -243,7 +242,7 @@ def train_net(epochs, min_save=1.0):
             session.run(training_operation, feed_dict={_x: batch_x, _y: batch_y})
         validation_accuracy = session.run(net.get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
         if validation_accuracy > min_save:
-            print("New maximum accuracy achieved.")
+            print("New maximum accuracy achieved. {}".format(validation_accuracy))
             net.save_session(session, definitions.MODEL_CHAR_SEGMENTATION_PATH)
             min_save = validation_accuracy
         if i % 4 == 0:
