@@ -5,6 +5,7 @@ __pycache__/
 *.png
 
 Report/*
+!Report/*.sty
 !Report/*.tex
 !Report/*.bib
 venv/
