@@ -14,7 +14,8 @@ from skimage.morphology import skeletonize
 import itertools
 dir = os.path.dirname(__file__)
 
-MAX_SKEL_COL_SUMMATION = 5
+MAX_SKEL_COL_SUMMATION = 4
+MIN_DISTANCE_EDGE = 8
 
 def rotate_image(image, angle):
     """
@@ -134,15 +135,6 @@ def find_splits_img(image):
     col_summation = cv2.reduce(skel, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
     col_summation_list = col_summation[0].tolist()
 
-    # remove leading and trailing zeros so that no unnecessary splits are performed
-    #col_summation_list_tmp = list(itertools.dropwhile(lambda x: x == 0, col_summation_list_orig))
-    #x_end_removed = len(col_summation_list_orig) - len(col_summation_list_tmp)
-    #col_summation_list = list(itertools.dropwhile(lambda x: x == 0, col_summation_list_tmp[::-1]))[::-1]
-    #x_offset = len(col_summation_list_tmp) - len(col_summation_list)
-
-    # crop the skeletonized image
-    #skel = skel[0:height, x_offset:x_offset+len(col_summation_list)]
-
     """
     Here we will try to replace the given splices with the final cuts we will be making.
     Consequent splices will be turned into a single one, and the splices on points with zero pixels in the skeletonized image will take preference above those with one pixel.
@@ -190,11 +182,12 @@ def find_splits_img(image):
     to_remove = list()
     for split_range in split_ranges:
         for (col, nr) in split_range:
-            if col == 0 or col == len(col_summation_list)-1:
+            if col <= MIN_DISTANCE_EDGE or col >= len(col_summation_list) - 1 - MIN_DISTANCE_EDGE:
                 to_remove.append(split_range)
 
     for split_range in to_remove:
-        split_ranges.remove(split_range)
+        if split_range in split_ranges:
+            split_ranges.remove(split_range)
 
 
     # Combining the split_ranges where in between the split ranges are no characters
