@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-from src import definitions
-from src.character_recognition import new_conv_layer
-from src.character_recognition import new_fc_layer
+import definitions
+from character_recognition import new_conv_layer
+from character_recognition import new_fc_layer
 
 """
 Python file for variations of neural networks and training operation functions. 

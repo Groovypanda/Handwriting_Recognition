@@ -79,8 +79,9 @@ def shearImage(image, s):
     shear_matrix = np.float32([[1, s, 0], [0, 1, 0]])
     return cv2.warpAffine(image, shear_matrix, definitions.SHAPE)
 
+
 def erodeImage(image):
-    element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+    element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     return cv2.erode(image, kernel=element)
 
 
@@ -88,30 +89,29 @@ def erodeImage(image):
 # Returns an array of augmented images.
 def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, add_shearing):
     # Array with augmented images
-    erodedImage = erodeImage(image)
-    images = [image, erodedImage]
+    images = [image]
 
     up, down, left, right = imageBorders(image)
     ## Addition of Gaussian noise
     if add_noise:
-        images.append(noisyImage(erodedImage, stddev=0.05))
+        images.append(noisyImage(image, stddev=0.05))
 
     ## Rotations of image
     if add_rotations:
         for angle in np.arange(-30, 60, 30):  # evenly spaced values within a given interval
             if (angle != 0):
-                if bool(getrandbits(1)): # Enough variation in rotation, but limit amount of examples
-                    images.append(rotateImage(erodedImage, angle))
+                if bool(getrandbits(1)):  # Enough variation in rotation, but limit amount of examples
+                    images.append(rotateImage(image, angle))
 
     ## Translation of image
     if add_translations:
         for tx in range(-8, 16, 8):
             for ty in range(-4, 4, 4):
-                if bool(getrandbits(1)): # Enough variation in translation, but limit amount of examples
+                if bool(getrandbits(1)):  # Enough variation in translation, but limit amount of examples
                     canTranslate = inBounds(up + ty) and inBounds(down + ty) and inBounds(left + tx) and inBounds(
                         right + tx)
                     if not tx == 0 and not ty == 0 and canTranslate:
-                        images.append(translateImage(erodedImage, tx, ty))
+                        images.append(translateImage(image, tx, ty))
 
     ## Scaling of image
     if add_scales:
@@ -124,13 +124,13 @@ def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, 
             for sy in np.arange(min_scale_y, max_scale_y + step, step):
                 if not sy == 1 and not sy == 1:
                     if inBounds(down * sy) and inBounds(right * sx):
-                        images.append(scaleImage(erodedImage, sx, sy))
+                        images.append(scaleImage(image, sx, sy))
     if add_shearing:
         # Shear images to make the dataset more robust to different slant when writing.
         # The character seems slightly translated after the shearing operation. So we place the character back in the center
         # with a translate.
-        shearedl = translateImage(shearImage(erodedImage, 0.2), -5, 0)
-        shearedr = translateImage(shearImage(erodedImage, -0.2), 5, 0)
+        shearedl = translateImage(shearImage(image, 0.2), -5, 0)
+        shearedr = translateImage(shearImage(image, -0.2), 5, 0)
         images.append(shearedl)
         images.append(shearedr)
         # images.append(sheared)
@@ -175,6 +175,9 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         # Data augmentation
         images = augmentImage(img, add_noise=add_noise, add_rotations=add_rotations, add_translations=add_translations,
                               add_scales=add_scales, add_shearing=add_shearing)
+        images2 = augmentImage(erodeImage(img), add_noise=add_noise, add_rotations=add_rotations, add_translations=add_translations,
+                              add_scales=add_scales, add_shearing=add_shearing)
+        images.extend(images2)
         # Output
         for aug_img in images:
             aug_img = np.subtract(255, aug_img)  # Save augmented images as images without inverted color values.

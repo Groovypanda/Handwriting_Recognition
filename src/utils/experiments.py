@@ -4,7 +4,7 @@ import time as t
 import tensorflow as tf
 from numpy import savetxt
 
-import src.experiments.experiment_nets as en
+from src.experiments import experiment_nets as en
 from src import definitions, character_recognition, character_preprocessing
 
 """
