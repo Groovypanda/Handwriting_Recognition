@@ -208,6 +208,33 @@ def add_words_to_line(line, words):
             line.append(word)
     return line
 
+MAX_RECTANGLE_HEIGHT_MULTIPLIER = 2
+def search_multiline_contours(rectangles_contours, img):
+    average_height = sum([rect[3] for rect in list(rectangles_contours.keys())]) / len(rectangles_contours)
+    probable_multiline_rectangles = [(rect, contour) for rect, contour in rectangles_contours.items(): if rect[3] >= MAX_RECTANGLE_HEIGHT_MULTIPLIER * average_height]
+
+    if len(probable_multiline_rectangles) > 0:
+        parsed_probabilities = split_multiline_contours(probable_multiline_rectangles, img)
+        for entry in probable_multiline_rectangles
+            del rectangles_contours[entry]
+        for parsed_rectangle in parsed_probabilities:
+            rectangles_contours[parsed_rectangle[0]] = parsed_rectangle[1]
+    else
+        return rectangles_contours
+
+
+SPLIT_MULTILINE_MULTIPLIER = 10
+def split_multiline_contours(probable_multiline_rectangles, average_height, img):
+    parsed_rectangles = list()
+    for rectangle, contour in probable_multiline_rectangles:
+        #create skeletonized image
+        (x, y, w, h) = rectangle
+        extracted_image = img[y:y+h, x:x+w]
+        blur = cv2.GaussianBlur(extracted_image,(3,3),0)
+        ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        row_summation = cv2.reduce(threshold, 1, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
+
+        #TODO:: SEARCH HIGHEST PEAKS
 
 def split_text_in_lines(rectangles_contours):
     """
@@ -275,6 +302,10 @@ def split_text_in_lines(rectangles_contours):
     # Please pass image as greyscale
     # the file index passed is for output purposes
 def preprocess_image(img, file_index = 0):
+    """
+    Convert the given text in words, in order in which they are found in the text
+    :return: A list of the word images
+    """
 
     file_number = str(file_index).zfill(3)
 
@@ -302,20 +333,24 @@ def preprocess_image(img, file_index = 0):
             rectangles_contours[rectangle] = contour
 
 
-    #remove rectangles contained by other rectangles
+    # Remove rectangles contained by other rectangles
     rectangles_to_remove = [rect2 for rect1 in rectangles_contours for rect2 in rectangles_contours if rect1 != rect2 and rectangle_contains_rectangle(rect1, rect2)];
 
     for rectangle in set(rectangles_to_remove):
         rectangles_contours.pop(rectangle, None)
 
-    # sift out small rectangles (points, lines, ...)
+    # Sift out small rectangles (points, lines, ...)
     rectangles_contours = remove_small_rectangles(rectangles_contours)
 
-    # ordering the found words in lines
+    # Split contours that mistakenly span multiple lines
 
+    rectangles_contours = search_multiline_contours(rectangles_contours, img)
+
+
+    # Ordering the found words in lines
     lines = split_text_in_lines(rectangles_contours)
-    # saving the found rectangles
 
+    # Saving the found rectangles
     extracted_words = list()
     for line_index, line in enumerate(lines):
         for word_index, rectangle in enumerate(line):

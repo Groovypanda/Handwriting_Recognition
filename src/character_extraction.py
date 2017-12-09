@@ -229,9 +229,5 @@ def find_splits_img(image):
             one_splits = [split for split in splits if split[1] != 0]
             final_splits.append(one_splits[ len(one_splits) // 2 ])
 
-    #final_realigned_splits = list()
-    #for split in finalsplits:
-    #   newsplit = (split[0] + x_end_removed, split[1])
-    #    final_realigned_splits.append(newsplit)
 
     return (final_splits)
