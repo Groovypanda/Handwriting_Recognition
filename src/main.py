@@ -8,6 +8,8 @@ from character_extraction import extract_characters
 from language_model import n_gram_model
 from vocabulary import most_likely_words
 from word_extraction import preprocess_image
+import splitpoint_decision as sd
+import character_recognition as cr
 
 
 def read_image(file_name):
@@ -29,7 +31,8 @@ def recognise_word(file_name):
     :param file_name: File name of the word
     :return: The word
     """
-    return max(recognise_possible_words(read_image(file_name), chr.init_session(), toc.init_session()), key=lambda x: x[1])
+    return max(recognise_possible_words(read_image(file_name), chr.init_session(), toc.init_session()),
+               key=lambda x: x[1])
 
 
 def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_oversegmentation_correction):
@@ -84,15 +87,23 @@ def recognise_text(file_name):
 
 
 def main(argv):
-    if len(argv) == 2:
-        conf = argv[0]
-        file_name = argv[1]
-        if conf == '--character' or conf == '-c':
-            print(recognise_character(file_name))
-        elif conf == '--word' or conf == '-w':
-            print(recognise_word(file_name))
-        elif conf == '--text' or conf == '-t':
-            print(recognise_text(file_name))
+    if len(argv) >= 1:
+        option = argv[0]
+        arg = argv[1] if len(argv) > 1 else None
+        if option == '--character' or option == '-c':
+            print(recognise_character(arg))
+        elif option == '--word' or option == '-w':  # Recognise a word
+            print(recognise_word(arg))
+        elif option == '--text' or option == '-t':
+            print(recognise_text(arg))
+        elif option == '--train-rec' or option == '-tc':  # Train a character segmentation model for 'arg' epochs
+            epochs = arg if arg is not None else 500
+            cr.train_net(epochs, min_save=0.79)
+        elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
+            epochs = arg if arg is not None else 500
+            sd.train_net(epochs, min_save=0.71)
+        elif option == '--create-data' or option == '-cd':  # Create new data for the character segmentation training.
+            sd.start_data_creation(arg)
     else:
         print(
             '''

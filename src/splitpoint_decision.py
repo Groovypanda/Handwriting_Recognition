@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
+from character_extraction import extract_character_separations
 import character_recognition as net  # Remove this dependency?
 import definitions
 
@@ -41,11 +42,11 @@ def create_training_data(start=0, amount=1000):
     show_range = 1
     images = open_images(start, amount)
     n = len(images)
-    with open(definitions.WORDET_SPLITTING_PATH, "ab") as out_file:
+    with open(definitions.WORD_SPLITTING_PATH, "ab") as out_file:
         for (i, (img_path, img)) in enumerate(images):
             print("Showing image number {} of {}".format(i, n))
             split_data = []
-            splits = chrextr.extract_character_separations(img[:, :, 0])
+            splits = extract_character_separations(img[:, :, 0])
             for (x, y) in splits:
                 split = False
                 img_tmp = img.copy()
@@ -63,9 +64,9 @@ def create_training_data(start=0, amount=1000):
             pickle.dump((start + i, img_path, split_data), out_file)
 
 
-def start_training(requested_start=0):
-    path = Path(definitions.WORDET_SPLITTING_PATH)
-    start = requested_start
+def start_data_creation(requested_start=0):
+    path = Path(definitions.WORD_SPLITTING_PATH)
+    start = requested_start if not requested_start is None else 0
     if path.exists():
         entries = read_training_data()
         if len(entries) != 0:
@@ -74,7 +75,7 @@ def start_training(requested_start=0):
 
 
 def read_training_data():
-    with open(definitions.WORDET_SPLITTING_PATH, "rb") as in_file:
+    with open(definitions.WORD_SPLITTING_PATH, "rb") as in_file:
         entries = []
         EOF = False
         while not EOF:  # Non ideal way of reading files... But easiest way to make program fool proof.

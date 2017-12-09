@@ -30,4 +30,4 @@ EXPERIMENTS_CHAR_GRAPHS_PATH = PROJECT_PATH + 'Graphs/'
 
 WORDSET_INFO_PATH = TXT_PATH + 'words.txt'
 WORDSET_PATH = DATA_PATH + 'words/'
-WORDET_SPLITTING_PATH = DATA_PATH + 'segmentation/' + 'segmentation.txt'
+WORD_SPLITTING_PATH = DATA_PATH + 'segmentation/' + 'segmentation.txt'
