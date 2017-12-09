@@ -234,7 +234,11 @@ def split_multiline_contours(probable_multiline_rectangles, average_height, img)
         ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         row_summation = cv2.reduce(threshold, 1, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
 
+        print("#################")
+        print(row_summation)
         #TODO:: SEARCH HIGHEST PEAKS
+
+    return probable_multiline_rectangles;
 
 def split_text_in_lines(rectangles_contours):
     """
