@@ -1,6 +1,4 @@
 from time import time
-
-import cv2
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
@@ -8,6 +6,7 @@ from sklearn.utils import shuffle
 
 import src.character_preprocessing as preprocess
 import definitions, character_utils
+from experiments import experiments
 
 '''
 For this project we use the Chars74K dataset. It contains 62 classes, with about 3.4K handwritten characters.
@@ -119,29 +118,31 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
     base1 = base * 8
     base2 = base * 1024
-    h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=base1, num_in_channels=NUM_CHANNELS,
+    h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=8, num_in_channels=NUM_CHANNELS,
                         use_pooling=True, global_weights=global_weights)
-    h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=2 * base1, num_in_channels=base1,
+    h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=h1.shape[-1],
                         use_pooling=True, global_weights=global_weights)
-    h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=3 * base1, num_in_channels=2 * base1,
+    h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=h2.shape[-1],
                         use_pooling=True, global_weights=global_weights)
     h4 = tf.contrib.layers.flatten(h3)
     if train:
         h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
         h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
-        h7 = new_fc_layer(name=7, input=h6, num_in=base2, num_out=base2 / 2, global_weights=global_weights)
+        h7 = new_fc_layer(name=7, input=h6, num_in=h6.shape[1], num_out=base2 / 2, global_weights=global_weights)
         h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
     else:
         h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
-        h8 = new_fc_layer(name=7, input=h7, num_in=base2, num_out=base2 / 2, global_weights=global_weights)
-    h = new_fc_layer(name='final', input=h8, num_in=base2 / 2, num_out=NUM_CLASSES, global_weights=global_weights)
+        h8 = new_fc_layer(name=7, input=h7, num_in=h7.shape[1], num_out=base2 / 2, global_weights=global_weights)
+    h = new_fc_layer(name='final', input=h8, num_in=h8.shape[1], num_out=NUM_CLASSES, global_weights=global_weights)
     return _x, _y, h
 
 
 def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, global_weights=None):
     # Probability of each class (The closer the 0, the more likely it has that class)
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=h, labels=_y)
+    print(global_weights)
     if global_weights:
+        print("yyeee global weights")
         weight_decay = tf.reduce_sum(tf.stack([tf.nn.l2_loss(w) for w in global_weights]))
     else:
         weight_decay = 0
@@ -152,7 +153,7 @@ def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, g
     return training_operation
 
 
-def train_net(n, restore=True, min_save=1.0):
+def train_net(n, restore=False, min_save=1.0):
     """
     Trains the network for n epochs with a new session
     Note: if this function has never been run, set restore to false!
@@ -178,22 +179,29 @@ def train_net(n, restore=True, min_save=1.0):
     num_train = len(x_train)
     print('Training:\n')
     start = time()
+    accuracies = []
+    times = []
     for i in range(total_epochs, total_epochs + n):
         for offset in range(0, num_train, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = x_train[offset:end], y_train[offset:end]
             session.run(training_operation, feed_dict={_x: batch_x, _y: batch_y})
         validation_accuracy = session.run(get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
+        accuracies.append(validation_accuracy)
+        t = time() - start
+        times.append(t)
         if i % 10 == 0:
-            print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
+            print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(total_epochs, t, validation_accuracy))
         total_epochs += 1
         if validation_accuracy > min_save:
-            print("New maximum accuracy achieved.")
+            print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
             min_save = validation_accuracy
+    experiments.save_output("all", time=times, accuracies=accuracies, iteration=1)
     validation_accuracy = session.run(get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
     print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
-    print("The training took: " + str(time() - start) + " seconds.")
+    t = str(time() - start)
+    print("The training took: " + str(t) + " seconds.")
     return session
 
 

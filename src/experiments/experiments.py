@@ -264,6 +264,3 @@ def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, base=1, learn
 # compare_batch_size()
 # compare_preprocessing_params()
 
-
-#TODO: compare_net_depth()
-compare_optimizer()
