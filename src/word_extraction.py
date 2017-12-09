@@ -264,19 +264,6 @@ def split_multiline_contours(probable_multiline_rectangles, average_height, img)
                 # Split the rectangle on the row with the lowest black pixel count (is thresholded so we assume this is text or only minor distortion)
                 (rect_cont1, rect_cont2) = split_rectangle_contour_horizontally(rectangle, contour, min_row)
 
-                cv2.imshow("img", extracted_image)
-                cv2.waitKey(0)
-
-                (x, y, w, h) = rect_cont1[0]
-                extracted_image = img[y:y+h, x:x+w]
-                cv2.imshow("img", extracted_image)
-                cv2.waitKey(0)
-
-                (x, y, w, h) = rect_cont2[0]
-                extracted_image = img[y:y+h, x:x+w]
-                cv2.imshow("img", extracted_image)
-                cv2.waitKey(0)
-
                 parsed_rectangles.append(rect_cont1)
                 parsed_rectangles.append(rect_cont2)
                 #TODO:: in case of time left: execute horizontal split on rectangles if col with 0 is found, else could combine two words where not desire
