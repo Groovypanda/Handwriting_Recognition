@@ -180,19 +180,20 @@ def create_neural_net(global_weights=None, train=True):
     """
     OUT_SIZE = 2
     NUM_CHANNELS = 1
-    _x = tf.placeholder(tf.float32, (None, MATRIX_Y, 2 * MATRIX_DX, NUM_CHANNELS))
-    _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
-    h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5,
-                            global_weights=global_weights, use_pooling=False)
-    h3 = tf.contrib.layers.flatten(h1)
-    h4 = net.new_fc_layer(name=3, input=h3, num_in=h3.shape[1], num_out=64, global_weights=global_weights)
-    if train:
-        h6 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
-        h5 = tf.nn.dropout(h6, keep_prob=DROPOUT)
-    else:
-        h5 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
-    h = net.new_fc_layer(name='final', input=h5, num_in=16, num_out=OUT_SIZE, global_weights=global_weights)
-    return _x, _y, h
+    with tf.variable_scope("SplitpointDecision"):
+        _x = tf.placeholder(tf.float32, (None, MATRIX_Y, 2 * MATRIX_DX, NUM_CHANNELS))
+        _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
+        h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5,
+                                global_weights=global_weights, use_pooling=False)
+        h3 = tf.contrib.layers.flatten(h1)
+        h4 = net.new_fc_layer(name=3, input=h3, num_in=h3.shape[1], num_out=64, global_weights=global_weights)
+        if train:
+            h6 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
+            h5 = tf.nn.dropout(h6, keep_prob=DROPOUT)
+        else:
+            h5 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
+        h = net.new_fc_layer(name='final', input=h5, num_in=16, num_out=OUT_SIZE, global_weights=global_weights)
+        return _x, _y, h
 
 
 def create_neural_net2():
@@ -267,7 +268,7 @@ def init_session():
     Fully creates an initialised session and returns an initialized neural network. 
     :return: 
     """
-    with tf.variable_scope("SplitpointDecision"):
+    with tf.variable_scope():
         session = tf.Session()
         _x, _y, h = create_neural_net(train=False)
         session.run(tf.global_variables_initializer())
