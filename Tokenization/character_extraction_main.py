@@ -14,7 +14,7 @@ from skimage.morphology import skeletonize
 import itertools
 dir = os.path.dirname(__file__)
 
-MAX_SKEL_COL_SUMMATION = 3
+MAX_SKEL_COL_SUMMATION = 5
 
 def rotate_image(image, angle):
     """
@@ -226,7 +226,7 @@ def find_splits_img(image):
 
     # We make a list with the final splits we will use
     final_splits = list()
-    for splits in split_ranges:
+    for splits in new_ranges:
         zero_splits = [split for split in splits if split[1] == 0 ]
         if(len(zero_splits) > 0):
             final_splits.append(zero_splits[ len(zero_splits) // 2 ])
