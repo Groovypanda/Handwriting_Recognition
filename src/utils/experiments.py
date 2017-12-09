@@ -4,8 +4,8 @@ import time as t
 import tensorflow as tf
 from numpy import savetxt
 
-from src.experiments import experiment_nets as en
-from src import definitions, character_recognition, character_preprocessing
+import experiments.experiment_nets as en
+import definitions, character_recognition, character_preprocessing
 
 """
 This script tries to test the effectiveness of certain parameters to find an optimal solution
@@ -20,7 +20,7 @@ EPOCHS = 200
 def compare_base():
     """
     Check the effect of different layer sizes.
-    :return: 
+    :return:
     """
     for i in range(1, 4):
         print("Running experiments with base " + str(i))
@@ -30,7 +30,7 @@ def compare_base():
 def compare_learning_rate():
     """
     Check the effect of different learning rates.
-    :return: 
+    :return:
     """
     learning_rates = [1e-3, 1e-4, 1e-5]
     for x in learning_rates:
@@ -41,7 +41,7 @@ def compare_learning_rate():
 def compare_filter_size():
     """
     Check the effect of different filter sizes.
-    :return: 
+    :return:
     """
     sizes = [3, 5, 7]
     for x in sizes:
@@ -52,7 +52,7 @@ def compare_filter_size():
 def compare_keep_prob():
     """
     Check the effect of different percentage of dropout.
-    :return: 
+    :return:
     """
     keep_probs = [0.3, 0.5, 0.7, 0.9]
     for x in keep_probs:
@@ -63,7 +63,7 @@ def compare_keep_prob():
 def compare_weight_decay():
     """
     Check the effect of regulation with weight decay.
-    :return: 
+    :return:
     """
     decays = [0, 1e-3, 1e-4, 1e-5]
     for x in decays:
@@ -74,7 +74,7 @@ def compare_weight_decay():
 def compare_batch_size():
     """
         Check of feeding different batch sizes as training data.
-        :return: 
+        :return:
         """
     sizes = [128, 256, 512, 1024]
     for x in sizes:
@@ -87,7 +87,7 @@ def compare_epochs():
         Check the effect of running more or less iterations.
         As I already know the exact effect of this, and this function will take very long.
         I might skip this experiment.
-    :return: 
+    :return:
     """
     epochs = [100, 250, 500, 1000]
     for x in epochs:
@@ -97,8 +97,8 @@ def compare_epochs():
 
 def compare_preprocessing_params():
     """
-    Check the effect of different preprocessing steps. Each preprocessing step is tested on its own. 
-    :return: 
+    Check the effect of different preprocessing steps. Each preprocessing step is tested on its own.
+    :return:
     """
 
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
@@ -127,10 +127,10 @@ def compare_preprocessing_params():
 def compare_image_dimensions():
     """
     Check the effect of working with different image dimensions
-    
+
     Implementing a function for  this experiment would require refactoring all of the character recognition code.
     This will be tested manually instead.
-    :return: 
+    :return:
     """
     pass
 
@@ -138,7 +138,7 @@ def compare_image_dimensions():
 def compare_net_depth():
     """
     Check the effect of working with neural nets with different amounts of layers
-    :return: 
+    :return:
     """
     for (name, conf) in en.net_configurations():
         run_experiment("net_conf_" + name, new_net_conf=conf)
@@ -147,7 +147,7 @@ def compare_net_depth():
 def compare_optimizer():
     """
     Check the effect of changing the training operation
-    :return: 
+    :return:
     """
     #run_experiment("optimizer_" + "adam", training_operation=en.training_op_with_adam)
     run_experiment("optimizer_" + "mom", training_operation=en.training_op_with_mom)
@@ -162,8 +162,8 @@ def save_output(name, accuracies, time, iteration=None):
     :param name: Name of the outputfile.
     :param accuracies: Array of accuracies in each epoch.
     :param time: Array of time measurements in each epoch.
-    :param iteration: Amount of times this experiment has been run.  
-    :return: 
+    :param iteration: Amount of times this experiment has been run.
+    :return:
     """
     extension = '.txt'
     if iteration is not None:
@@ -181,18 +181,18 @@ def experiment_net(n, base, learning_rate, batch_size, filter_size, keep_prob, w
                    training_operation_f):
     """
     A highly configurable function for training the neural network with all kinds of different parameters.
-    All of these arguments have a default value and can be left out. Running this function without any arguments is 
-    equivalent to running the actual neural network as described in CharacterRecognition.py 
+    All of these arguments have a default value and can be left out. Running this function without any arguments is
+    equivalent to running the actual neural network as described in CharacterRecognition.py
     :param n: Amount of epochs to train the neural network.
-    :param base: A multiplier for all layer sizes. 
-    :param learning_rate: The learning rate of the neural network. 
+    :param base: A multiplier for all layer sizes.
+    :param learning_rate: The learning rate of the neural network.
                           This is decremented over iterations when using the AdamOptimizer.
     :param batch_size: The batch size fed to the neural network.
-    :param filter_size: The size of the filters in the neural network. 
-    :param keep_prob: The probability of a connection between 2 perceptons being active in the fully connected layers.  
+    :param filter_size: The size of the filters in the neural network.
+    :param keep_prob: The probability of a connection between 2 perceptons being active in the fully connected layers.
     :param weight_decay: A regulation term to avoid overfitting. This indicates how much large weights should be penalized.
-    :param new_net_conf: A configuration for a neural network as described n experiment_nets.py for creating a new neural network, which will then be used. 
-    :param training_operation_f: Operation for training the custom neural network.  
+    :param new_net_conf: A configuration for a neural network as described n experiment_nets.py for creating a new neural network, which will then be used.
+    :param training_operation_f: Operation for training the custom neural network.
     :return: An array of the time passed and the accuracy at each iteration.
     """
     # Some variables required for training
@@ -263,4 +263,3 @@ def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, base=1, learn
 # compare_weight_decay()
 # compare_batch_size()
 # compare_preprocessing_params()
-

@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-from character_extraction import extract_character_separations
+import character_extraction as char_ex
 import character_recognition as net  # Remove this dependency?
 import definitions
 
@@ -47,7 +47,7 @@ def create_training_data(start=0, amount=1000):
         for (i, (img_path, img)) in enumerate(images):
             print("Showing image number {} of {}".format(i, n))
             split_data = []
-            splits = extract_character_separations(img[:, :, 0])
+            splits = char_ex.extract_character_separations(img[:, :, 0])
             for (x, y) in splits:
                 split = False
                 img_tmp = img.copy()
@@ -265,8 +265,8 @@ def get_data():
 
 def init_session():
     """
-    Fully creates an initialised session and returns an initialized neural network. 
-    :return: 
+    Fully creates an initialised session and returns an initialized neural network.
+    :return:
     """
     with tf.variable_scope():
         session = tf.Session()
