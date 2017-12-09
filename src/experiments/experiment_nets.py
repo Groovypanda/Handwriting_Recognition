@@ -1,13 +1,12 @@
 import tensorflow as tf
 
-from src import definitions
-from src.character_recognition import new_conv_layer
-from src.character_recognition import new_fc_layer
+import definitions
+import character_recognition as cr
 
 """
-Python file for variations of neural networks and training operation functions. 
+Python file for variations of neural networks and training operation functions.
 It uses the same default valus as CharacterRecognition.py
-It never uses weight decay. 
+It never uses weight decay.
 """
 
 # Global constants (default values)
@@ -28,7 +27,7 @@ cx = 'convolutional layer with max pooling'
 Compact string representation for the neural network in order to easily build variations to experiment with.
 Arguments for these layers are arbitrarily chosen as experiments for these values already exist.
 Array of these arguments represents the neural network configuration. For ease the configuration for the convolutional layers
-and fully connected layers are split in 2. 
+and fully connected layers are split in 2.
 fc -> fully connected layer
 fc_drop -> fully connected layer + dropout
 conv -> convolutional layer
@@ -52,10 +51,10 @@ def net_configurations():
 
 def create_neural_net(configuration):
     """
-    TODO: This function does not work correctly... 
+    TODO: This function does not work correctly...
     Builds an experimental neural network which can be trained with an optimizer to recognise characters.
-    :param A string configuration for the neural network.   
-    :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values. 
+    :param A string configuration for the neural network.
+    :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
     _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
     _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
@@ -71,7 +70,7 @@ def create_neural_net(configuration):
             pooling = True
         else:  # Error
             raise Exception("Incorrect neural network configuration")
-        layers.append(new_conv_layer(name=str(i), input=layers[-1], filter_size=FILTER_SIZE, num_filters=(i + 1) * base1,
+        layers.append(cr.new_conv_layer(name=str(i), input=layers[-1], filter_size=FILTER_SIZE, num_filters=(i + 1) * base1,
                                     num_in_channels=prev_filters, use_pooling=pooling))
         prev_filters = num_filters
 
@@ -80,13 +79,13 @@ def create_neural_net(configuration):
     for (i, fc_layer) in enumerate(configuration[1]):
         num_filters = (i + 1) * base2
         if fc_layer == f:
-            layers.append(new_fc_layer(name=i, input=layers[-1], num_in=layers[-1].shape[1], num_out=num_filters))
+            layers.append(cr.new_fc_layer(name=i, input=layers[-1], num_in=layers[-1].shape[1], num_out=num_filters))
         elif fc_layer == fx:
-            layers.append(new_fc_layer(name=i, input=layers[-1], num_in=layers[-1].shape[1], num_out=num_filters))
+            layers.append(cr.new_fc_layer(name=i, input=layers[-1], num_in=layers[-1].shape[1], num_out=num_filters))
             layers.append(tf.nn.dropout(layers[-1], keep_prob=KEEP_PROB))
         else:  # Error
             raise Exception("Incorrect neural network configuration")
-    h = new_fc_layer(name='final', input=layers[-1], num_in=layers[-1].shape[1], num_out=NUM_CLASSES)
+    h = cr.new_fc_layer(name='final', input=layers[-1], num_in=layers[-1].shape[1], num_out=NUM_CLASSES)
     layers.append(h)
     return _x, _y, h
 

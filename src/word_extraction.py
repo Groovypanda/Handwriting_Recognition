@@ -8,6 +8,7 @@ import os
 import cv2
 import numpy as np
 import sys
+from matplotlib import pyplot as plt
 
 
 dir = os.path.dirname(__file__)
@@ -201,42 +202,92 @@ def add_words_to_line(line, words):
     Adds words from words to line, if it is on the same line,
     as calculated by the check_same_line method.
     :return: The updated line
-
     """
     for word in words:
         if check_same_line(line, word) and not word in line:
             line.append(word)
     return line
 
+def split_rectangle_contour_horizontally(rectangle, contour, y_val):
+    """
+    Splits rectangle horizontally on y-val
+    :return: The two rectangles with their updated contours
+    """
+    (x, y, w, h) = rectangle
+    rect1 = (x, y, w, y_val-1)
+    rect2 = (x, y+y_val, w, h-y_val)
+    (cont1, cont2) = (contour, contour) # TODO:: SPLITTING THIS IS A HASSLE, WONT DO IF NOT USED SOMEWHERE ELSE
+
+    return ((rect1, cont1), (rect2, cont2))
+
+
 MAX_RECTANGLE_HEIGHT_MULTIPLIER = 2
 def search_multiline_contours(rectangles_contours, img):
     average_height = sum([rect[3] for rect in list(rectangles_contours.keys())]) / len(rectangles_contours)
-    probable_multiline_rectangles = [(rect, contour) for rect, contour in rectangles_contours.items(): if rect[3] >= MAX_RECTANGLE_HEIGHT_MULTIPLIER * average_height]
+    probable_multiline_rectangles = [(rect, contour) for rect, contour in rectangles_contours.items() if (rect[3] >= MAX_RECTANGLE_HEIGHT_MULTIPLIER * average_height)]
 
     if len(probable_multiline_rectangles) > 0:
-        parsed_probabilities = split_multiline_contours(probable_multiline_rectangles, img)
-        for entry in probable_multiline_rectangles
-            del rectangles_contours[entry]
+        parsed_probabilities = split_multiline_contours(probable_multiline_rectangles, average_height, img)
+        for entry in probable_multiline_rectangles:
+            del rectangles_contours[entry[0]]
         for parsed_rectangle in parsed_probabilities:
             rectangles_contours[parsed_rectangle[0]] = parsed_rectangle[1]
-    else
+        return rectangles_contours
+    else:
         return rectangles_contours
 
 
 SPLIT_MULTILINE_MULTIPLIER = 10
+SEARCH_AREA_MULTIPLIER = 2/3
 def split_multiline_contours(probable_multiline_rectangles, average_height, img):
     parsed_rectangles = list()
-    for rectangle, contour in probable_multiline_rectangles:
-        #create skeletonized image
-        (x, y, w, h) = rectangle
-        extracted_image = img[y:y+h, x:x+w]
-        blur = cv2.GaussianBlur(extracted_image,(3,3),0)
-        ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        row_summation = cv2.reduce(threshold, 1, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
+    busy = True
+    while busy:
+        busy = False
+        for rectangle, contour in probable_multiline_rectangles:
+            #create skeletonized image
+            (x, y, w, h) = rectangle
+            if h >=  MAX_RECTANGLE_HEIGHT_MULTIPLIER * average_height:
+                extracted_image = img[y:y+h, x:x+w]
+                # Inverting the image to view whites as zero and blacks as 255
+                inverted_extracted_image = cv2.bitwise_not(extracted_image)
+                blur = cv2.GaussianBlur(inverted_extracted_image,(3,3),0)
+                ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                row_summation = cv2.reduce(threshold, 1, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
 
-        print("#################")
-        print(row_summation)
-        #TODO:: SEARCH HIGHEST PEAKS
+                # Extract the row which is the most likely split points
+                center = len(row_summation) // 2
+                search_size = int(SEARCH_AREA_MULTIPLIER * average_height)
+                (min_row, min_val) = min( [ (index, element) for index, element in enumerate( row_summation[ int(center - search_size):int(center + search_size) ] ) ], key = lambda t: t[1] )
+                min_row += int(center - search_size) # re-add the offset of the list splicing of the previous line
+
+                # Split the rectangle on the row with the lowest black pixel count (is thresholded so we assume this is text or only minor distortion)
+                (rect_cont1, rect_cont2) = split_rectangle_contour_horizontally(rectangle, contour, min_row)
+
+                cv2.imshow("img", extracted_image)
+                cv2.waitKey(0)
+
+                (x, y, w, h) = rect_cont1[0]
+                extracted_image = img[y:y+h, x:x+w]
+                cv2.imshow("img", extracted_image)
+                cv2.waitKey(0)
+
+                (x, y, w, h) = rect_cont2[0]
+                extracted_image = img[y:y+h, x:x+w]
+                cv2.imshow("img", extracted_image)
+                cv2.waitKey(0)
+
+                parsed_rectangles.append(rect_cont1)
+                parsed_rectangles.append(rect_cont2)
+                #TODO:: in case of time left: execute horizontal split on rectangles if col with 0 is found, else could combine two words where not desire
+                busy = True
+            else:
+                parsed_rectangles.append((rectangle, contour))
+        probable_multiline_rectangles = parsed_rectangles
+        parsed_rectangles = list()
+
+    return probable_multiline_rectangles
+
 
     return probable_multiline_rectangles;
 
