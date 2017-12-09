@@ -1,12 +1,14 @@
 from time import time
+
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
 import character_preprocessing as preprocess
-import definitions, character_utils
-from experiments import experiments
+import character_utils
+import definitions
+import os
 
 '''
 For this project we use the Chars74K dataset. It contains 62 classes, with about 3.4K handwritten characters.
@@ -16,7 +18,7 @@ For this project we use the Chars74K dataset. It contains 62 classes, with about
 LEARNING_RATE = 1e-4
 DECAY = 1e-3
 KEEP_PROB = 0.5
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 FILTER_SIZE = 5
 NUM_CLASSES = 62
 SIZE = definitions.SIZE
@@ -64,7 +66,7 @@ def vector2label(vector):
 
 def new_weights(shape, weights):
     w = tf.get_variable('weights', shape, initializer=tf.truncated_normal_initializer(stddev=.1))
-    if weights:
+    if not weights is None:
         weights.append(w)
     return w
 
@@ -95,13 +97,14 @@ def new_fc_layer(name, input, num_in, num_out, global_weights=None):
 
 def get_data():
     """
+    :param max: Limits the possible amount of input data to avoid OOM errors. 
     :return: The training, validation and testset. These sets contain a list of respectively images, labels as vectors, labels
     """
     # Opening files
     labels, images, size = open_images()
     vector_labels = [label2vector(x) for x in labels]
     # Split the dataset into 3 parts
-    x_train, x_validation, y_train, y_validation = train_test_split(images, vector_labels, train_size=0.8)
+    x_train, x_validation, y_train, y_validation = train_test_split(images, vector_labels, train_size=0.88)
     return (x_train, y_train), (x_validation, y_validation)
 
 
@@ -116,13 +119,12 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     """
     _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
     _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
-    base1 = base * 8
     base2 = base * 1024
     h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=8, num_in_channels=NUM_CHANNELS,
                         use_pooling=True, global_weights=global_weights)
-    h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=h1.shape[-1],
+    h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=8,
                         use_pooling=True, global_weights=global_weights)
-    h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=h2.shape[-1],
+    h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=16,
                         use_pooling=True, global_weights=global_weights)
     h4 = tf.contrib.layers.flatten(h3)
     if train:
@@ -140,9 +142,7 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
 def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, global_weights=None):
     # Probability of each class (The closer the 0, the more likely it has that class)
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=h, labels=_y)
-    print(global_weights)
     if global_weights:
-        print("yyeee global weights")
         weight_decay = tf.reduce_sum(tf.stack([tf.nn.l2_loss(w) for w in global_weights]))
     else:
         weight_decay = 0
@@ -172,6 +172,7 @@ def train_net(n, restore=False, min_save=1.0):
     # Initialize variables of neural network
     session.run(tf.global_variables_initializer())
     if restore:
+        print("Restoring previous session.")
         # Initialize variables of neural network with values of previous session.
         restore_session(session)
 
@@ -181,7 +182,7 @@ def train_net(n, restore=False, min_save=1.0):
     start = time()
     accuracies = []
     times = []
-    for i in range(total_epochs, total_epochs + n):
+    for i in range(n):
         for offset in range(0, num_train, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = x_train[offset:end], y_train[offset:end]
@@ -191,15 +192,12 @@ def train_net(n, restore=False, min_save=1.0):
         t = time() - start
         times.append(t)
         if i % 10 == 0:
-            print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(total_epochs, t, validation_accuracy))
-        total_epochs += 1
+            print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
         if validation_accuracy > min_save:
             print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
             min_save = validation_accuracy
     experiments.save_output("all", time=times, accuracies=accuracies, iteration=1)
-    validation_accuracy = session.run(get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
-    print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
     t = str(time() - start)
     print("The training took: " + str(t) + " seconds.")
     return session
@@ -301,7 +299,8 @@ def img_to_text(image, sessionargs, n=1):
 
 
 def most_probable_chars(cls_pred, n):
-    return list(reversed(sorted([(character_utils.index2str(i), x) for i, x in enumerate(cls_pred)], key=lambda x: x[1])[-n:]))
+    return list(
+        reversed(sorted([(character_utils.index2str(i), x) for i, x in enumerate(cls_pred)], key=lambda x: x[1])[-n:]))
 
 
 def init_session():
@@ -317,4 +316,23 @@ def init_session():
         return session, _x, _y, h
 
 
-# train_net(1000, restore=False, min_save=0.79).close()
+def save_output(name, accuracies, time, iteration=None):
+    """
+    Saves the output of an experiment to out.
+    :param name: Name of the outputfile.
+    :param accuracies: Array of accuracies in each epoch.
+    :param time: Array of time measurements in each epoch.
+    :param iteration: Amount of times this experiment has been run.  
+    :return: 
+    """
+    extension = '.txt'
+    if iteration is not None:
+        extension = '_' + str(iteration) + extension
+    out_path = definitions.EXPERIMENTS_CHAR_PATH + name + '/'
+    try:
+        os.makedirs(out_path)
+    except OSError:
+        pass  # dir already exists.
+    np.savetxt(out_path + 'accuracy' + extension, accuracies)
+    np.savetxt(out_path + 'time' + extension, time)
+
