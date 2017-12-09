@@ -4,7 +4,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
-import src.character_preprocessing as preprocess
+import character_preprocessing as preprocess
 import definitions, character_utils
 from experiments import experiments
 
@@ -112,7 +112,7 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     :param keep_prob: Probability that connections after every fully connected layers are used.
     :param filter_size: Size of the filters
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
-    :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values. 
+    :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
     _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
     _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
@@ -229,9 +229,9 @@ def create_session():
 
 def save_session(session, path=definitions.MODEL_CHAR_RECOGNITION_PATH):
     """
-    Save variables of current session. 
+    Save variables of current session.
     Side effect: closes session
-    :return: None 
+    :return: None
     """
     saver = tf.train.Saver()
     saver.save(session, path)
@@ -289,7 +289,7 @@ def img_to_text(image, sessionargs, n=1):
     """
     Converts an image into a character.
     :param Image: The input image
-    :param n: Indicates the amount of results to be returned. 
+    :param n: Indicates the amount of results to be returned.
               If n is higher than 1, the most probable characters and their probabilities will be returned.
     :param sessionargs: Session and the neural network placeholders
     :return: A list of possible characters and their probabilities. Size of this list equals n.
@@ -307,8 +307,8 @@ def most_probable_chars(cls_pred, n):
 def init_session():
     with tf.variable_scope("CharacterRecognition"):
         """
-        Fully creates an initialised session and returns an initialized neural network. 
-        :return: 
+        Fully creates an initialised session and returns an initialized neural network.
+        :return:
         """
         session = tf.Session()
         _x, _y, h = create_neural_net(train=False)
@@ -318,4 +318,3 @@ def init_session():
 
 
 # train_net(1000, restore=False, min_save=0.79).close()
-
