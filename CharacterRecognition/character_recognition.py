@@ -74,7 +74,7 @@ def new_biases(length):
     return tf.get_variable('biases', shape=[length], initializer=tf.constant_initializer(0.1))
 
 
-def new_conv_layer(name, input, num_filters, filter_size, num_in_channels, global_weights, use_pooling=True):
+def new_conv_layer(name, input, num_filters, filter_size, num_in_channels, global_weights=None, use_pooling=True):
     with tf.variable_scope("conv_layer_" + str(name)):
         shape = [filter_size, filter_size, num_in_channels, num_filters]
         weights = new_weights(shape, global_weights)
@@ -87,7 +87,7 @@ def new_conv_layer(name, input, num_filters, filter_size, num_in_channels, globa
         return tf.nn.relu(layer)
 
 
-def new_fc_layer(name, input, num_in, num_out, global_weights):
+def new_fc_layer(name, input, num_in, num_out, global_weights=None):
     with tf.variable_scope("fc_layer_" + str(name)):
         weights = new_weights(shape=[num_in, num_out], weights=global_weights)
         biases = new_biases(length=num_out)
@@ -329,5 +329,3 @@ def examples():
             print(ex,
                   img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
                               sessionargs, n=1))
-
-train_net(200, restore=False)

@@ -112,7 +112,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         arg = sys.argv[1]
         if arg == '-t' or arg == '--test':
-            read_training_data()
+            print(len(read_training_data()))
         else:
             start_training(int(arg))
     else:
