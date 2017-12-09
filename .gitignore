@@ -8,3 +8,4 @@ Report/*
 !Report/*.tex
 !Report/*.bib
 venv/
+*.pyc
