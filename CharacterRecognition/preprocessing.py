@@ -165,7 +165,6 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         label = int(file_name.split('/')[1][-2:])
         file_name = settings.CHAR_DATA_PATH + file_name
         img = preprocess_image(read_image(file_name), inverse=True)
-        erodeImage(img)
         # Data augmentation
         images = augmentImage(erodeImage(img), addNoise=add_noise, addRotations=add_rotations, addTranslations=add_translations,
                               addScales=add_scales, addShearing=add_shearing)
@@ -187,4 +186,4 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
     print('\nThe execution time is {}'.format(end - start))
 
 # Run this function for augmentation...
-# augment_data(add_translations=False)
+# augment_data()

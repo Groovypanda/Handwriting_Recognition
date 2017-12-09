@@ -2,9 +2,8 @@ from Tokenization.character_extraction_main import extract_characters
 from Tokenization.word_extraction import preprocess_image
 from Tokenization.character_combinator import evaluate_character_combinations
 from Postprocessing.language_model import n_gram_model
-from CharacterRecognition.character_recognition import init_session
-from CharacterRecognition.character_recognition import imgs_to_prob_list
-from CharacterRecognition.character_recognition import img_to_text
+import CharacterRecognition.character_recognition as chr
+import Tokenization.oversegmentation_correction as toc
 from Postprocessing.vocabulary import most_likely_words
 import sys
 import cv2
@@ -20,7 +19,7 @@ def recognise_character(file_name):
     :param file_name: File name of the image
     :return: The character
     """
-    return img_to_text(read_image(file_name), init_session())
+    return chr.img_to_text(read_image(file_name), chr.init_session())
 
 
 def recognise_word(file_name):
@@ -29,10 +28,10 @@ def recognise_word(file_name):
     :param file_name: File name of the word
     :return: The word
     """
-    return max(recognise_possible_words(read_image(file_name), init_session), key=lambda x: x[1])
+    return max(recognise_possible_words(read_image(file_name), chr.init_session(), toc.init_session()), key=lambda x: x[1])
 
 
-def recognise_possible_words(img, sessionargs):
+def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_oversegmentation_correction):
     """
     Algorithm:
 
@@ -41,16 +40,16 @@ def recognise_possible_words(img, sessionargs):
     3) Find the most likely words given the cls_pred_list. Now we have a list of words and their probabilities.
     (These probabilities are based on word distances with actual words in the English dictionary)
 
-    :param sessionargs: Session and the neural network placeholders
+    :param sessionargs_char_recognition: Session and the neural network placeholders
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
-    char_imgs = extract_characters(img)
+    char_imgs = extract_characters(img, sessionargs=sessionargs_oversegmentation_correction)
 
     # Call character_combinator
 
-    evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs)
-    cls_pred_list = imgs_to_prob_list(char_imgs, sessionargs)
+    evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
+    cls_pred_list = chr.imgs_to_prob_list(char_imgs, sessionargs_char_recognition)
     return most_likely_words(cls_pred_list)
 
 
@@ -72,7 +71,7 @@ def recognise_text(file_name):
     text = []  # Converted image into list of words
     for word in words:
         # Find a list of possible words using the vocabularium
-        voc_words = recognise_possible_words(word, init_session())
+        voc_words = recognise_possible_words(word, chr.init_session(), toc.init_session())
         # Find the most likely words using the language model
         lang_words = n_gram_model(text, voc_words.keys())
         most_likely_word = \

@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import os
 import imutils
+import Tokenization.oversegmentation_correction as toc
 
 # Found a good skeltonize-algorithm in the scikit-library
 # Scikit-image dependency! (https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-image)
@@ -28,7 +29,7 @@ def rotate_image(image, angle):
 
 #chosen_angles = [-7, -3, 0, 3, 7]
 chosen_angles = [0]
-def extract_character_separations(word_image):
+def extract_character_separations(word_image, postprocess=True, sessionargs=None):
     """
     Calculate the separation points of the characters;
     :return: A Tuple with the list of chosen separation points, and a thresholded image in the correct rotation of the chosen optimal separation angle.
@@ -40,8 +41,10 @@ def extract_character_separations(word_image):
     #   rotated_image = rotate_image(word_image, angle)
     blur = cv2.GaussianBlur(word_image,(1,1),0)
     ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
-    rotated_splits.append(find_splits_img(word_image))
+    splitpoints = find_splits_img(word_image)
+    if postprocess and not sessionargs is None: # Use a neural network to check if predicted splitting points are actual splitting points.
+        toc.filter_splitpoints(word_image, splitpoints)
+    rotated_splits.append(splitpoints)
 
     '''
     We have the rotated image and the splits for each of the chosen angles
@@ -60,13 +63,13 @@ def extract_character_separations(word_image):
 
     return chosen_split_layout
 
-def extract_characters(word_image, index=0):
+def extract_characters(word_image, sessionargs=None):
     """
     Extracts the chracters with segmentation on the word image
     :return: The labels of images, numpy pixel arrpens the dataset and preprocesses the images.ays with the image data, amount of images
     """
 
-    chosen_split_layout = extract_character_separations(word_image)
+    chosen_split_layout = extract_character_separations(word_image, sessionargs=sessionargs)
 
     blur = cv2.GaussianBlur(word_image,(1,1),0)
     ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)

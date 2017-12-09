@@ -154,10 +154,14 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     h = new_fc_layer(name='final', input=h8, num_in=base2 / 2, num_out=NUM_CLASSES, global_weights=global_weights)
     return _x, _y, h
 
-def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY):
+
+def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, global_weights=None):
     # Probability of each class (The closer the 0, the more likely it has that class)
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=h, labels=_y)
-    weight_decay = tf.reduce_sum(tf.stack([tf.nn.l2_loss(w) for w in weights]))
+    if global_weights:
+        weight_decay = tf.reduce_sum(tf.stack([tf.nn.l2_loss(w) for w in global_weights]))
+    else:
+        weight_decay = 0
     loss_operation = tf.reduce_mean(cross_entropy) + decay * weight_decay
 
     # Optimisation of the neural network
@@ -165,7 +169,7 @@ def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY):
     return training_operation
 
 
-def train_net(n, restore=True):
+def train_net(n, restore=True, min_save=1.0):
     """
     Trains the network for n epochs with a new session
     Note: if this function has never been run, set restore to false!
@@ -177,12 +181,13 @@ def train_net(n, restore=True):
     # Some variables required for training
     total_epochs = 0
     training_set, validation_set, test_set = get_data()
+    weights = []
     x_train = training_set[0]
     y_train = training_set[1]
     x_validation = validation_set[0]
     y_validation = validation_set[1]
-    _x, _y, h = create_neural_net()
-    training_operation = create_training_operation(h, _y)
+    _x, _y, h = create_neural_net(global_weights=weights)
+    training_operation = create_training_operation(h, _y, global_weights=weights)
     session = create_session()
     # Initialize variables of neural network
     session.run(tf.global_variables_initializer())
@@ -203,6 +208,10 @@ def train_net(n, restore=True):
         if i % 10 == 0:
             print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
         total_epochs += 1
+        if validation_accuracy > min_save:
+            print("New maximum accuracy achieved.")
+            save_session(session)
+            min_save = validation_accuracy
     validation_accuracy = session.run(get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
     print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
     print("The training took: " + str(t.time() - start) + " seconds.")
@@ -239,7 +248,6 @@ def save_session(session, path=settings.SAVE_PATH):
     """
     saver = tf.train.Saver()
     saver.save(session, path)
-    session.close()
 
 
 def restore_session(session, path=settings.SAVE_PATH):
@@ -329,3 +337,6 @@ def examples():
             print(ex,
                   img_to_text(cv2.imread(settings.EXAMPLE_CHAR_PATH + ex + '_' + str(i) + ".png", 0),
                               sessionargs, n=1))
+
+# train_net(1000, restore=False, min_save=0.79).close()
+

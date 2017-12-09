@@ -1,6 +1,6 @@
 import settings
 import cv2
-import Tokenization.character_extraction_main as chrextr
+import Tokenization.character_extraction_main as chrext
 from pathlib import Path
 import pickle
 import numpy as np
@@ -16,6 +16,8 @@ START_LINE = 18
 SIZE = (MATRIX_Y / WINDOW_SIZE) * ((MATRIX_DX * 2) / WINDOW_SIZE)
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 8
+DECAY = 1e-3
+
 
 def open_images(start=0, amount=-1):
     start = start + START_LINE
@@ -128,16 +130,24 @@ def convert_training_data(images, entries):
     for (i, (name, img)) in enumerate(images):
         _, _, split_data = entries[i]
         for (splitpoint, is_splitpoint) in split_data:
-            pixel_matrix = img[:, splitpoint - MATRIX_DX:splitpoint + MATRIX_DX, 0]
-            # Normalize the matrix values
-            thr, pixel_matrix = cv2.threshold(pixel_matrix, 127, 1, cv2.THRESH_BINARY)
+            pixel_matrix = get_pixel_matrix(img, splitpoint)
             if not pixel_matrix is None:
-                pixel_matrix = cv2.resize(pixel_matrix, dsize=(2 * MATRIX_DX, MATRIX_Y))
-                pixel_matrix = np.reshape(pixel_matrix, (MATRIX_Y, 2*MATRIX_DX, 1))
                 label = [0, 1] if is_splitpoint else [1, 0]
                 labels.append(label)
                 pixel_matrices.append(pixel_matrix)
     return pixel_matrices, labels
+
+
+def get_pixel_matrix(img, splitpoint):
+    pixel_matrix = img[:, splitpoint - MATRIX_DX:splitpoint + MATRIX_DX, 0]
+    # Normalize the matrix values
+    thr, pixel_matrix = cv2.threshold(pixel_matrix, 127, 1, cv2.THRESH_BINARY)
+    if not pixel_matrix is None:
+        pixel_matrix = cv2.resize(pixel_matrix, dsize=(2 * MATRIX_DX, MATRIX_Y))
+        pixel_matrix = np.reshape(pixel_matrix, (MATRIX_Y, 2 * MATRIX_DX, 1))
+        return pixel_matrix
+    else:
+        return None
 
 
 def convert_training_data2(images, entries):
@@ -160,20 +170,27 @@ def convert_training_data2(images, entries):
     return density_matrices, labels
 
 
-def create_neural_net():
+def create_neural_net(global_weights=None, train=True):
     """
     Builds a neural network which can be trained with an optimizer to decide if potential splitting points are actual splitting points.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the expected values.
     """
     OUT_SIZE = 2
     NUM_CHANNELS = 1
-    _x = tf.placeholder(tf.float32, (None, MATRIX_Y, 2*MATRIX_DX, NUM_CHANNELS))
+    _x = tf.placeholder(tf.float32, (None, MATRIX_Y, 2 * MATRIX_DX, NUM_CHANNELS))
     _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
-    h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5)
-    h2 = tf.contrib.layers.flatten(h1)
-    h3 = net.new_fc_layer(name=2, input=h2, num_in=h2.shape[1], num_out=16)
-    h4 = tf.nn.dropout(h3, keep_prob=0.7)
-    h = net.new_fc_layer(name=3, input=h4, num_in=16, num_out=OUT_SIZE)
+    h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5,
+                            global_weights=global_weights)
+    h2 = net.new_conv_layer(name=2, input=h1, num_in_channels=3, num_filters=3, filter_size=3,
+                            global_weights=global_weights)
+    h3 = tf.contrib.layers.flatten(h2)
+    h4 = net.new_fc_layer(name=3, input=h3, num_in=h3.shape[1], num_out=64, global_weights=global_weights)
+    if train:
+        h6 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
+        h5 = tf.nn.dropout(h6, keep_prob=0.7)
+    else:
+        h5 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
+    h = net.new_fc_layer(name='final', input=h5, num_in=16, num_out=OUT_SIZE, global_weights=global_weights)
     return _x, _y, h
 
 
@@ -198,17 +215,20 @@ def create_training_operation(h, _y, learning_rate=LEARNING_RATE):
     return training_operation
 
 
-def train_net(epochs):
+def train_net(epochs, min_save=1.0):
     """
     Trains the network for n epochs with a new session
     Note: if this function has never been run, set restore to false!
+    Min_save indicates from which value the session should start saving. The weights with the highest accuracy will be in the final model.
     :param epochs: Amount of epochs to be trained
     :return: Returns the trained session
     """
     session = tf.Session()
+    global_weights = []
     (x_train, y_train), (x_validation, y_validation) = get_data()
-    _x, _y, h = create_neural_net()
-    training_operation = create_training_operation(h, _y)
+    _x, _y, h = create_neural_net(global_weights)
+    training_operation = net.create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY,
+                                                       global_weights=global_weights)
     session.run(tf.global_variables_initializer())
     # Actual training
     num_train = len(x_train)
@@ -220,6 +240,10 @@ def train_net(epochs):
             batch_x, batch_y = x_train[offset:end], y_train[offset:end]
             session.run(training_operation, feed_dict={_x: batch_x, _y: batch_y})
         validation_accuracy = session.run(net.get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
+        if validation_accuracy > min_save:
+            print("New maximum accuracy achieved.")
+            net.save_session(session, settings.CHAR_SEGMENTATION_NET_SAVE_PATH)
+            min_save = validation_accuracy
         if i % 4 == 0:
             print('EPOCH {}: Validation Accuracy = {:.3f}'.format(i, validation_accuracy))
     print("The training took: " + str(time() - start) + " seconds.")
@@ -237,6 +261,32 @@ def get_data():
     return (x_train, y_train), (x_validation, y_validation)
 
 
+def init_session():
+    """
+    Fully creates an initialised session and returns an initialized neural network. 
+    :return: 
+    """
+    session = tf.Session()
+    _x, _y, h = create_neural_net(train=False)
+    session.run(tf.global_variables_initializer())
+    net.restore_session(session, path=settings.CHAR_SEGMENTATION_NET_SAVE_PATH)
+    return session, _x, _y, h
+
+
+def filter_splitpoints(img, potential_split_points, sessionargs):
+    print(potential_split_points)
+    (session, _x, _y, h) = sessionargs
+    pixel_matrices = []
+    for splitpoint in potential_split_points:
+            pixel_matrix = get_pixel_matrix(img, splitpoint)
+            if not pixel_matrix is None:
+                pixel_matrices.append(pixel_matrix)
+    # Initialize variables of neural network
+    actual_splitpoints = session.run(tf.nn.softmax(h), feed_dict={_x: pixel_matrices})
+    print(actual_splitpoints)
+    return actual_splitpoints
+
+
 """
 Source: https://research-repository.griffith.edu.au/bitstream/handle/10072/15242/11185.pdf%3Bsequence=1
 For each segmentation point in a particular word (given by its xcoordinate),
@@ -251,4 +301,5 @@ segmentation points to the ANN, only the densities of each
 window are presented.
 """
 
-net.save_session(train_net(300), settings.CHAR_SEGMENTATION_NET_SAVE_PATH)
+# net.save_session(train_net(200), settings.CHAR_SEGMENTATION_NET_SAVE_PATH)
+# train_net(500, min_save=0.71).close()

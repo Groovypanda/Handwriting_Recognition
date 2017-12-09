@@ -42,7 +42,7 @@ def create_training_data(start=0, amount=1000):
         for (i, (img_path, img)) in enumerate(images):
             print("Showing image number {} of {}".format(i, n))
             split_data = []
-            splits = chrextr.extract_character_separations(img[:, :, 0])
+            splits = chrextr.extract_character_separations(img[:, :, 0], postprocess=False)
             for (x, y) in splits:
                 split = False
                 img_tmp = img.copy()
