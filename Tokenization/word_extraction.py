@@ -9,6 +9,10 @@ import cv2
 import numpy as np
 
 
+dir = os.path.dirname(__file__)
+outputpath = os.path.join(dir, 'data/output/')
+filepath = os.path.join(dir, 'data/texts/')
+datapath = os.path.join(dir, 'data/')
 # checks if rectangle 2 inside rectangle 1
 def rectangle_contains_rectangle(rectangle1, rectangle2):
     """
@@ -83,9 +87,17 @@ def create_new_rectangle( rectangle1, contour1, rectangle2, contour2 ):
     contour3 = np.concatenate((contour1, contour2))
     return ( rectangle3 , contour3 )
 
+def write_threshold_image(threshold_image, file_number):
+
+    # Write threshold image for demonstration pirposes
+    threshold_directory_path = os.path.join(dir, outputpath + 'thresholds')
+    thresholdpath = os.path.join(dir, outputpath + 'thresholds/image' + str(file_number) + 'threshold.png')
+    if not os.path.exists(threshold_directory_path):
+        os.makedirs(threshold_directory_path)
+    cv2.imwrite(thresholdpath, threshold_image)
 
 
-def fix_vertical_overlap_in_line(line):
+def fix_vertical_overlap_in_line(line, rectangles_copy):
     busy = True
     while busy:
         busy = False
@@ -105,22 +117,17 @@ def fix_vertical_overlap_in_line(line):
     for element in additions:
         line.append(element)
 
-    return line
+    return (line, rectangles_copy)
 
     # Please pass image as greyscale
     # the file index passed is for output purposes
 def preprocess_image(img, file_index = 0):
 
 
-    dir = os.path.dirname(__file__)
-    outputpath = os.path.join(dir, '../data/output/')
-    filepath = os.path.join(dir, '../data/texts/')
-    datapath = os.path.join(dir, '../data/')
     # clear previous output
 
     if not os.path.exists(datapath):
         os.makedirs(datapath)
-
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
 
@@ -128,60 +135,33 @@ def preprocess_image(img, file_index = 0):
 
     #PREPROCESSING
 
-    # 1. reading image in greyscale // NO LONGER APPLICABLE
     height, width = img.shape[:2]
 
-    # 2. Thresholding image (maybe?)
-
-    #blur = cv2.GaussianBlur(img,(5,5),0)
-
-    #thresh = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,3,4)
-
+    # 2. Thresholding image
 
     blur = cv2.GaussianBlur(img,(3,3),0)
     ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    #cv2.imwrite(path + "words/text.png", img)
-
-    #cv2.imwrite(path + "words/text1.png", blur)
-
-    threshold_directory_path = os.path.join(dir, outputpath + 'thresholds')
-    thresholdpath = os.path.join(dir, outputpath + 'thresholds/image' + file_number + 'threshold.png')
-    if not os.path.exists(threshold_directory_path):
-        os.makedirs(threshold_directory_path)
-
-    cv2.imwrite(thresholdpath, thresh)
+    # Write threshold image for demonstration pirposes
+    write_threshold_image(thresh, file_index)
 
     # Finding contours
-
     im2, contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
 
-    #skews = []
     rectangles_contours = {}
     for index in range (0, len(contours)):
         contour = contours[index]
         rectangle = cv2.boundingRect(contour)
-
         if abs(rectangle[2] - width) > 2 or abs(rectangle[3] - height) > 2:
             rectangles_contours[rectangle] = contour
 
 
-    #cv2.drawContours(img, skews, -1, (0,255,0), 1)
-
-    rectangles_to_remove = [];
-    to_add = {}
-
-    # Sifting out rectangles inside others
-    for rectangle1 in rectangles_contours:
-        for rectangle2 in rectangles_contours:
-            if rectangle1 != rectangle2:
-                if rectangle_contains_rectangle(rectangle1, rectangle2):
-                    rectangles_to_remove.append(2)
-
+    #remove rectangles contained by other rectangles
+    rectangles_to_remove = [rect2 for rect1 in rectangles_contours for rect2 in rectangles_contours if rect1 != rect2 and rectangle_contains_rectangle(rect1, rect2)];
 
     #print('removing : ' + str(len(rectangles_to_remove)))
-    for rectangle in rectangles_to_remove:
+    for rectangle in set(rectangles_to_remove):
         rectangles_contours.pop(rectangle, None)
 
     # try to add squared that are overlapping
@@ -297,7 +277,7 @@ def preprocess_image(img, file_index = 0):
                     lastline.append(rect)
                 line = lastline
 
-        line = fix_vertical_overlap_in_line(line)
+        line, rectangles_copy = fix_vertical_overlap_in_line(line, rectangles_copy)
 
         sortedline = sorted(line, key=lambda tup: tup[0])
 
