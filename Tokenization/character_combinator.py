@@ -1,30 +1,17 @@
-import Tokenization.character_normalizer as normalizer
+import character_normalizer as normalizer
+#import CharacterRecognition.character_recognition as cr
+
+
+def normalize_and_execute_character_recognition(character_images):
+
+    print("lel")
 
 
 def evaluate_character_combinations(character_images, session_args):
-    nlist = list()
-    for char_img in character_images:
+
+    # Prepare characters for evaluation
+
+
+    for iteration in range(1, 8):
+        identiefier = 0
         nlist.append(normalizer.normalize_character([char_img]))
-
-    return nlist
-
-
-def evaluate_character_combinations2(character_images, session_args):
-
-    (session, _x, _y, h) = session_args
-
-    lastIteration = [(index, normalizer.normalize_character([char_img])) for index, char_img in character_images]
-    print(lastIteration)
-    busy = True
-    while busy:
-        busy = False
-
-        current_iteration = list()
-        #zoek die met beste
-
-        # WHITEBOARD VOOR REST
-
-
-
-    character_probabilities = cr.imgs_to_prob_list(character_images, session, _x, _y, h)
-    return return_characters

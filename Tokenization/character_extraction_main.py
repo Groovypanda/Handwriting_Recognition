@@ -14,6 +14,8 @@ from skimage.morphology import skeletonize
 import itertools
 dir = os.path.dirname(__file__)
 
+MAX_SKEL_COL_SUMMATION = 3
+
 def rotate_image(image, angle):
     """
     Returns the image rotated by the angle (angle).
@@ -35,7 +37,7 @@ def extract_character_separations(word_image):
     rotated_splits = list()
 
     #for angle in chosen_angles:
-    #rotated_image = rotate_image(word_image, angle)
+    #   rotated_image = rotate_image(word_image, angle)
     blur = cv2.GaussianBlur(word_image,(1,1),0)
     ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
@@ -48,7 +50,6 @@ def extract_character_separations(word_image):
     but will yield the smallest percentage of undersegmentation.
     We start with taking the segmentation of the image without rotation as to ensure no unnecessary rotations are picked
     '''
-    print(rotated_splits)
     if len(rotated_splits) == 0 or len(rotated_splits[0]) == 0:
         return []
     most_splits = len( rotated_splits[ len(rotated_splits) // 2 ][0] )
@@ -134,13 +135,13 @@ def find_splits_img(image):
     col_summation_list = col_summation[0].tolist()
 
     # remove leading and trailing zeros so that no unnecessary splits are performed
-    col_summation_list_tmp = list(itertools.dropwhile(lambda x: x == 0, col_summation_list))
-    x_end_removed = len(col_summation_list) - len(col_summation_list_tmp)
-    col_summation_list = list(itertools.dropwhile(lambda x: x == 0, col_summation_list_tmp[::-1]))[::-1]
-    x_offset = len(col_summation_list_tmp) - len(col_summation_list)
+    #col_summation_list_tmp = list(itertools.dropwhile(lambda x: x == 0, col_summation_list_orig))
+    #x_end_removed = len(col_summation_list_orig) - len(col_summation_list_tmp)
+    #col_summation_list = list(itertools.dropwhile(lambda x: x == 0, col_summation_list_tmp[::-1]))[::-1]
+    #x_offset = len(col_summation_list_tmp) - len(col_summation_list)
 
     # crop the skeletonized image
-    skel = skel[0:height, x_offset:x_offset+len(col_summation_list)]
+    #skel = skel[0:height, x_offset:x_offset+len(col_summation_list)]
 
     """
     Here we will try to replace the given splices with the final cuts we will be making.
@@ -168,10 +169,12 @@ def find_splits_img(image):
         potential_cuts.pop(0)
         startpoint += 1
 
-    # Add consequent splits with a len > 1 as a list (currentsplit) to a general list (splitranges)
     sorted_potential_cuts = sorted(potential_cuts, key=lambda tup: tup[0])
+
+
+        # Add consequent splits (with a len > 1) as a list (currentsplit) to a general list (split_ranges)
     currentsplit = list()
-    splitranges = list()
+    split_ranges = list()
     index = 0
     for (col, pix) in sorted_potential_cuts:
         if index + 1 < len(sorted_potential_cuts) and sorted_potential_cuts[index + 1][0] == col + 1:
@@ -179,24 +182,61 @@ def find_splits_img(image):
         else:
             currentsplit.append((col, pix))
             #undo single line splits
-            if len(currentsplit) > 1:
-                splitranges.append(currentsplit)
+            #if len(currentsplit) > 1:
+            split_ranges.append(currentsplit)
             currentsplit = list()
         index += 1
 
+    to_remove = list()
+    for split_range in split_ranges:
+        for (col, nr) in split_range:
+            if col == 0 or col == len(col_summation_list)-1:
+                to_remove.append(split_range)
+
+    for split_range in to_remove:
+        split_ranges.remove(split_range)
+
+
+    # Combining the split_ranges where in between the split ranges are no characters
+    combined_ranges = list()
+    current_ranges = list()
+    for index in range(len(split_ranges)):
+        if (index + 1 == len(split_ranges)):
+            current_ranges.append(split_ranges[index])
+            combined_ranges.append(current_ranges)
+        else:
+            cur = split_ranges[index]
+            highest_splitpoint_current = cur[len(cur)-1][0]
+            nxt = split_ranges[index + 1]
+            lowest_splitpoint_next = nxt[0][0]
+
+            failed = False
+            for col_index in range(highest_splitpoint_current + 1, lowest_splitpoint_next):
+                if col_summation_list[col_index] > MAX_SKEL_COL_SUMMATION:
+                    failed = True
+            if failed:
+                current_ranges.append(cur)
+                combined_ranges.append(current_ranges)
+                current_ranges = list()
+            else:
+                current_ranges.append(cur)
+
+    new_ranges = [[(split, nr) for split_range in combined_range for (split, nr) in split_range] for combined_range in combined_ranges]
+
+
     # We make a list with the final splits we will use
-    finalsplits = list()
-    for splits in splitranges:
+    final_splits = list()
+    for splits in split_ranges:
         zero_splits = [split for split in splits if split[1] == 0 ]
         if(len(zero_splits) > 0):
-            finalsplits.append(zero_splits[ len(zero_splits) // 2 ])
+            final_splits.append(zero_splits[ len(zero_splits) // 2 ])
         else:
             one_splits = [split for split in splits if split[1] != 0]
-            finalsplits.append(one_splits[ len(one_splits) // 2 ])
+            final_splits.append(one_splits[ len(one_splits) // 2 ])
 
-    final_realigned_splits = list()
-    for split in finalsplits:
-        newsplit = (split[0] + x_end_removed, split[1])
-        final_realigned_splits.append(newsplit)
+    #final_realigned_splits = list()
+    #for split in finalsplits:
+    #   newsplit = (split[0] + x_end_removed, split[1])
+    #    final_realigned_splits.append(newsplit)
 
-    return (final_realigned_splits)
+    return (final_splits)
