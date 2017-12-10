@@ -46,7 +46,7 @@ def extract_character_separations(word_image, postprocess=True, sessionargs=None
         splitpoint_decisions = toc.decide_splitpoints(word_image, splitpoints, sessionargs)
         splitpoints = [split for (is_split, split) in zip(splitpoint_decisions, splitpoints) if is_split]
     rotated_splits.append(splitpoints)
-    
+
     '''
     We have the rotated image and the splits for each of the chosen angles
     Now we identify the image with the most splits,

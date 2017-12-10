@@ -287,16 +287,18 @@ def decide_splitpoints(img, potential_split_points, sessionargs):
     :param sessionargs: Session and neural network variables.
     :return: A list where every item indicates if the corresponding value in potential_split_points is a split point.
     """
-    (session, _x, _y, h) = sessionargs
-    img = np.expand_dims(img, axis=2)
-    pixel_matrices = []
-    for (splitpoint,y) in potential_split_points:
-        pixel_matrix = get_pixel_matrix(img, splitpoint)
-        if not pixel_matrix is None:
-            pixel_matrices.append(pixel_matrix)
-    # Initialize variables of neural network
-    actual_splitpoints = session.run(tf.nn.softmax(h), feed_dict={_x: pixel_matrices})
-    return [bool(x) for x in np.argmax(actual_splitpoints, axis=1)]
+    if len(potential_split_points) > 0:
+        (session, _x, _y, h) = sessionargs
+        img = np.expand_dims(img, axis=2)
+        pixel_matrices = []
+        for (splitpoint,y) in potential_split_points:
+            pixel_matrix = get_pixel_matrix(img, splitpoint)
+            if not pixel_matrix is None :
+                pixel_matrices.append(pixel_matrix)
+        actual_splitpoints = session.run(tf.nn.softmax(h), feed_dict={_x: pixel_matrices})
+        return [bool(x) for x in np.argmax(actual_splitpoints, axis=1)]
+    else:
+        return []
 
 
 """
