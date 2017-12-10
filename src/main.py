@@ -1,7 +1,4 @@
-import sys
-
 import cv2
-
 import character_recognition as chr
 import splitpoint_decision as toc
 from character_extraction import extract_characters
@@ -10,10 +7,19 @@ from vocabulary import most_likely_words
 from word_extraction import preprocess_image
 import splitpoint_decision as sd
 import character_recognition as cr
-
+from character_preprocessing import augment_data
+import word_normalizer as wn
+from pathlib import Path
+import shutil
+import definitions
+import os
+import sys
 
 def read_image(file_name):
-    return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+    if Path(file_name).exists():
+        return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+    else:
+        raise FileNotFoundError(file_name)
 
 
 def recognise_character(file_name):
@@ -31,7 +37,9 @@ def recognise_word(file_name):
     :param file_name: File name of the word
     :return: The word
     """
-    return max(recognise_possible_words(read_image(file_name), chr.init_session(), toc.init_session()),
+    tocsessionargs = toc.init_session()
+    chrsessionargs = chr.init_session()
+    return max(recognise_possible_words(read_image(file_name), chrsessionargs, tocsessionargs),
                key=lambda x: x[1])
 
 
@@ -48,7 +56,9 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
-    char_imgs = extract_characters(img, sessionargs=sessionargs_oversegmentation_correction)
+    print("########################################################")
+    normalized_word_image = wn.normalize_word(img)
+    char_imgs = extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
 
     # Call character_combinator
 
@@ -82,7 +92,7 @@ def recognise_text(file_name):
             max([(word, alpha * voc_words[word] + beta * prob) for word, prob in lang_words.items()],
                 key=lambda x: x[0])[0]
         text.append(most_likely_word)
-        print(most_likely_word)
+        print("Found word: " + most_likely_word)
     return ' '.join(text)
 
 
@@ -90,20 +100,22 @@ def main(argv):
     if len(argv) >= 1:
         option = argv[0]
         arg = argv[1] if len(argv) > 1 else None
-        if option == '--character' or option == '-c':
+        if option == '--character' or option == '-c':  # Recognise a character
             print(recognise_character(arg))
         elif option == '--word' or option == '-w':  # Recognise a word
             print(recognise_word(arg))
-        elif option == '--text' or option == '-t':
+        elif option == '--text' or option == '-t':  # Recognise a text
             print(recognise_text(arg))
-        elif option == '--train-rec' or option == '-tc':  # Train a character segmentation model for 'arg' epochs
-            epochs = arg if arg is not None else 500
-            cr.train_net(epochs, min_save=0.79)
+        elif option == '--train-rec' or option == '-tr':  # Train a character segmentation model for 'arg' epochs
+            epochs = int(arg) if arg is not None else 500
+            cr.train_net(epochs, min_save=0.795)
         elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
-            epochs = arg if arg is not None else 500
+            epochs = int(arg) if arg is not None else 250
             sd.train_net(epochs, min_save=0.71)
         elif option == '--create-data' or option == '-cd':  # Create new data for the character segmentation training.
             sd.start_data_creation(arg)
+        elif option == '--augment-data' or option == '-ad':  # Augment the character dataset
+            augment_data()
     else:
         print(
             '''
@@ -120,5 +132,20 @@ def main(argv):
         )
 
 
+def train_several_models():
+    path = definitions.MODELS_PATH + 'CharacterRecognition/Model'
+    src_path = path + '/'
+    for i in range(3):
+        print("Iteration {}".format(i))
+        session = cr.train_net(500, min_save=0.795, iteration=i + 1)
+        session.close()
+        for dirpath, dirnames, filenames in os.walk(src_path):
+            for filename in filenames:
+                dst_path = path + str(i + 1) + '/'
+                shutil.copy(src_path + filename, dst_path)
+    cr.train_net(1500, min_save=0.795, iteration=4)
+
+
 if __name__ == "__main__":
     main(sys.argv[1:])
+

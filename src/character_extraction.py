@@ -43,7 +43,8 @@ def extract_character_separations(word_image, postprocess=True, sessionargs=None
     ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     splitpoints = find_splits_img(word_image)
     if postprocess and not sessionargs is None: # Use a neural network to check if predicted splitting points are actual splitting points.
-        toc.filter_splitpoints(word_image, splitpoints)
+        splitpoint_decisions = toc.decide_splitpoints(word_image, splitpoints, sessionargs)
+        splitpoints = [split for (is_split, split) in zip(splitpoint_decisions, splitpoints) if is_split]
     rotated_splits.append(splitpoints)
 
     '''
@@ -75,7 +76,7 @@ def extract_characters(word_image, sessionargs=None):
     ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     # chosen split layout variables
     finalsplits = chosen_split_layout
-    height, width = threshold.shape
+    height, width = threshold.shape[:2]
 
     # Splitting the characters on the chosen split locations (finalsplits)
     splitcharacters = list()
@@ -93,7 +94,7 @@ def extract_characters(word_image, sessionargs=None):
 
 def skeletonize_thresholded_image(treshold_img):
     #skeletonize the image. Division is to normalize white to 1 and black to 0.
-    height, width = treshold_img.shape
+    height, width = treshold_img.shape[:2]
     skel2 = skeletonize(treshold_img/255)
 
     resultnpy = np.copy(treshold_img)  # had a weird bug where newly made np matrix did not work
@@ -125,7 +126,7 @@ def find_splits_img(image):
 
     # The image is inverted to facilitate working with the colors later on, as now blacks will be 0.
     inverted = cv2.bitwise_not(image)
-    height, width = inverted.shape
+    height, width = inverted.shape[:2]
 
     # Thresholding the image with the OTSU-algorithm
     blur = cv2.GaussianBlur(inverted,(1,1),0)
@@ -229,9 +230,5 @@ def find_splits_img(image):
             one_splits = [split for split in splits if split[1] != 0]
             final_splits.append(one_splits[ len(one_splits) // 2 ])
 
-    #final_realigned_splits = list()
-    #for split in finalsplits:
-    #   newsplit = (split[0] + x_end_removed, split[1])
-    #    final_realigned_splits.append(newsplit)
 
     return (final_splits)

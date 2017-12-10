@@ -1,13 +1,14 @@
 from time import time
 
-import cv2
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
-import src.character_preprocessing as preprocess
-import definitions, character_utils
+import character_preprocessing as preprocess
+import character_utils
+import definitions
+import os
 
 '''
 For this project we use the Chars74K dataset. It contains 62 classes, with about 3.4K handwritten characters.
@@ -17,7 +18,7 @@ For this project we use the Chars74K dataset. It contains 62 classes, with about
 LEARNING_RATE = 1e-4
 DECAY = 1e-3
 KEEP_PROB = 0.5
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 FILTER_SIZE = 5
 NUM_CLASSES = 62
 SIZE = definitions.SIZE
@@ -31,7 +32,7 @@ def open_images():
     :return: The labels of images, numpy pixel arrays with the image data, amount of images
     """
     file_names = open(definitions.PREPROCESSED_CHARSET_INFO_PATH, 'r').read().splitlines()
-    print("Reading dataset of {} images".format(len(file_names)))
+    #print("Reading dataset of {} images".format(len(file_names)))
     file_names = shuffle(file_names)
     labels = [int(x.split('-')[1]) for x in file_names]
     length = len(file_names)
@@ -65,7 +66,7 @@ def vector2label(vector):
 
 def new_weights(shape, weights):
     w = tf.get_variable('weights', shape, initializer=tf.truncated_normal_initializer(stddev=.1))
-    if weights:
+    if not weights is None:
         weights.append(w)
     return w
 
@@ -96,13 +97,14 @@ def new_fc_layer(name, input, num_in, num_out, global_weights=None):
 
 def get_data():
     """
+    :param max: Limits the possible amount of input data to avoid OOM errors. 
     :return: The training, validation and testset. These sets contain a list of respectively images, labels as vectors, labels
     """
     # Opening files
     labels, images, size = open_images()
     vector_labels = [label2vector(x) for x in labels]
     # Split the dataset into 3 parts
-    x_train, x_validation, y_train, y_validation = train_test_split(images, vector_labels, train_size=0.8)
+    x_train, x_validation, y_train, y_validation = train_test_split(images, vector_labels, train_size=0.88)
     return (x_train, y_train), (x_validation, y_validation)
 
 
@@ -113,29 +115,29 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     :param keep_prob: Probability that connections after every fully connected layers are used.
     :param filter_size: Size of the filters
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
-    :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values. 
+    :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
-    _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
-    _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
-    base1 = base * 8
-    base2 = base * 1024
-    h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=base1, num_in_channels=NUM_CHANNELS,
-                        use_pooling=True, global_weights=global_weights)
-    h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=2 * base1, num_in_channels=base1,
-                        use_pooling=True, global_weights=global_weights)
-    h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=3 * base1, num_in_channels=2 * base1,
-                        use_pooling=True, global_weights=global_weights)
-    h4 = tf.contrib.layers.flatten(h3)
-    if train:
-        h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
-        h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
-        h7 = new_fc_layer(name=7, input=h6, num_in=base2, num_out=base2 / 2, global_weights=global_weights)
-        h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
-    else:
-        h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
-        h8 = new_fc_layer(name=7, input=h7, num_in=base2, num_out=base2 / 2, global_weights=global_weights)
-    h = new_fc_layer(name='final', input=h8, num_in=base2 / 2, num_out=NUM_CLASSES, global_weights=global_weights)
-    return _x, _y, h
+    with tf.variable_scope(''):
+        _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
+        _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
+        base2 = base * 1024
+        h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=8, num_in_channels=NUM_CHANNELS,
+                            use_pooling=True, global_weights=global_weights)
+        h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=8,
+                            use_pooling=True, global_weights=global_weights)
+        h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=16,
+                            use_pooling=True, global_weights=global_weights)
+        h4 = tf.contrib.layers.flatten(h3)
+        if train:
+            h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
+            h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
+            h7 = new_fc_layer(name=7, input=h6, num_in=h6.shape[1], num_out=base2 / 2, global_weights=global_weights)
+            h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
+        else:
+            h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
+            h8 = new_fc_layer(name=7, input=h7, num_in=h7.shape[1], num_out=base2 / 2, global_weights=global_weights)
+        h = new_fc_layer(name='final', input=h8, num_in=h8.shape[1], num_out=NUM_CLASSES, global_weights=global_weights)
+        return _x, _y, h
 
 
 def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, global_weights=None):
@@ -152,7 +154,7 @@ def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, g
     return training_operation
 
 
-def train_net(n, restore=True, min_save=1.0):
+def train_net(n, restore=False, min_save=1.0, iteration=1):
     """
     Trains the network for n epochs with a new session
     Note: if this function has never been run, set restore to false!
@@ -171,6 +173,7 @@ def train_net(n, restore=True, min_save=1.0):
     # Initialize variables of neural network
     session.run(tf.global_variables_initializer())
     if restore:
+        print("Restoring previous session.")
         # Initialize variables of neural network with values of previous session.
         restore_session(session)
 
@@ -178,22 +181,26 @@ def train_net(n, restore=True, min_save=1.0):
     num_train = len(x_train)
     print('Training:\n')
     start = time()
-    for i in range(total_epochs, total_epochs + n):
+    accuracies = []
+    times = []
+    for i in range(n):
         for offset in range(0, num_train, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = x_train[offset:end], y_train[offset:end]
             session.run(training_operation, feed_dict={_x: batch_x, _y: batch_y})
         validation_accuracy = session.run(get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
-        if i % 10 == 0:
-            print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
-        total_epochs += 1
+        accuracies.append(validation_accuracy)
+        t = time() - start
+        times.append(t)
+        #if i % 10 == 0:
+            #print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
         if validation_accuracy > min_save:
-            print("New maximum accuracy achieved.")
+            print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
             min_save = validation_accuracy
-    validation_accuracy = session.run(get_accuracy(h, _y), feed_dict={_x: x_validation, _y: y_validation})
-    print('EPOCH {}: Validation Accuracy = {:.3f}'.format(total_epochs, validation_accuracy))
-    print("The training took: " + str(time() - start) + " seconds.")
+    save_output("all", time=times, accuracies=accuracies, iteration=iteration)
+    t = str(time() - start)
+    print("The training took: " + str(t) + " seconds.")
     return session
 
 
@@ -221,9 +228,9 @@ def create_session():
 
 def save_session(session, path=definitions.MODEL_CHAR_RECOGNITION_PATH):
     """
-    Save variables of current session. 
+    Save variables of current session.
     Side effect: closes session
-    :return: None 
+    :return: None
     """
     saver = tf.train.Saver()
     saver.save(session, path)
@@ -281,7 +288,7 @@ def img_to_text(image, sessionargs, n=1):
     """
     Converts an image into a character.
     :param Image: The input image
-    :param n: Indicates the amount of results to be returned. 
+    :param n: Indicates the amount of results to be returned.
               If n is higher than 1, the most probable characters and their probabilities will be returned.
     :param sessionargs: Session and the neural network placeholders
     :return: A list of possible characters and their probabilities. Size of this list equals n.
@@ -293,15 +300,20 @@ def img_to_text(image, sessionargs, n=1):
 
 
 def most_probable_chars(cls_pred, n):
-    return list(reversed(sorted([(character_utils.index2str(i), x) for i, x in enumerate(cls_pred)], key=lambda x: x[1])[-n:]))
+    return list(
+        reversed(sorted([(character_utils.index2str(i), x) for i, x in enumerate(cls_pred)], key=lambda x: x[1])[-n:]))
 
 
 def init_session():
-    with tf.variable_scope("CharacterRecognition"):
-        """
-        Fully creates an initialised session and returns an initialized neural network. 
-        :return: 
-        """
+    """
+    Fully creates an initialised session and returns an initialized neural network.
+    :return:
+    """
+    graph = tf.Graph()
+    session = tf.Session(graph=graph)
+
+    with session.graph.as_default():
+        # Create variables and ops.
         session = tf.Session()
         _x, _y, h = create_neural_net(train=False)
         session.run(tf.global_variables_initializer())
@@ -309,5 +321,23 @@ def init_session():
         return session, _x, _y, h
 
 
-# train_net(1000, restore=False, min_save=0.79).close()
+def save_output(name, accuracies, time, iteration=None):
+    """
+    Saves the output of an experiment to out.
+    :param name: Name of the outputfile.
+    :param accuracies: Array of accuracies in each epoch.
+    :param time: Array of time measurements in each epoch.
+    :param iteration: Amount of times this experiment has been run.  
+    :return: 
+    """
+    extension = '.txt'
+    if iteration is not None:
+        extension = '_' + str(iteration) + extension
+    out_path = definitions.EXPERIMENTS_CHAR_PATH + name + '/'
+    try:
+        os.makedirs(out_path)
+    except OSError:
+        pass  # dir already exists.
+    np.savetxt(out_path + 'accuracy' + extension, accuracies)
+    np.savetxt(out_path + 'time' + extension, time)
 
