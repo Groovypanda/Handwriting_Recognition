@@ -94,7 +94,7 @@ def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, 
     up, down, left, right = imageBorders(image)
     ## Addition of Gaussian noise
     if add_noise:
-        images.append(noisyImage(image, stddev=0.05))
+        images.append(noisyImage(image, stddev=0.004))
 
     ## Rotations of image
     if add_rotations:
@@ -154,7 +154,7 @@ def preprocess_image(img, inverse=False):
     # We add a simple threshold for distinguishing the foreground and background.
     # Maybe this should actually be done before character recognition and not in preprocessing.
     conf = cv2.THRESH_BINARY if not inverse else cv2.THRESH_BINARY_INV
-    thr, img = cv2.threshold(img, 127, 255, conf)
+    thr, img = cv2.threshold(img, 127, 1, conf)
     return np.reshape(img, definitions.IMG_SHAPE)
 
 
@@ -180,7 +180,7 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
         images.extend(images2)
         # Output
         for aug_img in images:
-            aug_img = np.subtract(255, aug_img)  # Save augmented images as images without inverted color values.
+            aug_img = np.multiply(255, np.subtract(1, aug_img))  # Save augmented images as images without inverted color values.
             new_file_name = definitions.PREPROCESSED_CHARSET_PATH + 'image-{}-{}.png'.format(label, i)
             cv2.imwrite(new_file_name, aug_img)
             out_file_names.write(new_file_name + '\n')
@@ -191,3 +191,12 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
 
     end = t.time()
     print('\nThe execution time is {}'.format(end - start))
+
+def run():
+    img = preprocess_image(read_image("C:/Users/Jarre/PycharmProjects/Project_AI/Data/charset/Img/Sample001/img001-001.png"), inverse=True)
+    # imgs = augmentImage(img, add_translations=True, add_noise=True, add_rotations=True, add_scales=True, add_shearing=True)
+    imgs = augmentImage(img, add_translations=True, add_noise=True, add_rotations=True, add_scales=True, add_shearing=True)
+    print(len(imgs))
+    for tmp in imgs:
+        cv2.imshow("tmp2", cv2.resize(np.multiply(255, np.subtract(1, tmp)), dsize=(64, 64)))
+        cv2.waitKey(0)

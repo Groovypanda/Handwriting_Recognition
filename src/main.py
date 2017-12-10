@@ -1,3 +1,5 @@
+
+
 import cv2
 import splitpoint_decision as toc
 import  character_extraction as ce
@@ -8,7 +10,11 @@ import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
+<<<<<<< HEAD
 
+=======
+import character_combinator as ccb
+>>>>>>> 3475134a6ac20274c559b39a8cd625de0b495bf6
 import character_normalizer as cn
 
 from pathlib import Path
@@ -45,13 +51,13 @@ def recognise_word(file_name):
                key=lambda x: x[1])
 
 
-def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_oversegmentation_correction):
+def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_oversegmentation_correction, postprocess=True, verbose=False):
     """
     Algorithm:
 
     1) Split the sentence in images of characters.
-    2) Convert every character to a list of probabilities. A list of these lists is named the cls_pred_list.
-    3) Find the most likely words given the cls_pred_list. Now we have a list of words and their probabilities.
+    2) Convert every character to a list of probabilities. A list of these lists is named the char_probabilities.
+    3) Find the most likely words given the char_probabilities. Now we have a list of words and their probabilities.
     (These probabilities are based on word distances with actual words in the English dictionary)
 
     :param sessionargs_char_recognition: Session and the neural network placeholders
@@ -59,13 +65,16 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
     normalized_word_image = wn.normalize_word(img)
-    char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
+    char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction, postprocess=postprocess)
 
     # normalized_characters = [cm.normalize_character(character) for character in char_imgs]
     # ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
 
-    cls_pred_list = cr.imgs_to_prob_list(char_imgs, sessionargs_char_recognition)
-    return most_likely_words(cls_pred_list)
+    # Call character_combinator
+
+    # evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
+    char_probabilities = cr.imgs_to_text(char_imgs, sessionargs_char_recognition, n=3, verbose=verbose)
+    return most_likely_words(char_probabilities)
 
 
 def recognise_text(file_name):
@@ -93,7 +102,7 @@ def recognise_text(file_name):
             max([(word, alpha * voc_words[word] + beta * prob) for word, prob in lang_words.items()],
                 key=lambda x: x[0])[0]
         text.append(most_likely_word)
-        print("Found word: " + most_likely_word)
+        print("Found word: " + most_likely_word[0])
     return ' '.join(text)
 
 
@@ -109,7 +118,7 @@ def main(argv):
             print(recognise_text(arg))
         elif option == '--train-rec' or option == '-tr':  # Train a character segmentation model for 'arg' epochs
             epochs = int(arg) if arg is not None else 500
-            cr.train_net(epochs, min_save=0.795)
+            cr.train_net(epochs, min_save=0.77)
         elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
             epochs = int(arg) if arg is not None else 250
             sd.train_net(epochs, min_save=0.71)
@@ -131,21 +140,6 @@ def main(argv):
             -h, --help: Prints this output.
             '''
         )
-
-
-def train_several_models():
-    path = definitions.MODELS_PATH + 'CharacterRecognition/Model'
-    src_path = path + '/'
-    for i in range(3):
-        print("Iteration {}".format(i))
-        session = cr.train_net(500, min_save=0.795, iteration=i + 1)
-        session.close()
-        for dirpath, dirnames, filenames in os.walk(src_path):
-            for filename in filenames:
-                dst_path = path + str(i + 1) + '/'
-                shutil.copy(src_path + filename, dst_path)
-    cr.train_net(1500, min_save=0.795, iteration=4)
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
