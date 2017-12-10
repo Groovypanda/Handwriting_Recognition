@@ -47,7 +47,7 @@ def recognise_word(file_name):
                key=lambda x: x[1])
 
 
-def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_oversegmentation_correction):
+def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_oversegmentation_correction, postprocess=True, verbose=False):
     """
     Algorithm:
 
@@ -61,7 +61,7 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
     normalized_word_image = wn.normalize_word(img)
-    char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
+    char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction, postprocess=postprocess)
 
     # normalized_characters = [cm.normalize_character(character) for character in char_imgs]
     # ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
@@ -69,7 +69,7 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     # Call character_combinator
 
     # evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
-    char_probabilities = cr.imgs_to_text(char_imgs, sessionargs_char_recognition, n=3)
+    char_probabilities = cr.imgs_to_text(char_imgs, sessionargs_char_recognition, n=3, verbose=verbose)
     return most_likely_words(char_probabilities)
 
 
