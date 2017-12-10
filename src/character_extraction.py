@@ -81,7 +81,7 @@ def extract_characters(word_image, sessionargs=None):
     height, width = threshold.shape[:2]
 
 
-    cse.evaluate_character_combinations(threshold, finalsplits)
+    #cse.evaluate_character_combinations(threshold, finalsplits)
 
     # Splitting the characters on the chosen split locations (finalsplits)
     splitcharacters = list()

@@ -36,23 +36,26 @@ def delete_white_border(character_image):
     borderless_image = character_image[up_bound:down_bound, left_bound:right_bound]
     return(borderless_image)
 
-def normalize_character(charlist):
+def combine_characters(characterlist):
+    if len(characterlist) == 0:
+        return None
+
+    # Horizontal concatenation of the character splices
+    character_img = characterlist[0]
+    index = 0;
+    while (index + 1) < len(characterlist):
+        character_img = np.concatenate((character_img, characterlist[index + 1]), axis=1)
+        index += 1
+    return character_img
+
+def normalize_character(character):
     """
     Precondition:: All character slices in the input have the same height! This is correct when the character slices come from the same word.
     :return: a normalized image of the chosen character splits all pasted together
     """
 
-
-    if len(charlist) == 0:
-        return None
-
     # Horizontal concatenation of the character splices
-    character_img = charlist[0]
-    index = 0;
-    while (index + 1) < len(charlist):
-        character_img = np.concatenate((character_img, charlist[index + 1]), axis=1)
-        index += 1
-
+    character_img = character
     # Treshold the image
     blur = cv2.GaussianBlur(character_img,(3,3),0)
     ret3,thresh = cv2.threshold(blur,120,255,cv2.THRESH_BINARY)

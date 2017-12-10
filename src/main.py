@@ -11,6 +11,8 @@ import word_normalizer as wn
 
 import character_combinator as ccb
 
+import character_normalizer as cn
+
 from pathlib import Path
 import shutil
 import definitions
@@ -61,7 +63,8 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     normalized_word_image = wn.normalize_word(img)
     char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
 
-    ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
+    # normalized_characters = [cm.normalize_character(character) for character in char_imgs]
+    # ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
 
     # Call character_combinator
 
