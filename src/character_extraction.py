@@ -11,6 +11,7 @@ import numpy as np
 # Found a good skeltonize-algorithm in the scikit-library
 # Scikit-image dependency! (https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-image)
 from skimage.morphology import skeletonize
+import character_split_evaluator as cse
 
 import splitpoint_decision as toc
 
@@ -72,11 +73,15 @@ def extract_characters(word_image, sessionargs=None):
 
     chosen_split_layout = extract_character_separations(word_image, sessionargs=sessionargs)
 
+
     blur = cv2.GaussianBlur(word_image,(1,1),0)
     ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     # chosen split layout variables
     finalsplits = chosen_split_layout
     height, width = threshold.shape[:2]
+
+
+    cse.evaluate_character_combinations(threshold, finalsplits)
 
     # Splitting the characters on the chosen split locations (finalsplits)
     splitcharacters = list()
