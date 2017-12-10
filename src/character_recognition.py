@@ -33,7 +33,7 @@ def open_images():
     :return: The labels of images, numpy pixel arrays with the image data, amount of images
     """
     file_names = open(definitions.PREPROCESSED_CHARSET_INFO_PATH, 'r').read().splitlines()
-    #print("Reading dataset of {} images".format(len(file_names)))
+    # print("Reading dataset of {} images".format(len(file_names)))
     file_names = shuffle(file_names)
     labels = [int(x.split('-')[1]) for x in file_names]
     length = len(file_names)
@@ -118,7 +118,7 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
-    with tf.variable_scope(''):
+    with tf.variable_scope('CharacterRecognition'):
         _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
         _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
         base2 = base * 1024
@@ -193,8 +193,8 @@ def train_net(n, restore=False, min_save=1.0, iteration=1):
         accuracies.append(validation_accuracy)
         t = time() - start
         times.append(t)
-        #if i % 10 == 0:
-            #print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
+        if i % 10 == 0:
+            print('EPOCH {} - {:.0f}s: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
         if validation_accuracy > min_save:
             print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
@@ -282,12 +282,24 @@ def imgs_to_prob_list(images, sessionargs):
     prob_list = []
     for img in images:
         probabilities = img_to_prob(img, sessionargs)
-        # print(sorted([(character_utils.cls2str(i),x) for (i,x) in enumerate(probabilities)], key=lambda x:-x[1])[:5])
+        # print(sorted([(character_utils.index2str(i),x) for (i,x) in enumerate(probabilities)], key=lambda x:-x[1])[:5])
         prob_list.append(probabilities)
     return prob_list
 
 
-def img_to_text(image, sessionargs, n=1):
+def imgs_to_text(images, sessionargs, n=1, verbose=False):
+    """
+    Converts an image into a character.
+    :param Image: The input image
+    :param n: Indicates the amount of results to be returned.
+              If n is higher than 1, the most probable characters and their probabilities will be returned.
+    :param sessionargs: Session and the neural network placeholders
+    :return: A list of possible characters and their probabilities for every character. Size the inner list equals n
+    """
+    return [img_to_text(img, sessionargs, n, verbose=verbose) for img in images]
+
+
+def img_to_text(image, sessionargs, n=1, verbose=False):
     """
     Converts an image into a character.
     :param Image: The input image
@@ -299,6 +311,8 @@ def img_to_text(image, sessionargs, n=1):
     if n == 1:
         return character_utils.index2str(np.argmax(img_to_prob(image, sessionargs)))
     else:
+        if verbose:
+            print(most_probable_chars(img_to_prob(image, sessionargs), n))
         return most_probable_chars(img_to_prob(image, sessionargs), n)
 
 
@@ -343,4 +357,3 @@ def save_output(name, accuracies, time, iteration=None):
         pass  # dir already exists.
     np.savetxt(out_path + 'accuracy' + extension, accuracies)
     np.savetxt(out_path + 'time' + extension, time)
-
