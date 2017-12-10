@@ -9,9 +9,7 @@ from word_extraction import preprocess_image
 import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
-import word_normalizer as wn
 import character_normalizer as cn
-
 from pathlib import Path
 import shutil
 import definitions

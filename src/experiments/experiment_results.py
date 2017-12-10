@@ -56,13 +56,14 @@ def find_experiment_location(experiment_name):
 
 
 def find_experiment_conf_location(experiment_name, conf):
-    return find_experiment_location('_'.join([experiment_name, str(conf)]))[0]
+    dir_name = '_'.join([experiment_name, str(conf)]) if conf != '' else experiment_name
+    return find_experiment_location(dir_name)[0]
 
 
 def visualise(accuracies, times, name='', show=True, save=False, labels=None):
     plots = []
     for i in range(len(accuracies)):
-        if labels[i]:
+        if labels and labels[i]:
             print("{}: {:.0f}%, {:.0f}".format(labels[i], 100 * accuracies[i][-1], times[i][-1]))
         else:
             print(accuracies[i][-1], times[i][-1])
@@ -76,7 +77,7 @@ def visualise(accuracies, times, name='', show=True, save=False, labels=None):
     plt.ylabel("Accuracy")
     plt.xlabel("Time (s)")
     axes = plt.gca()
-    axes.set_ylim([0, 0.9])
+    axes.set_ylim([0, 1])
     if save and name != '':
         savefig(os.path.join(definitions.EXPERIMENTS_CHAR_GRAPHS_PATH, name + '.png'))
     if show:
@@ -97,5 +98,14 @@ def visualise_experiment_configuration(experiment_name, conf, save=False):
     #visualise_experiment(exp, max=True, save=True)
 #visualise_experiment_configuration("preprocess", conf="all", save=False)
 
-visualise_experiment("preprocess", max=False, save=False)
+def visualise_all():
+    accuracy_path = definitions.EXPERIMENTS_CHAR_PATH + 'all/accuracy_907.txt'
+    time_path = definitions.EXPERIMENTS_CHAR_PATH + 'all/time_907.txt'
+    accuracy = np.loadtxt(accuracy_path)
+    time = np.loadtxt(time_path)
+    end = 500
+    visualise([accuracy[:end]], [time[:end]], name='final_{}'.format(end), save=True)
+    print(np.max([accuracy[:end]]))
 
+
+visualise_all()
