@@ -31,11 +31,11 @@ def open_images(start=0, amount=-1):
     file_entries = [x.split(' ') for x in files]
     print("Reading new dataset of {} images, starting at image {}".format(len(file_entries), start))
     images = []
-    files = [x[0] for x in file_entries]
-    for file_name in files:
+    files = [(x[0], x[-1]) for x in file_entries]
+    for (file_name, word) in files:
         parts = file_name.split('-')
         file_path = '/'.join([parts[0], parts[0] + '-' + parts[1], file_name + '.png'])
-        images.append((file_path, cv2.imread(definitions.WORDSET_PATH + file_path)))
+        images.append((file_path, word, cv2.imread(definitions.WORDSET_PATH + file_path)))
     return images
 
 
@@ -43,10 +43,12 @@ def create_training_data(start=0, amount=1000):
     images = open_images(start, amount)
     n = len(images)
     with open(definitions.WORD_SPLITTING_PATH, "ab") as out_file:
-        for (i, (img_path, img)) in enumerate(images):
-            print("Showing image number {} of {}".format(i, n))
+        for (i, (img_path, word, img)) in enumerate(images):
+            print("Displaying word {} - Showing image number {} of {}".format(word, i, n))
             splits = char_ex.extract_character_separations(img[:, :, 0])
             split_data = manual_split_point_detection(img, splits)
+            if split_data is None:
+                return
             pickle.dump((start + i, img_path, split_data), out_file)
 
 
@@ -149,7 +151,7 @@ def convert_training_data(images, entries):
     """
     labels = []
     pixel_matrices = []
-    for (i, (name, img)) in enumerate(images):
+    for (i, (name, word, img)) in enumerate(images):
         _, _, split_data = entries[i]
         for (splitpoint, is_splitpoint) in split_data:
             pixel_matrix = get_pixel_matrix(img, splitpoint)
@@ -320,17 +322,4 @@ def decide_splitpoints(img, potential_split_points, sessionargs):
         return []
 
 
-"""
-Source: https://research-repository.griffith.edu.au/bitstream/handle/10072/15242/11185.pdf%3Bsequence=1
-For each segmentation point in a particular word (given by its xcoordinate),
-a matrix of pixels is extracted and stored in an
-A” training file. Each matrix is first normalised in size,
-and then significantly reduced in size by a simple feature
-extractor. The feature extractor breaks the segmentation
-point matrix down into small windows of equal size and
-analyses the density of black and white pixels. Therefore,
-instead of presenting the raw pixel values of the
-segmentation points to the ANN, only the densities of each
-window are presented.
-"""
 

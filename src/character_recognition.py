@@ -287,7 +287,7 @@ def imgs_to_prob_list(images, sessionargs):
     return prob_list
 
 
-def imgs_to_text(images, sessionargs, n=1):
+def imgs_to_text(images, sessionargs, n=1, verbose=False):
     """
     Converts an image into a character.
     :param Image: The input image
@@ -296,10 +296,10 @@ def imgs_to_text(images, sessionargs, n=1):
     :param sessionargs: Session and the neural network placeholders
     :return: A list of possible characters and their probabilities for every character. Size the inner list equals n
     """
-    return [img_to_text(img, sessionargs, n) for img in images]
+    return [img_to_text(img, sessionargs, n, verbose=verbose) for img in images]
 
 
-def img_to_text(image, sessionargs, n=1):
+def img_to_text(image, sessionargs, n=1, verbose=False):
     """
     Converts an image into a character.
     :param Image: The input image
@@ -311,6 +311,8 @@ def img_to_text(image, sessionargs, n=1):
     if n == 1:
         return character_utils.index2str(np.argmax(img_to_prob(image, sessionargs)))
     else:
+        if verbose:
+            print(most_probable_chars(img_to_prob(image, sessionargs), n))
         return most_probable_chars(img_to_prob(image, sessionargs), n)
 
 

@@ -65,6 +65,16 @@ def most_likely_words(char_probabilities):
     return words
 
 
+def most_likely_words_without_voc(char_probabilities):
+    """
+        Finds the most likely words given the class probabilities without a vocabularium.
+        :param char_probabilities: A list of tuples with characters and their probabilities for every character in the word
+        :return: A dictionary with words as keys and probabilities as values.
+        """
+    alpha = 0.7  # Importance of original word
+    beta = 0.3  # Importance of word for voc
+    most_possible_characters = possible_written_characters(char_probabilities)
+    return most_possible_characters
 '''
 FOLLOWING FUNCTIONS ARE FOR TESTING PURPOSES
 '''
