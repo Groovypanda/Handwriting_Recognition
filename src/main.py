@@ -114,7 +114,7 @@ def main(argv):
             print(recognise_text(arg))
         elif option == '--train-rec' or option == '-tr':  # Train a character segmentation model for 'arg' epochs
             epochs = int(arg) if arg is not None else 500
-            cr.train_net(epochs, min_save=0.790)
+            cr.train_net(epochs, min_save=0.77)
         elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
             epochs = int(arg) if arg is not None else 250
             sd.train_net(epochs, min_save=0.71)

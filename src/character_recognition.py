@@ -118,7 +118,7 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
-    with tf.variable_scope(''):
+    with tf.variable_scope('CharacterRecognition'):
         _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
         _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
         base2 = base * 1024
@@ -282,7 +282,7 @@ def imgs_to_prob_list(images, sessionargs):
     prob_list = []
     for img in images:
         probabilities = img_to_prob(img, sessionargs)
-        # print(sorted([(character_utils.cls2str(i),x) for (i,x) in enumerate(probabilities)], key=lambda x:-x[1])[:5])
+        # print(sorted([(character_utils.index2str(i),x) for (i,x) in enumerate(probabilities)], key=lambda x:-x[1])[:5])
         prob_list.append(probabilities)
     return prob_list
 

@@ -7,7 +7,7 @@ import character_recognition as cr
 from character_preprocessing import augmentImage
 from character_preprocessing import preprocess_image
 from character_preprocessing import erodeImage
-from character_utils import cls2str
+from character_utils import index2str
 import  numpy as np
 
 
