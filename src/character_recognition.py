@@ -32,7 +32,7 @@ def open_images():
     :return: The labels of images, numpy pixel arrays with the image data, amount of images
     """
     file_names = open(definitions.PREPROCESSED_CHARSET_INFO_PATH, 'r').read().splitlines()
-    print("Reading dataset of {} images".format(len(file_names)))
+    #print("Reading dataset of {} images".format(len(file_names)))
     file_names = shuffle(file_names)
     labels = [int(x.split('-')[1]) for x in file_names]
     length = len(file_names)
@@ -154,7 +154,7 @@ def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, g
     return training_operation
 
 
-def train_net(n, restore=False, min_save=1.0):
+def train_net(n, restore=False, min_save=1.0, iteration=1):
     """
     Trains the network for n epochs with a new session
     Note: if this function has never been run, set restore to false!
@@ -192,13 +192,13 @@ def train_net(n, restore=False, min_save=1.0):
         accuracies.append(validation_accuracy)
         t = time() - start
         times.append(t)
-        if i % 10 == 0:
-            print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
+        #if i % 10 == 0:
+            #print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
         if validation_accuracy > min_save:
             print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
             min_save = validation_accuracy
-    save_output("all", time=times, accuracies=accuracies, iteration=1)
+    save_output("all", time=times, accuracies=accuracies, iteration=iteration)
     t = str(time() - start)
     print("The training took: " + str(t) + " seconds.")
     return session
