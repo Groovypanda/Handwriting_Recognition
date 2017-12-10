@@ -309,11 +309,16 @@ def init_session():
     Fully creates an initialised session and returns an initialized neural network.
     :return:
     """
-    session = tf.Session()
-    _x, _y, h = create_neural_net(train=False)
-    session.run(tf.global_variables_initializer())
-    restore_session(session)
-    return session, _x, _y, h
+    graph = tf.Graph()
+    session = tf.Session(graph=graph)
+
+    with session.graph.as_default():
+        # Create variables and ops.
+        session = tf.Session()
+        _x, _y, h = create_neural_net(train=False)
+        session.run(tf.global_variables_initializer())
+        restore_session(session)
+        return session, _x, _y, h
 
 
 def save_output(name, accuracies, time, iteration=None):

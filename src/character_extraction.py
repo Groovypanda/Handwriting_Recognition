@@ -43,9 +43,10 @@ def extract_character_separations(word_image, postprocess=True, sessionargs=None
     ret3,rotated_threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     splitpoints = find_splits_img(word_image)
     if postprocess and not sessionargs is None: # Use a neural network to check if predicted splitting points are actual splitting points.
-        toc.filter_splitpoints(word_image, splitpoints)
+        splitpoint_decisions = toc.decide_splitpoints(word_image, splitpoints, sessionargs)
+        splitpoints = [split for (is_split, split) in zip(splitpoint_decisions, splitpoints) if is_split]
     rotated_splits.append(splitpoints)
-
+    
     '''
     We have the rotated image and the splits for each of the chosen angles
     Now we identify the image with the most splits,

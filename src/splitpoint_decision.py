@@ -187,7 +187,7 @@ def create_neural_net(global_weights=None, train=True):
                                 global_weights=global_weights, use_pooling=False)
         h3 = tf.contrib.layers.flatten(h1)
         h4 = net.new_fc_layer(name=3, input=h3, num_in=h3.shape[1], num_out=64, global_weights=global_weights)
-        if train:
+        if False:
             h6 = net.new_fc_layer(name=4, input=h4, num_in=64, num_out=16, global_weights=global_weights)
             h5 = tf.nn.dropout(h6, keep_prob=DROPOUT)
         else:
@@ -268,26 +268,35 @@ def init_session():
     Fully creates an initialised session and returns an initialized neural network.
     :return:
     """
-    with tf.variable_scope():
-        session = tf.Session()
+    graph = tf.Graph()
+    session = tf.Session(graph=graph)
+    with session.graph.as_default():
+        # Create variables and ops.
         _x, _y, h = create_neural_net(train=False)
         session.run(tf.global_variables_initializer())
         net.restore_session(session, path=definitions.MODEL_CHAR_SEGMENTATION_PATH)
         return session, _x, _y, h
 
 
-def filter_splitpoints(img, potential_split_points, sessionargs):
-    print(potential_split_points)
+def decide_splitpoints(img, potential_split_points, sessionargs):
+    """
+    Checks if the given splitpoints are actual splitpoints in the image using a neural network to classify the splitpoint 
+    as correct or incorrect.
+    :param img: Image of a word
+    :param potential_split_points: List of potential splitpoints 
+    :param sessionargs: Session and neural network variables.
+    :return: A list where every item indicates if the corresponding value in potential_split_points is a split point.
+    """
     (session, _x, _y, h) = sessionargs
+    img = np.expand_dims(img, axis=2)
     pixel_matrices = []
-    for splitpoint in potential_split_points:
-            pixel_matrix = get_pixel_matrix(img, splitpoint)
-            if not pixel_matrix is None:
-                pixel_matrices.append(pixel_matrix)
+    for (splitpoint,y) in potential_split_points:
+        pixel_matrix = get_pixel_matrix(img, splitpoint)
+        if not pixel_matrix is None:
+            pixel_matrices.append(pixel_matrix)
     # Initialize variables of neural network
     actual_splitpoints = session.run(tf.nn.softmax(h), feed_dict={_x: pixel_matrices})
-    print(actual_splitpoints)
-    return actual_splitpoints
+    return [bool(x) for x in np.argmax(actual_splitpoints, axis=1)]
 
 
 """
@@ -304,5 +313,3 @@ segmentation points to the ANN, only the densities of each
 window are presented.
 """
 
-# net.save_session(train_net(200), settings.CHAR_SEGMENTATION_NET_SAVE_PATH)
-# train_net(500, min_save=0.71).close()
