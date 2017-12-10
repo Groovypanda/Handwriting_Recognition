@@ -36,7 +36,9 @@ def recognise_word(file_name):
     :param file_name: File name of the word
     :return: The word
     """
-    return max(recognise_possible_words(read_image(file_name), chr.init_session(), toc.init_session()),
+    tocsessionargs = toc.init_session()
+    chrsessionargs = chr.init_session()
+    return max(recognise_possible_words(read_image(file_name), chrsessionargs, tocsessionargs),
                key=lambda x: x[1])
 
 
