@@ -1,6 +1,6 @@
 import cv2
 import splitpoint_decision as toc
-from character_extraction import extract_characters
+import  character_extraction as ce
 from language_model import n_gram_model
 from vocabulary import most_likely_words
 from word_extraction import preprocess_image
@@ -8,6 +8,11 @@ import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
+
+import character_combinator as ccb
+
+import character_normalizer as cn
+
 from pathlib import Path
 import shutil
 import definitions
@@ -55,9 +60,11 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
-    print("########################################################")
     normalized_word_image = wn.normalize_word(img)
-    char_imgs = extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
+    char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
+
+    # normalized_characters = [cm.normalize_character(character) for character in char_imgs]
+    # ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
 
     # Call character_combinator
 
@@ -132,4 +139,3 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
