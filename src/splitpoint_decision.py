@@ -40,29 +40,37 @@ def open_images(start=0, amount=-1):
 
 
 def create_training_data(start=0, amount=1000):
-    show_range = 1
     images = open_images(start, amount)
     n = len(images)
     with open(definitions.WORD_SPLITTING_PATH, "ab") as out_file:
         for (i, (img_path, img)) in enumerate(images):
             print("Showing image number {} of {}".format(i, n))
-            split_data = []
             splits = char_ex.extract_character_separations(img[:, :, 0])
-            for (x, y) in splits:
-                split = False
-                img_tmp = img.copy()
-                for y in range(-show_range, show_range + 1):
-                    img_tmp[:, x + y] = [0, 0, 255]
-                cv2.imshow("img", img_tmp)  # Present splitpoint to user
-                key = cv2.waitKey(0)
-                if key == 13 or key == 32:  # User decides x is a splitpoint
-                    split = True
-                elif key == 27:  # escape
-                    return
-                else:  # user decides x is not a splitpoint
-                    pass
-                split_data.append((x, split))
+            split_data = manual_split_point_detection(img, splits)
             pickle.dump((start + i, img_path, split_data), out_file)
+
+
+def manual_split_point_detection(img, splits):
+    if len(img.shape) == 2:
+        img = np.expand_dims(img, axis=2)
+        img = np.repeat(img, 3, axis=2)
+    split_data = []
+    show_range = 1
+    for (x, _) in splits:
+        split = False
+        img_tmp = img.copy()
+        for y in range(-show_range, show_range + 1):
+            img_tmp[:, x + y] = [0, 0, 255]
+        cv2.imshow("img", img_tmp)  # Present splitpoint to user
+        key = cv2.waitKey(0)
+        if key == 13 or key == 32:  # User decides x is a splitpoint
+            split = True
+        elif key == 27:  # escape
+            return
+        else:  # user decides x is not a splitpoint
+            pass
+        split_data.append((x, split))
+    return split_data
 
 
 def start_data_creation(requested_start=0):
