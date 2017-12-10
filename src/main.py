@@ -1,7 +1,4 @@
-import sys
-
 import cv2
-
 import character_recognition as chr
 import splitpoint_decision as toc
 from character_extraction import extract_characters
@@ -13,7 +10,10 @@ import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
 from pathlib import Path
-
+import shutil
+import definitions
+import os
+import sys
 
 def read_image(file_name):
     if Path(file_name).exists():
@@ -132,5 +132,20 @@ def main(argv):
         )
 
 
+def train_several_models():
+    path = definitions.MODELS_PATH + 'CharacterRecognition/Model'
+    src_path = path + '/'
+    for i in range(3):
+        print("Iteration {}".format(i))
+        session = cr.train_net(500, min_save=0.795, iteration=i + 1)
+        session.close()
+        for dirpath, dirnames, filenames in os.walk(src_path):
+            for filename in filenames:
+                dst_path = path + str(i + 1) + '/'
+                shutil.copy(src_path + filename, dst_path)
+    cr.train_net(1500, min_save=0.795, iteration=4)
+
+
 if __name__ == "__main__":
     main(sys.argv[1:])
+
