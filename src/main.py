@@ -9,7 +9,7 @@ from word_extraction import preprocess_image
 import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
-import word_normalizer as wn
+import character_normalizer as cn
 from pathlib import Path
 import shutil
 import definitions
@@ -66,7 +66,8 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     # Call character_combinator
 
     # evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
-    char_probabilities = cr.imgs_to_text(char_imgs, sessionargs_char_recognition, n=3, verbose=verbose)
+    normalized_character_images = [cn.normalize_character(character_im) for character_im in char_imgs]
+    char_probabilities = cr.imgs_to_text(normalized_character_images, sessionargs_char_recognition, n=3, verbose=verbose)
     return most_likely_words(char_probabilities)
 
 

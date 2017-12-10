@@ -208,7 +208,7 @@ def remove_image_contour_if_exists(img, rectangles_contours):
     height, width = img.shape[:2]
     to_remove = list()
     for rect in rectangles_contours:
-        if rect[2] >= width-4 and rect[3] >= height-4: # 2 pixels from border, 2 padding
+        if rect[2] >= width-PADDING_SIZE and rect[3] >= height-PADDING_SIZE: # 2 pixels from border, 2 padding
             to_remove.append(rect)
     for rect in to_remove:
         del rectangles_contours[rect]
@@ -370,12 +370,13 @@ def split_text_in_lines(rectangles_contours):
     return lines
 
 
+PADDING_SIZE = 4 #pixels
 def pad_img_white(img):
     height, width = img.shape[:2]
-    new_h, new_w = height+2, width+2
+    new_h, new_w = height+(2*PADDING_SIZE), width+(2*PADDING_SIZE)
 
     container = cv2.bitwise_not(np.zeros((new_h, new_w), np.uint8))
-    container[1:height+1 ,1:width+1] = img
+    container[PADDING_SIZE:height+PADDING_SIZE ,PADDING_SIZE:width+PADDING_SIZE] = img
     return container
 
     # Please pass image as greyscale

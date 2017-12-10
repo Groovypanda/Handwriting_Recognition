@@ -112,5 +112,3 @@ def rand(not_indices, amount):
 def test():
     print(correct_written_words("artificol"))
     print(correct_written_words("inteligance"))
-
-test()
