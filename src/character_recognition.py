@@ -117,7 +117,7 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
-    with tf.variable_scope(''):
+    with tf.variable_scope('CharacterRecognition'):
         _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
         _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
         base2 = base * 1024
@@ -192,8 +192,8 @@ def train_net(n, restore=False, min_save=1.0, iteration=1):
         accuracies.append(validation_accuracy)
         t = time() - start
         times.append(t)
-        #if i % 10 == 0:
-            #print('EPOCH {} - {:.0f}: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
+        if i % 10 == 0:
+            print('EPOCH {} - {:.0f}s: Validation Accuracy = {:.3f}'.format(i, t, validation_accuracy))
         if validation_accuracy > min_save:
             print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)

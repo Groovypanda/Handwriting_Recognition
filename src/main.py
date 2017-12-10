@@ -92,7 +92,7 @@ def recognise_text(file_name):
             max([(word, alpha * voc_words[word] + beta * prob) for word, prob in lang_words.items()],
                 key=lambda x: x[0])[0]
         text.append(most_likely_word)
-        print("Found word: " + most_likely_word)
+        print("Found word: " + most_likely_word[0])
     return ' '.join(text)
 
 
@@ -108,7 +108,7 @@ def main(argv):
             print(recognise_text(arg))
         elif option == '--train-rec' or option == '-tr':  # Train a character segmentation model for 'arg' epochs
             epochs = int(arg) if arg is not None else 500
-            cr.train_net(epochs, min_save=0.795)
+            cr.train_net(epochs, min_save=0.790)
         elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
             epochs = int(arg) if arg is not None else 250
             sd.train_net(epochs, min_save=0.71)
@@ -130,21 +130,6 @@ def main(argv):
             -h, --help: Prints this output.
             '''
         )
-
-
-def train_several_models():
-    path = definitions.MODELS_PATH + 'CharacterRecognition/Model'
-    src_path = path + '/'
-    for i in range(3):
-        print("Iteration {}".format(i))
-        session = cr.train_net(500, min_save=0.795, iteration=i + 1)
-        session.close()
-        for dirpath, dirnames, filenames in os.walk(src_path):
-            for filename in filenames:
-                dst_path = path + str(i + 1) + '/'
-                shutil.copy(src_path + filename, dst_path)
-    cr.train_net(1500, min_save=0.795, iteration=4)
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
