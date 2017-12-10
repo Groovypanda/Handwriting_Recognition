@@ -47,8 +47,8 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     Algorithm:
 
     1) Split the sentence in images of characters.
-    2) Convert every character to a list of probabilities. A list of these lists is named the cls_pred_list.
-    3) Find the most likely words given the cls_pred_list. Now we have a list of words and their probabilities.
+    2) Convert every character to a list of probabilities. A list of these lists is named the char_probabilities.
+    3) Find the most likely words given the char_probabilities. Now we have a list of words and their probabilities.
     (These probabilities are based on word distances with actual words in the English dictionary)
 
     :param sessionargs_char_recognition: Session and the neural network placeholders
@@ -62,8 +62,8 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     # Call character_combinator
 
     # evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
-    cls_pred_list = cr.imgs_to_prob_list(char_imgs, sessionargs_char_recognition)
-    return most_likely_words(cls_pred_list)
+    char_probabilities = cr.imgs_to_text(char_imgs, sessionargs_char_recognition, n=3)
+    return most_likely_words(char_probabilities)
 
 
 def recognise_text(file_name):

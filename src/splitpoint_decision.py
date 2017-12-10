@@ -50,6 +50,17 @@ def create_training_data(start=0, amount=1000):
             pickle.dump((start + i, img_path, split_data), out_file)
 
 
+def show_splitpoints(img, splits):
+    if len(img.shape) == 2:
+        img = np.expand_dims(img, axis=2)
+        img = np.repeat(img, 3, axis=2)
+    split_data = []
+    show_range = 1
+    for (x, _) in splits:
+        for y in range(-show_range, show_range + 1):
+            img[:, x + y] = [0, 0, 255]
+    return img
+
 def manual_split_point_detection(img, splits):
     if len(img.shape) == 2:
         img = np.expand_dims(img, axis=2)

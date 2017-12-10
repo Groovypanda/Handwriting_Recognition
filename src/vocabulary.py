@@ -25,36 +25,35 @@ def correct_written_words(word, amount=3):
         return close_matches
 
 
-def possible_written_characters(cls_pred_list, branching_factor=3):
+def possible_written_characters(char_probabilities, branching_factor=3):
     """
     We find the most likely words based purely on character probabilities. This making a tree of possible words.
     The depth indicates the length of the word. The leafs are full words. Each node contains a pair with the word and its
     probability.
-    :param cls_pred_list:  list of list with probabilities for each character (62 classes) per character in the word.
+    :param char_probabilities:  list of list with probabilities for each character (62 classes) per character in the word.
     :param branching_factor:  Decides how many possibilities to check for each character
     :return: a list of pairs with words and their probabilities
     """
-    cls_preds = sorted([(i, x) for (i, x) in enumerate(cls_pred_list[0])], key=lambda x: x[1], reverse=True)[:branching_factor]
+
     possibilities = []
-    for cls_pred_i, cls_pred_p in cls_preds:  # Go trough most likely characters (index and probability)
-        if len(cls_pred_list) > 1:
-            for word, probability in possible_written_characters(cls_pred_list[1:], branching_factor):
-                possibilities.append((character_utils.cls2str(1 + cls_pred_i) + word, cls_pred_p * probability))
+    for char, cls_pred_p in char_probabilities[0]:  # Go trough most likely characters (index and probability)
+        if len(char_probabilities) > 1:
+            for word, probability in possible_written_characters(char_probabilities[1:], branching_factor):
+                possibilities.append((char + word, cls_pred_p * probability))
         else:
-            possibilities.append((character_utils.cls2str(1 + cls_pred_i), cls_pred_p))
+            possibilities.append((char, cls_pred_p))
     return possibilities
 
 
-def most_likely_words(cls_pred_list):
+def most_likely_words(char_probabilities):
     """
-    Finds the most likely words given the cls_pred_list using a vocabularium.
-    :param cls_pred_list:
+    Finds the most likely words given the class probabilities using a vocabularium.
+    :param char_probabilities: A list of tuples with characters and their probabilities for every character in the word
     :return: A dictionary with words as keys and probabilities as values.
     """
     alpha = 0.7  # Importance of original word
     beta = 0.3  # Importance of word for voc
-    most_possible_characters = possible_written_characters(cls_pred_list)
-    most_possible_characters.sort(key=lambda x: -x[1])
+    most_possible_characters = possible_written_characters(char_probabilities)
     words = {}
     for characters, probability in most_possible_characters[:3]:
         correctly_written_words = correct_written_words(characters)
