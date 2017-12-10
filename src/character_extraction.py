@@ -75,7 +75,7 @@ def extract_characters(word_image, sessionargs=None):
     ret3,threshold = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     # chosen split layout variables
     finalsplits = chosen_split_layout
-    height, width = threshold.shape
+    height, width = threshold.shape[:2]
 
     # Splitting the characters on the chosen split locations (finalsplits)
     splitcharacters = list()
@@ -93,7 +93,7 @@ def extract_characters(word_image, sessionargs=None):
 
 def skeletonize_thresholded_image(treshold_img):
     #skeletonize the image. Division is to normalize white to 1 and black to 0.
-    height, width = treshold_img.shape
+    height, width = treshold_img.shape[:2]
     skel2 = skeletonize(treshold_img/255)
 
     resultnpy = np.copy(treshold_img)  # had a weird bug where newly made np matrix did not work
@@ -125,7 +125,7 @@ def find_splits_img(image):
 
     # The image is inverted to facilitate working with the colors later on, as now blacks will be 0.
     inverted = cv2.bitwise_not(image)
-    height, width = inverted.shape
+    height, width = inverted.shape[:2]
 
     # Thresholding the image with the OTSU-algorithm
     blur = cv2.GaussianBlur(inverted,(1,1),0)

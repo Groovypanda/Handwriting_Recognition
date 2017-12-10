@@ -11,6 +11,7 @@ from word_extraction import preprocess_image
 import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
+import word_normalizer as wn
 
 def read_image(file_name):
     return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
@@ -48,7 +49,9 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
-    char_imgs = extract_characters(img, sessionargs=sessionargs_oversegmentation_correction)
+    print("########################################################")
+    normalized_word_image = wn.normalize_word(img)
+    char_imgs = extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction)
 
     # Call character_combinator
 
