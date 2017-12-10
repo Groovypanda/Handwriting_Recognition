@@ -142,9 +142,6 @@ def find_splits_img(image):
 
     skel = skeletonize_thresholded_image(thresh)
 
-    cv2.imshow("skel", skel)
-    cv2.waitKey(0)
-
     # We reduce each collumn to its summation, and normalize it to 1 for each black pixel in the original threshold image
     col_summation = cv2.reduce(skel, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
     col_summation_list = col_summation[0].tolist()

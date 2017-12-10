@@ -57,15 +57,7 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
-
-    cv2.imshow("n", img)
-    cv2.waitKey(0)
-
     normalized_word_image = wn.normalize_word(img)
-
-
-    cv2.imshow("n", normalized_word_image)
-    cv2.waitKey(0)
 
     char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction, postprocess=postprocess)
 
