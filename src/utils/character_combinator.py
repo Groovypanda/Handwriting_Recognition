@@ -9,7 +9,7 @@ def normalize_and_execute_character_recognition(character_images):
 # All values are in pixels
 SPLIT_POINT_MIN_DISTANCE = 5
 MINIMAL_PIXEL_COUNT = 100
-split_count_per_x_range = 1/8 (1 split point per 8 pixels) 
+split_count_per_x_range = 1/8 (1 split point per 8 pixels)
 def evaluate_character_combinations(character_images, session_args):
 
     # Prepare characters for evaluation
@@ -24,7 +24,14 @@ def evaluate_character_combinations(character_images, session_args):
 
     """
 
+    """
+    count pixels between splits, order by most probable unnessecary
+        => fitness
 
-    for iteration in range(1, 8):
-        identiefier = 0
-        nlist.append(normalizer.normalize_character([char_img]))
+    close to two other split splitpoints
+        => fitness minus'
+
+    Check if splits are closer thatn MIN_DISTANCE
+        remove which one?
+
+    """
