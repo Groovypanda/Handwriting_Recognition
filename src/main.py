@@ -10,13 +10,6 @@ import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
-<<<<<<< HEAD
-
-=======
-import character_combinator as ccb
->>>>>>> 3475134a6ac20274c559b39a8cd625de0b495bf6
-import character_normalizer as cn
-
 from pathlib import Path
 import shutil
 import definitions

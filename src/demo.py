@@ -12,14 +12,15 @@ import word_normalizer as wn
 import vocabulary
 import splitpoint_decision as sd
 
-aug_demo = True
-char_rec_demo = True
+aug_demo = False
+char_rec_demo = False
 word_splitting_demo = True
 word_rec_demo = True
-data_creation_demo = True
+data_creation_demo = False
 
 def start_demo():
     char_file = definitions.PROJECT_PATH + 'Data/charset/Img/Sample056/img056-003.png'
+    demo_chars = definitions.PROJECT_PATH + 'demo_data/char/{}.png'
     # word_file = definitions.PROJECT_PATH + 'Data/words/b04/b04-060/b04-060-00-07.png' # Government
     word_file = 'words/beer.png'
     word_image = main.read_image(word_file)
@@ -32,7 +33,7 @@ def start_demo():
         demo_augmentation(char_image)
     if char_rec_demo:
         # input("Character recognition demo")
-        demo_char_recognition(char_image, chrsessionargs)
+        demo_char_recognition(demo_chars, chrsessionargs)
     if data_creation_demo:
         # input("Data creation demo")
         demo_data_creation()
@@ -80,11 +81,14 @@ def demo_augmentation(img):
     cv2.destroyAllWindows()
 
 
-def demo_char_recognition(img, sessionargs):
-    cv2.imshow("Character recognition", img)
-    cv2.waitKey(0)
-    print(cr.img_to_text(img, sessionargs, n=3))
-    cv2.destroyAllWindows()
+def demo_char_recognition(demo_chars, sessionargs):
+    for ordinal in range(ord('a'), ord('z')+1):
+        char = chr(ordinal)
+        img = main.read_image(demo_chars.format(char))
+        cv2.imshow("Character recognition of the letter {}".format(char), img)
+        print(cr.img_to_text(img, sessionargs, n=3))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 def demo_word_recognition(img, chrsessionargs, tocsessionargs):
     cv2.imshow("Word recognition", img)

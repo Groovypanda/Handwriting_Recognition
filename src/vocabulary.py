@@ -108,3 +108,9 @@ def rand(not_indices, amount):
             return rands
     else:
         return []
+
+def test():
+    print(correct_written_words("artificol"))
+    print(correct_written_words("inteligance"))
+
+test()
