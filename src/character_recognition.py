@@ -117,26 +117,27 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     :param base: experimental parameter, a higher base should produce better results. This should be a strict positive integer.
     :return: The input layer x, the output layer with the predicted values and a placeholder for the actual values.
     """
-    _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
-    _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
-    base2 = base * 1024
-    h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=8, num_in_channels=NUM_CHANNELS,
-                        use_pooling=True, global_weights=global_weights)
-    h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=8,
-                        use_pooling=True, global_weights=global_weights)
-    h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=16,
-                        use_pooling=True, global_weights=global_weights)
-    h4 = tf.contrib.layers.flatten(h3)
-    if train:
-        h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
-        h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
-        h7 = new_fc_layer(name=7, input=h6, num_in=h6.shape[1], num_out=base2 / 2, global_weights=global_weights)
-        h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
-    else:
-        h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
-        h8 = new_fc_layer(name=7, input=h7, num_in=h7.shape[1], num_out=base2 / 2, global_weights=global_weights)
-    h = new_fc_layer(name='final', input=h8, num_in=h8.shape[1], num_out=NUM_CLASSES, global_weights=global_weights)
-    return _x, _y, h
+    with tf.variable_scope(''):
+        _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
+        _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
+        base2 = base * 1024
+        h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=8, num_in_channels=NUM_CHANNELS,
+                            use_pooling=True, global_weights=global_weights)
+        h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=8,
+                            use_pooling=True, global_weights=global_weights)
+        h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=16,
+                            use_pooling=True, global_weights=global_weights)
+        h4 = tf.contrib.layers.flatten(h3)
+        if train:
+            h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
+            h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
+            h7 = new_fc_layer(name=7, input=h6, num_in=h6.shape[1], num_out=base2 / 2, global_weights=global_weights)
+            h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
+        else:
+            h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
+            h8 = new_fc_layer(name=7, input=h7, num_in=h7.shape[1], num_out=base2 / 2, global_weights=global_weights)
+        h = new_fc_layer(name='final', input=h8, num_in=h8.shape[1], num_out=NUM_CLASSES, global_weights=global_weights)
+        return _x, _y, h
 
 
 def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, global_weights=None):
@@ -197,7 +198,7 @@ def train_net(n, restore=False, min_save=1.0):
             print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
             min_save = validation_accuracy
-    experiments.save_output("all", time=times, accuracies=accuracies, iteration=1)
+    save_output("all", time=times, accuracies=accuracies, iteration=1)
     t = str(time() - start)
     print("The training took: " + str(t) + " seconds.")
     return session
@@ -304,16 +305,15 @@ def most_probable_chars(cls_pred, n):
 
 
 def init_session():
-    with tf.variable_scope("CharacterRecognition"):
-        """
-        Fully creates an initialised session and returns an initialized neural network.
-        :return:
-        """
-        session = tf.Session()
-        _x, _y, h = create_neural_net(train=False)
-        session.run(tf.global_variables_initializer())
-        restore_session(session)
-        return session, _x, _y, h
+    """
+    Fully creates an initialised session and returns an initialized neural network.
+    :return:
+    """
+    session = tf.Session()
+    _x, _y, h = create_neural_net(train=False)
+    session.run(tf.global_variables_initializer())
+    restore_session(session)
+    return session, _x, _y, h
 
 
 def save_output(name, accuracies, time, iteration=None):

@@ -12,9 +12,14 @@ import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
+from pathlib import Path
+
 
 def read_image(file_name):
-    return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+    if Path(file_name).exists():
+        return cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+    else:
+        raise FileNotFoundError(file_name)
 
 
 def recognise_character(file_name):
@@ -100,14 +105,14 @@ def main(argv):
         elif option == '--text' or option == '-t':  # Recognise a text
             print(recognise_text(arg))
         elif option == '--train-rec' or option == '-tr':  # Train a character segmentation model for 'arg' epochs
-            epochs = arg if arg is not None else 500
-            cr.train_net(epochs, min_save=0.78)
+            epochs = int(arg) if arg is not None else 500
+            cr.train_net(epochs, min_save=0.795)
         elif option == '--train-split' or option == '-ts':  # Train a character recognition model for 'arg' epochs
-            epochs = arg if arg is not None else 250
+            epochs = int(arg) if arg is not None else 250
             sd.train_net(epochs, min_save=0.71)
         elif option == '--create-data' or option == '-cd':  # Create new data for the character segmentation training.
             sd.start_data_creation(arg)
-        elif option =='--augment-data' or option == '-ad':  # Augment the character dataset
+        elif option == '--augment-data' or option == '-ad':  # Augment the character dataset
             augment_data()
     else:
         print(
