@@ -9,8 +9,6 @@ import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
 
-import character_combinator as ccb
-
 import character_normalizer as cn
 
 from pathlib import Path
@@ -66,9 +64,6 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     # normalized_characters = [cm.normalize_character(character) for character in char_imgs]
     # ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
 
-    # Call character_combinator
-
-    # evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
     cls_pred_list = cr.imgs_to_prob_list(char_imgs, sessionargs_char_recognition)
     return most_likely_words(cls_pred_list)
 
