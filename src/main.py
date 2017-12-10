@@ -1,3 +1,5 @@
+
+
 import cv2
 import splitpoint_decision as toc
 import  character_extraction as ce
@@ -8,9 +10,7 @@ import splitpoint_decision as sd
 import character_recognition as cr
 from character_preprocessing import augment_data
 import word_normalizer as wn
-
 import character_combinator as ccb
-
 import character_normalizer as cn
 
 from pathlib import Path

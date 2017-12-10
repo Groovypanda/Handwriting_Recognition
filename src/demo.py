@@ -8,12 +8,12 @@ from character_preprocessing import augmentImage
 from character_preprocessing import preprocess_image
 from character_preprocessing import erodeImage
 from character_utils import index2str
-import  numpy as np
-
+import numpy as np
 
 aug_demo = False
 char_rec_demo = True
 word_splitting_demo = False
+
 
 def start_demo():
     char_file = definitions.PROJECT_PATH + 'Data/charset/Img/Sample056/img056-003.png'
@@ -22,7 +22,6 @@ def start_demo():
     char_image = main.read_image(char_file)
     tocsessionargs = toc.init_session()
     chrsessionargs = cr.init_session()
-
 
     if aug_demo:
         input("Data augmentation demo")
@@ -33,7 +32,6 @@ def start_demo():
     if word_splitting_demo:
         input("Word splitting demo")
         demo_word_splitting(word_image, tocsessionargs)
-
 
 
 def resize_word(img):
@@ -63,6 +61,7 @@ def demo_augmentation(img):
     for augimg in images:
         cv2.imshow("Augmented image", cv2.resize(np.multiply(255, np.subtract(1, augimg)), dsize=(300, 300)))
         cv2.waitKey(0)
+
 
 if __name__ == "__main__":
     start_demo()
