@@ -34,7 +34,7 @@ def possible_written_characters(cls_pred_list, branching_factor=3):
     :param branching_factor:  Decides how many possibilities to check for each character
     :return: a list of pairs with words and their probabilities
     """
-    cls_preds = sorted([(i, x) for (i, x) in enumerate(cls_pred_list[0])], reverse=True)[:branching_factor]
+    cls_preds = sorted([(i, x) for (i, x) in enumerate(cls_pred_list[0])], key=lambda x: x[1], reverse=True)[:branching_factor]
     possibilities = []
     for cls_pred_i, cls_pred_p in cls_preds:  # Go trough most likely characters (index and probability)
         if len(cls_pred_list) > 1:
@@ -51,12 +51,18 @@ def most_likely_words(cls_pred_list):
     :param cls_pred_list:
     :return: A dictionary with words as keys and probabilities as values.
     """
+    alpha = 0.7  # Importance of original word
+    beta = 0.3  # Importance of word for voc
     most_possible_characters = possible_written_characters(cls_pred_list)
-    most_possible_characters.sort(key=lambda x: x[1])
+    most_possible_characters.sort(key=lambda x: -x[1])
     words = {}
-    for characters, probability in most_possible_characters[-3:]:
-        for word, score in correct_written_words(characters):
-            words[word] = probability * score
+    for characters, probability in most_possible_characters[:3]:
+        correctly_written_words = correct_written_words(characters)
+        if len(correctly_written_words) > 0:
+            for word, score in correctly_written_words:
+                words[word] = alpha * probability + beta * (score) # Smoothing technique, is score is 0 algorithm won't fail
+        else:
+            words[characters] = probability * 0.01
     return words
 
 

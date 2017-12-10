@@ -1,5 +1,4 @@
 import cv2
-import character_recognition as chr
 import splitpoint_decision as toc
 from character_extraction import extract_characters
 from language_model import n_gram_model
@@ -28,7 +27,7 @@ def recognise_character(file_name):
     :param file_name: File name of the image
     :return: The character
     """
-    return chr.img_to_text(read_image(file_name), chr.init_session())
+    return cr.img_to_text(read_image(file_name), cr.init_session())
 
 
 def recognise_word(file_name):
@@ -38,7 +37,7 @@ def recognise_word(file_name):
     :return: The word
     """
     tocsessionargs = toc.init_session()
-    chrsessionargs = chr.init_session()
+    chrsessionargs = cr.init_session()
     return max(recognise_possible_words(read_image(file_name), chrsessionargs, tocsessionargs),
                key=lambda x: x[1])
 
@@ -63,7 +62,7 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     # Call character_combinator
 
     # evaluated_chars = evaluate_character_combinations(char_imgs, sessionargs_char_recognition)
-    cls_pred_list = chr.imgs_to_prob_list(char_imgs, sessionargs_char_recognition)
+    cls_pred_list = cr.imgs_to_prob_list(char_imgs, sessionargs_char_recognition)
     return most_likely_words(cls_pred_list)
 
 
@@ -85,7 +84,7 @@ def recognise_text(file_name):
     text = []  # Converted image into list of words
     for word in words:
         # Find a list of possible words using the vocabularium
-        voc_words = recognise_possible_words(word, chr.init_session(), toc.init_session())
+        voc_words = recognise_possible_words(word, cr.init_session(), toc.init_session())
         # Find the most likely words using the language model
         lang_words = n_gram_model(text, voc_words.keys())
         most_likely_word = \
