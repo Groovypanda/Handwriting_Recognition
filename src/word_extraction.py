@@ -450,16 +450,17 @@ def preprocess_image(img, file_index = 0):
             # Saving the found word images to a file
             write_word_image(extracted_word, file_number, line_index, word_index)
 
+    new_img = img.copy()
     greyscale = 73
     color_increment = 180 // len(lines)
     for line_index, line in enumerate(lines):
         for word_index, rectangle in enumerate(line):
             (x, y, w, h) = rectangle
-            cv2.rectangle(img,(x,y),(x+w,y+h),(greyscale,255,0),5)
+            cv2.rectangle(new_img,(x,y),(x+w,y+h),(greyscale,255,0),5)
         greyscale += color_increment
 
     # Write threshold image for demonstration pirposes
-    write_threshold_image(img, file_index)
+    write_threshold_image(new_img, file_index)
     write_threshold_image(thresh, file_index+10)
 
     return (extracted_words)

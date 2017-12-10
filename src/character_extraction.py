@@ -46,11 +46,11 @@ def extract_character_separations(word_image, postprocess=True, sessionargs=None
     blur = cv2.GaussianBlur(word_image, (1, 1), 0)
     ret3, rotated_threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     splitpoints = find_splits_img(word_image)
+
     if postprocess and not sessionargs is None:  # Use a neural network to check if predicted splitting points are actual splitting points.
         splitpoint_decisions = toc.decide_splitpoints(word_image, splitpoints, sessionargs)
         splitpoints = [split for (is_split, split) in zip(splitpoint_decisions, splitpoints) if is_split]
     rotated_splits.append(splitpoints)
-
     '''
     We have the rotated image and the splits for each of the chosen angles
     Now we identify the image with the most splits,
@@ -141,6 +141,9 @@ def find_splits_img(image):
     ret3, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     skel = skeletonize_thresholded_image(thresh)
+
+    cv2.imshow("skel", skel)
+    cv2.waitKey(0)
 
     # We reduce each collumn to its summation, and normalize it to 1 for each black pixel in the original threshold image
     col_summation = cv2.reduce(skel, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S) // 255;
