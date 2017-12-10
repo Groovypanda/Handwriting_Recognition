@@ -10,12 +10,13 @@ from character_preprocessing import erodeImage
 import numpy as np
 import word_normalizer as wn
 import vocabulary
+import splitpoint_decision as sd
 
-aug_demo = False
-char_rec_demo = False
+aug_demo = True
+char_rec_demo = True
 word_splitting_demo = True
 word_rec_demo = True
-
+data_creation_demo = True
 
 def start_demo():
     char_file = definitions.PROJECT_PATH + 'Data/charset/Img/Sample056/img056-003.png'
@@ -27,21 +28,29 @@ def start_demo():
     chrsessionargs = cr.init_session()
 
     if aug_demo:
-        input("Data augmentation demo")
+        # input("Data augmentation demo")
         demo_augmentation(char_image)
     if char_rec_demo:
-        input("Character recognition demo")
-        print(cr.img_to_text(char_image, chrsessionargs, n=3))
+        # input("Character recognition demo")
+        demo_char_recognition(char_image, chrsessionargs)
+    if data_creation_demo:
+        # input("Data creation demo")
+        demo_data_creation()
     if word_splitting_demo:
-        input("Word splitting demo")
+        # input("Word splitting demo")
         demo_word_splitting(word_image, tocsessionargs)
     if word_rec_demo:
-        input("Word recognition demo")
+        # input("Word recognition demo")
         demo_word_recognition(word_image, chrsessionargs, tocsessionargs)
 
 
 def resize_word(img):
     return cv2.resize(img, dsize=(800, 300))
+
+
+def demo_data_creation():
+    sd.start_data_creation()
+    cv2.destroyAllWindows()
 
 
 def demo_word_splitting(word_image, sessionargs):
@@ -68,15 +77,26 @@ def demo_augmentation(img):
     for augimg in images:
         cv2.imshow("Augmented image", cv2.resize(np.multiply(255, np.subtract(1, augimg)), dsize=(300, 300)))
         cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
+
+def demo_char_recognition(img, sessionargs):
+    cv2.imshow("Character recognition", img)
+    cv2.waitKey(0)
+    print(cr.img_to_text(img, sessionargs, n=3))
+    cv2.destroyAllWindows()
 
 def demo_word_recognition(img, chrsessionargs, tocsessionargs):
+    cv2.imshow("Word recognition", img)
+    cv2.waitKey(0)
     normalized_word_image = wn.normalize_word(img)
     char_imgs = chrext.extract_characters(normalized_word_image, sessionargs=tocsessionargs, postprocess=False)
     char_probabilities = cr.imgs_to_text(char_imgs, chrsessionargs, n=3)
     print(max(vocabulary.possible_written_characters(char_probabilities), key=lambda x: x[1]))
     print("Without neural net: " + str(main.recognise_possible_words(img, chrsessionargs, tocsessionargs, postprocess=False)))
     print("With neural net: " + str(main.recognise_possible_words(img, chrsessionargs, tocsessionargs, postprocess=True, verbose=True)))
+    cv2.destroyAllWindows()
+
 
 
 if __name__ == "__main__":

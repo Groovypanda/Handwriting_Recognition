@@ -39,7 +39,7 @@ def open_images(start=0, amount=-1):
     return images
 
 
-def create_training_data(start=0, amount=1000):
+def create_training_data(start=0, amount=10):
     images = open_images(start, amount)
     n = len(images)
     with open(definitions.WORD_SPLITTING_PATH, "ab") as out_file:
@@ -49,14 +49,13 @@ def create_training_data(start=0, amount=1000):
             split_data = manual_split_point_detection(img, splits)
             if split_data is None:
                 return
-            pickle.dump((start + i, img_path, split_data), out_file)
+            pickle.dump((start + i, img_path, split_data), out_file, protocol=2)
 
 
 def show_splitpoints(img, splits):
     if len(img.shape) == 2:
         img = np.expand_dims(img, axis=2)
         img = np.repeat(img, 3, axis=2)
-    split_data = []
     show_range = 1
     for (x, _) in splits:
         for y in range(-show_range, show_range + 1):
@@ -206,6 +205,8 @@ def create_neural_net(global_weights=None, train=True):
         _y = tf.placeholder(tf.float32, (None, OUT_SIZE))
         h1 = net.new_conv_layer(name=1, input=_x, num_in_channels=NUM_CHANNELS, num_filters=3, filter_size=5,
                                 global_weights=global_weights, use_pooling=False)
+        #h2 = net.new_conv_layer(name=2, input=h1, num_in_channels=3, num_filters=6, filter_size=5,
+        #                        global_weights=global_weights, use_pooling=False)
         h3 = tf.contrib.layers.flatten(h1)
         h4 = net.new_fc_layer(name=3, input=h3, num_in=h3.shape[1], num_out=64, global_weights=global_weights)
         if False:
@@ -322,4 +323,8 @@ def decide_splitpoints(img, potential_split_points, sessionargs):
         return []
 
 
-
+def convert_pickle_data():
+    entries = read_training_data()
+    with open(definitions.WORD_SPLITTING_PATH, "wb") as out_file:
+        for entry in entries:
+            pickle.dump(entry, out_file, protocol=2)
