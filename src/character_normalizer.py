@@ -50,8 +50,8 @@ def normalize_character(charlist):
     character_img = charlist[0]
     index = 0;
     while (index + 1) < len(charlist):
-        character_img = cv2.hconcat(character_img, charlist[index + 1])
-
+        character_img = np.concatenate((character_img, charlist[index + 1]), axis=1)
+        index += 1
 
     # Treshold the image
     blur = cv2.GaussianBlur(character_img,(3,3),0)
@@ -79,6 +79,5 @@ def normalize_character(charlist):
 
     container = cv2.bitwise_not(np.zeros((CONTAINER_DIMS,CONTAINER_DIMS), np.uint8))
     container[side_padding:side_padding+CHARACTER_DIMS, side_padding:side_padding+CHARACTER_DIMS] = final_character_image
-
 
     return (container)

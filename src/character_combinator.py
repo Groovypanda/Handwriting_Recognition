@@ -1,7 +1,7 @@
 import character_normalizer as normalizer
 import character_recognition as cr
 import character_utils
-
+import cv2
 
 def normalize_and_combine_characters(split_characters_images, sessionargs_char_recognition):
     split_characters_list = list()
@@ -13,23 +13,27 @@ def normalize_and_combine_characters(split_characters_images, sessionargs_char_r
         base_percentage, max_percentage, identiefier_list = 0, 0, list()
         split_characters_list.append( (character_image, base_percentage, identiefier_list, max_percentage) )
 
-    for iteration_length in range(1, max_iterations):
+    print (len (split_characters_list))
+    for iteration_length in range(1, max_iterations+1):
         print("##########################")
         print(iteration_length)
-        for startindex in range(len(split_characters_list) - 1 - iteration_length):
+        for startindex in range(0, len(split_characters_list) - iteration_length + 1):
             print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
             print(startindex)
 
             combined_character_splices = split_characters_images[startindex:startindex + iteration_length]
+
             normalized_combined_character_splices = normalizer.normalize_character(combined_character_splices)
+            print("normalized")
 
-            for char in normalized_combined_character_splices:
-                print ("CHARACTER")
-                probabilities = cr.img_to_prob(char, sessionargs_char_recognition)
-                #print(cr.most_probable_chars(probabilities, 5))
-                #print(sorted([(character_utils.cls2str(i),x) for (i,x) in enumerate(probabilities)], key=lambda x:-x[1])[:5])
 
-            identifier += 1;
 
+
+            print ("CHARACTER")
+            probabilities = cr.img_to_prob(normalized_combined_character_splices, sessionargs_char_recognition)
+            print(cr.most_probable_chars(probabilities, 5))
+
+            #cv2.imshow("c2", normalized_combined_character_splices)
+            #cv2.waitKey(0)
 
     return list()
