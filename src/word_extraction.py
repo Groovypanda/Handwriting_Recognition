@@ -12,8 +12,8 @@ from matplotlib import pyplot as plt
 
 
 dir = os.path.dirname(__file__)
-outputpath = os.path.join(dir, 'data/output/')
-datapath = os.path.join(dir, 'data/')
+datapath = os.path.join(dir, '../data/')
+outputpath = os.path.join(datapath, 'output/')
 if not os.path.exists(datapath):
     os.makedirs(datapath)
 if not os.path.exists(outputpath):
@@ -124,13 +124,16 @@ def write_word_image(extracted_word, file_number, line_index, word_index):
     cv2.imwrite(wordpath, extracted_word)
 
 def check_for_overlapping_in_line(line):
+    average_width = sum([rect[2] for rect in line]) / len(line)
+    average_characters = 16; # AVERAGE = 8, HALF CHARACTER WIDTH SO *2
+    ALLOWED_WORD_GAP = - average_width / average_characters # allowed pixels between parts of the word for correction
     """
     Checks for an overlap in the bounding rectangles of the contours and returns the two overlapping rectangles if found within a line of the text
     :return: A tuple with the two overlapping rectangles or a tuple of None values if no overlap was found
     """
     for rect1 in line:
         for rect2 in line:
-            if (rect1 != rect2 and ( vertical_overlap_rectangle(rect1, rect2) or rectangle_follows_rectangle(rect1, rect2, -1) ) ):
+            if (rect1 != rect2 and ( vertical_overlap_rectangle(rect1, rect2) or rectangle_follows_rectangle(rect1, rect2, ALLOWED_WORD_GAP) ) ):
                 return (rect1, rect2)
     return (None, None)
 
@@ -197,6 +200,22 @@ def remove_small_rectangles(rectangles_contours):
                 rectangles_contours.pop(rectangle, None)
     return rectangles_contours
 
+def remove_image_contour_if_exists(img, rectangles_contours):
+    """
+    Remove the contour of the image if it is taken by otsu's thresholding
+    :return: The updated rectangles_contours
+    """
+    height, width = img.shape[:2]
+    to_remove = list()
+    for rect in rectangles_contours:
+        if rect[2] >= width-PADDING_SIZE and rect[3] >= height-PADDING_SIZE: # 2 pixels from border, 2 padding
+            to_remove.append(rect)
+    for rect in to_remove:
+        del rectangles_contours[rect]
+
+    return rectangles_contours
+
+
 def add_words_to_line(line, words):
     """
     Adds words from words to line, if it is on the same line,
@@ -223,6 +242,11 @@ def split_rectangle_contour_horizontally(rectangle, contour, y_val):
 
 MAX_RECTANGLE_HEIGHT_MULTIPLIER = 2
 def search_multiline_contours(rectangles_contours, img):
+    """
+    Search the found words, for mistakenly combined words from two different lines.
+    We call the function split_multiline_contours if such a mistake is found.
+    :return: rectangles_contours but with the mistakes replaced by the split words.
+    """
     average_height = sum([rect[3] for rect in list(rectangles_contours.keys())]) / len(rectangles_contours)
     probable_multiline_rectangles = [(rect, contour) for rect, contour in rectangles_contours.items() if (rect[3] >= MAX_RECTANGLE_HEIGHT_MULTIPLIER * average_height)]
 
@@ -240,6 +264,10 @@ def search_multiline_contours(rectangles_contours, img):
 SPLIT_MULTILINE_MULTIPLIER = 10
 SEARCH_AREA_MULTIPLIER = 2/3
 def split_multiline_contours(probable_multiline_rectangles, average_height, img):
+    """
+    We split the words based on the minimum value in the horizontal row-projection histogram
+    :return: rectangles_contours but with the mistakes replaced by the split words.
+    """
     parsed_rectangles = list()
     busy = True
     while busy:
@@ -341,6 +369,16 @@ def split_text_in_lines(rectangles_contours):
 
     return lines
 
+
+PADDING_SIZE = 4 #pixels
+def pad_img_white(img):
+    height, width = img.shape[:2]
+    new_h, new_w = height+(2*PADDING_SIZE), width+(2*PADDING_SIZE)
+
+    container = cv2.bitwise_not(np.zeros((new_h, new_w), np.uint8))
+    container[PADDING_SIZE:height+PADDING_SIZE ,PADDING_SIZE:width+PADDING_SIZE] = img
+    return container
+
     # Please pass image as greyscale
     # the file index passed is for output purposes
 def preprocess_image(img, file_index = 0):
@@ -352,7 +390,7 @@ def preprocess_image(img, file_index = 0):
     file_number = str(file_index).zfill(3)
 
     #PREPROCESSING
-
+    img = pad_img_white(img)
     height, width = img.shape[:2]
 
     # 2. Thresholding image
@@ -360,8 +398,6 @@ def preprocess_image(img, file_index = 0):
     blur = cv2.GaussianBlur(img,(3,3),0)
     ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    # Write threshold image for demonstration pirposes
-    write_threshold_image(thresh, file_index)
 
     # Finding contours
     im2, contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
@@ -374,6 +410,16 @@ def preprocess_image(img, file_index = 0):
         if abs(rectangle[2] - width) > 2 or abs(rectangle[3] - height) > 2:
             rectangles_contours[rectangle] = contour
 
+    # All rectangles print demonstration purposes
+    print_img = img.copy()
+    for rectangle in rectangles_contours:
+        (x, y, w, h) = rectangle
+        cv2.rectangle(print_img,(x,y),(x+w,y+h),(0,255,0),2)
+    write_threshold_image(print_img, file_index+20)
+
+
+    # Remove possible image contour because of padding
+    rectangles_contours = remove_image_contour_if_exists(img, rectangles_contours)
 
     # Remove rectangles contained by other rectangles
     rectangles_to_remove = [rect2 for rect1 in rectangles_contours for rect2 in rectangles_contours if rect1 != rect2 and rectangle_contains_rectangle(rect1, rect2)];
@@ -403,5 +449,18 @@ def preprocess_image(img, file_index = 0):
 
             # Saving the found word images to a file
             write_word_image(extracted_word, file_number, line_index, word_index)
+
+    new_img = img.copy()
+    greyscale = 73
+    color_increment = 180 // len(lines)
+    for line_index, line in enumerate(lines):
+        for word_index, rectangle in enumerate(line):
+            (x, y, w, h) = rectangle
+            cv2.rectangle(new_img,(x,y),(x+w,y+h),(greyscale,255,0),5)
+        greyscale += color_increment
+
+    # Write threshold image for demonstration pirposes
+    write_threshold_image(new_img, file_index)
+    write_threshold_image(thresh, file_index+10)
 
     return (extracted_words)

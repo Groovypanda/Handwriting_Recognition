@@ -32,4 +32,11 @@ def normalize_and_combine_characters(split_characters_images, sessionargs_char_r
             cv2.imshow("c2", normalized_combined_character_splices)
             cv2.waitKey(0)
 
+
+            #########################################################
+            # RESULTS ARE UNFAVORABLE BECAUSE OF                    #
+            # VERY HIGH CERTAINTY OF ERRONOUS RECOGNISED characters #
+            # WHEN MULTIPLE NORMALIZED CHARACTERS ARE FED           #
+            #########################################################
+
     return list()

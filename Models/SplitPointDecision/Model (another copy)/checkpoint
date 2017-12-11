@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/jarre/Documents/Handwriting_Recognition/Models/SplitPointDecision/Model/model.ckpt"
+all_model_checkpoint_paths: "/home/jarre/Documents/Handwriting_Recognition/Models/SplitPointDecision/Model/model.ckpt"
