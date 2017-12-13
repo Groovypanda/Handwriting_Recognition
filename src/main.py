@@ -11,6 +11,7 @@ import character_recognition as cr
 from character_preprocessing import augment_data
 import character_normalizer as cn
 from pathlib import Path
+import word_normalizer as wn
 import shutil
 import definitions
 import os
@@ -57,9 +58,9 @@ def recognise_possible_words(img, sessionargs_char_recognition, sessionargs_over
     :param image: Image of a word
     :return: A list of pairs, the pairs consist of likely words and their probabilities.
     """
-    normalized_word_image = wn.normalize_word(img)
+    # normalized_word_image = wn.normalize_word(img)
 
-    char_imgs = ce.extract_characters(normalized_word_image, sessionargs=sessionargs_oversegmentation_correction, postprocess=postprocess)
+    char_imgs = ce.extract_characters(img, sessionargs=sessionargs_oversegmentation_correction, postprocess=postprocess)
 
     # normalized_characters = [cm.normalize_character(character) for character in char_imgs]
     # ccb.normalize_and_combine_characters(char_imgs, sessionargs_char_recognition)
@@ -97,7 +98,7 @@ def recognise_text(file_name):
             max([(word, alpha * voc_words[word] + beta * prob) for word, prob in lang_words.items()],
                 key=lambda x: x[0])[0]
         text.append(most_likely_word)
-        print("Found word: " + most_likely_word[0])
+        print("Found word: " + most_likely_word)
     return ' '.join(text)
 
 

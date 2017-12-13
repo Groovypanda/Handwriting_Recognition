@@ -99,13 +99,14 @@ def visualise_experiment_configuration(experiment_name, conf, save=False):
 #visualise_experiment_configuration("preprocess", conf="all", save=False)
 
 def visualise_all():
-    accuracy_path = definitions.EXPERIMENTS_CHAR_PATH + 'all/accuracy_907.txt'
-    time_path = definitions.EXPERIMENTS_CHAR_PATH + 'all/time_907.txt'
+    accuracy_path = definitions.EXPERIMENTS_CHAR_PATH + 'all/accuracy_917.txt'
+    time_path = definitions.EXPERIMENTS_CHAR_PATH + 'all/time_917.txt'
     accuracy = np.loadtxt(accuracy_path)
     time = np.loadtxt(time_path)
-    end = 500
-    visualise([accuracy[:end]], [time[:end]], name='final_{}'.format(end), save=True)
-    print(np.max([accuracy[:end]]))
+    start = 0
+    end = 3000
+    visualise([accuracy[start:end]], [time[start:end]], name='final_{}'.format(end), save=True)
+    max_i = np.argmax(accuracy[start:end])
+    print(max_i, accuracy[max_i])
 
 
-visualise_all()

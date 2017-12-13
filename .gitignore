@@ -1,12 +1,12 @@
 .idea/
 Data/
+data/
 __pycache__/
-*.jpg
-*.png
 
 Report/*
 !Report/*.sty
 !Report/*.tex
 !Report/*.bib
+!Report/images/
 venv/
 *.pyc

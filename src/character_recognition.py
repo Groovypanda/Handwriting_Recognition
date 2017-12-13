@@ -155,7 +155,7 @@ def create_training_operation(h, _y, learning_rate=LEARNING_RATE, decay=DECAY, g
     return training_operation
 
 
-def train_net(n, restore=False, min_save=1.0, iteration=1):
+def train_net(n, restore=False, min_save=1.0, iteration=1, name='all'):
     """
     Trains the network for n epochs with a new session
     Note: if this function has never been run, set restore to false!
@@ -199,7 +199,7 @@ def train_net(n, restore=False, min_save=1.0, iteration=1):
             print("New maximum accuracy {} achieved.".format(validation_accuracy))
             save_session(session)
             min_save = validation_accuracy
-    save_output("all", time=times, accuracies=accuracies, iteration=iteration)
+    save_output(name, time=times, accuracies=accuracies, iteration=iteration)
     t = str(time() - start)
     print("The training took: " + str(t) + " seconds.")
     return session

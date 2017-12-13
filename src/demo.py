@@ -12,11 +12,11 @@ import word_normalizer as wn
 import vocabulary
 import splitpoint_decision as sd
 
-aug_demo = False
-char_rec_demo = False
+aug_demo = True
+char_rec_demo = True
+data_creation_demo = True
 word_splitting_demo = True
 word_rec_demo = True
-data_creation_demo = False
 
 def start_demo():
     char_file = definitions.PROJECT_PATH + 'Data/charset/Img/Sample056/img056-003.png'

@@ -39,7 +39,7 @@ def open_images(start=0, amount=-1):
     return images
 
 
-def create_training_data(start=0, amount=1000):
+def create_training_data(start=0, amount=10):
     images = open_images(start, amount)
     n = len(images)
     with open(definitions.WORD_SPLITTING_PATH, "ab") as out_file:

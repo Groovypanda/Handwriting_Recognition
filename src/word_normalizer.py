@@ -5,6 +5,8 @@ NORMALIZED_HEIGHT = 100 #pixels
 PADDING = 5
 def normalize_word(word_image):
 
+    return (word_image)
+
     height, width = word_image.shape[:2]
 
 
@@ -19,3 +21,4 @@ def normalize_word(word_image):
     #container[PADDING:norm_height+PADDING ,PADDING:norm_width+PADDING] = normalized_word
 
     return normalized_word
+

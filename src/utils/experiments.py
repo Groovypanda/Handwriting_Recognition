@@ -4,7 +4,7 @@ import time as t
 import tensorflow as tf
 from numpy import savetxt
 
-import experiments.experiment_nets as en
+from src.experiments import experiment_nets as en
 import definitions, character_recognition, character_preprocessing
 
 """
@@ -94,6 +94,12 @@ def compare_epochs():
         print("Running experiments with " + str(x) + " iterations")
         run_experiment("epochs_" + str(x), batch_size=x)
 
+def run_experiment_with_orig_net(name, iterations=200):
+    for i in range(iterations):
+        with tf.variable_scope("Experiment_" + name + "_" + str(i)):
+            print("Experiment: " + str(i))
+            character_recognition.train_net(name=name, iteration=i, n=iterations)
+
 
 def compare_preprocessing_params():
     """
@@ -102,26 +108,29 @@ def compare_preprocessing_params():
     """
 
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
-                                         add_shearing=False)
-    run_experiment("preprocess_" + "none")
+                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "none")
     character_preprocessing.augment_data(add_noise=True, add_rotations=False, add_scales=False, add_translations=False,
-                                         add_shearing=False)
-    run_experiment("preprocess_" + "noise")
+                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "noise")
     character_preprocessing.augment_data(add_noise=False, add_rotations=True, add_scales=False, add_translations=False,
-                                         add_shearing=False)
-    run_experiment("preprocess_" + "rotate")
+                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "rotate")
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=True, add_translations=False,
-                                         add_shearing=False)
-    run_experiment("preprocess_" + "scale")
+                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "scale")
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=True,
-                                         add_shearing=False)
-    run_experiment("preprocess_" + "translate")
+                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "translate")
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
-                                         add_shearing=True)
-    run_experiment("preprocess_" + "shear")
+                                         add_shearing=True, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "shear")
+    character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
+                                         add_shearing=False, add_erode=True, add_one=True, confirm=False)
+    run_experiment_with_orig_net("preprocess_" + "erode")
     character_preprocessing.augment_data(add_noise=True, add_rotations=True, add_scales=True, add_translations=True,
-                                         add_shearing=True)
-    run_experiment("preprocess_" + "all")
+                                         add_shearing=True, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "all")
 
 
 def compare_image_dimensions():
@@ -262,4 +271,4 @@ def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, base=1, learn
 # compare_keep_prob()
 # compare_weight_decay()
 # compare_batch_size()
-# compare_preprocessing_params()
+compare_preprocessing_params()
