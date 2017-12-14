@@ -94,11 +94,11 @@ def compare_epochs():
         print("Running experiments with " + str(x) + " iterations")
         run_experiment("epochs_" + str(x), batch_size=x)
 
-def run_experiment_with_orig_net(name, iterations=200):
-    for i in range(iterations):
+def run_experiment_with_orig_net(name):
+    for i in range(ITERATIONS):
         with tf.variable_scope("Experiment_" + name + "_" + str(i)):
             print("Experiment: " + str(i))
-            character_recognition.train_net(name=name, iteration=i, n=iterations)
+            character_recognition.train_net(name=name, iteration=i, n=200)
 
 
 def compare_preprocessing_params():
