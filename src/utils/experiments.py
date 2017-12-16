@@ -13,7 +13,7 @@ for recognising characters.
 """
 
 # Increase this for actual experiments.
-ITERATIONS = 4
+ITERATIONS = 2
 EPOCHS = 200
 
 
@@ -101,12 +101,8 @@ def run_experiment_with_orig_net(name):
             character_recognition.train_net(name=name, iteration=i, n=200)
 
 
-def compare_preprocessing_params():
-    """
-    Check the effect of different preprocessing steps. Each preprocessing step is tested on its own.
-    :return:
-    """
 
+'''
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
                                          add_shearing=False, add_one=True, confirm=False, add_erode=False)
     run_experiment_with_orig_net("preprocess_" + "none")
@@ -116,6 +112,12 @@ def compare_preprocessing_params():
     character_preprocessing.augment_data(add_noise=False, add_rotations=True, add_scales=False, add_translations=False,
                                          add_shearing=False, add_one=True, confirm=False, add_erode=False)
     run_experiment_with_orig_net("preprocess_" + "rotate")
+'''
+def compare_preprocessing_params():
+    """
+    Check the effect of different preprocessing steps. Each preprocessing step is tested on its own.
+    :return:
+    """
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=True, add_translations=False,
                                          add_shearing=False, add_one=True, confirm=False, add_erode=False)
     run_experiment_with_orig_net("preprocess_" + "scale")

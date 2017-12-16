@@ -84,7 +84,6 @@ def erodeImage(image):
     element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     return cv2.erode(image, kernel=element)
 
-
 # Expects a normalized image as input.
 # Returns an array of augmented images.
 def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, add_shearing, add_one=False):
@@ -128,10 +127,11 @@ def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, 
                         right + tx)
                     if not tx == 0 and not ty == 0 and canTranslate:
                         translatedImages.append(translateImage(image, tx, ty))
-        if add_one:
-            images.append(random.choice(translatedImages))
-        else:
-            images.extend(translatedImages)
+        if len(translatedImages) > 0:
+            if add_one:
+                images.append(random.choice(translatedImages))
+            else:
+                images.extend(translatedImages)
 
     ## Scaling of image
     if add_scales:
@@ -146,10 +146,11 @@ def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, 
                 if not sy == 1 and not sy == 1:
                     if inBounds(down * sy) and inBounds(right * sx):
                         scaledImages.append(scaleImage(image, sx, sy))
-        if add_one:
-            images.append(random.choice(scaledImages))
-        else:
-            images.extend(scaledImages)
+        if len(scaledImages) > 0:
+            if add_one:
+                images.append(random.choice(scaledImages))
+            else:
+                images.extend(scaledImages)
     if add_shearing:
         # Shear images to make the dataset more robust to different slant when writing.
         shearedImages = [shearImage(image, 0.2), shearImage(image), -0.2]
