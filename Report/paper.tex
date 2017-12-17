@@ -92,7 +92,7 @@ We make use of two types of preprocessing steps: normalization and augmentation 
 \label{par:norm}
 Theoretically feeding normalized data to the neural network returns the same output as before.
 In reality however, it is better to normalize data to avoid getting stuck in local optima and to increase training speed of the model \cite{NormGoal}.
-We normalize the data by reducing the input dimensions from (1200,900,3) to (64,64,1). A simple threshold is added to improve the contrast in our image.
+We normalize the data by reducing the input dimensions to (64,64,1). A simple threshold is added to improve the contrast in our image.
 This allows the foreground to be more distinguishable from the background and allows the neural network to train and recognise more easily.
 
 \subsubsection{Data augmentation}
@@ -234,7 +234,7 @@ Dependant on the situation, additional techniques for page segmentation can be u
 % TODO:: Run length Smearing Algorithm reference --> ....
 
 
-\subsection{binarization}
+\subsection{Binarization}
 The first preprocessing step is binarizing the text image.
 If the image is not yet greyscaled, this is done at the start of the preprocessing phase.
 The greyscaled image is converted from greyscaled into a binary image.
@@ -252,16 +252,16 @@ The choise of tresholding algorithm depends largely on intended purposes of the 
 If very noisy documents will need to be processed, additional noise removal techniques and other preprocessing techniques may be required to reduce the excess noise picked up by the tresholding algorithm.
 
 
-\subsection{contouring}
+\subsection{Contouring}
 Our heuristic text segmentation algorithm is based on finding the contours in the text image, so we can group these contours in postprocessing stages to recover the original words from the text image.
 The contouring algorithm used is the one implemented in the opencv library for python.
 This algorithm generates a lot of unneeded contours, which we will filter through postprocessing.
 Also since words in handwritten text are not always connected into one piece, we will need to connect these contours in the postprocessing stages as well.
 
-\subsection{postprocessing}
+\subsection{Postprocessing}
 In the postprocessing step, we eliminate the redundant extracted contours, and reconnect the contours of words that consist of multiple parts.
 
-\subsubsection{contour removal}
+\subsubsection{Contour removal}
 Since the contouring algorithm produces contours that are not contours of the words in the text, these contours need to be filtered out and removed.
 To accomplish this we make use of the bounding box we can draw around a contour.
 This bounding box is the smallest rectangle containing said contour, and it will allow us to easily compare contour positions in the text image.
@@ -277,7 +277,7 @@ We achieve this by taking the average height of all the found contours in the te
 From these contours we calculate the average height, after which we remove the contours with a height lesser than the average height multiplied by a chosen parameter $minimalHeightMultiplier$.
 The optimal results were achieved when we initialize with $minimalHeightMultiplier = 2/3$, so that we retain only contours higher than the average height $ * 2/3$.
 
-\subsubsection{contour combination}
+\subsubsection{Contour combination}
 With the excess contours removed, we can begin to reconstruct the original words from the text by combining multiple contours into one where needed.
 The algorithm used for this is a straightforward overlapping algorithm, that combines word segments based on the overlap between the bounding box of their contours.
 The parameters for this algorithm are the $alowedWordGap$ and the $allowedVerticalOverlap$ paramters.
@@ -308,11 +308,11 @@ These parameters are initialized as $interWordSegmentDistance = $ the average wi
 \end{figure}
 
 \vspace{-20px}
-\subsection{line selection}
+\subsection{Line selection}
 Now that the words are extracted from the text image, the next goal is to try and reconstruct the original text by reordering these words in their original lines.
 For the line selection process, an iterative algorithm, Algorithm \ref{alg:linereconstr}, is used.
 \begin{algorithm}[tb]
-   \caption{Line reconstruction algorithm}
+   \caption{Algorithm for line reconstruction}
    \label{alg:linereconstr}
 \begin{algorithmic}
    \STATE {\bfseries Input:} $extractedWords$, $textlines$
@@ -401,10 +401,10 @@ For this we will use oversegmentation correction techniques.
 
 \subsection{Oversegmentation correction}
 In this section we provide techniques to verify the correctness of these segmentation points. 
-\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. [6:39]
+\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. 
 In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
 
-\subsubsection{rule based}
+\subsubsection{Rule based techniques}
 The main oversegmentation correction is handled by our neural network.
 However some simple solutions can be added to remove unwanted potential segmentation points throught deterministic processing.
 
@@ -429,8 +429,8 @@ A technique was tested using the feedback of the chracter recognition network to
 However this turned out not to be an effective technique, because the neural network tends to provide random probabilities with a high degree of certainty when multiple characters were fed to the network in the same image.
 Since it is impossible to validate these responses from the neural network, this technique is not used in the final version of our oversegmentation correction.
 
-\subsubsection{Neural network}
-The neural network we use to judge the potential segmentation points, is based on \cite{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points.
+\subsubsection{Machine learning approach}
+The neural network we use to judge the correctness of segmentation points, is based on \cite{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points.
 For every of these segmentation points a pixel matrix is extracted surrounding the segmentation point. This pixel matrix is normalised in size.
 Next, small windows of equal size are extracted from the pixel matrix and for each window the density is calculated. This is the number of black pixels divided by the total amount of pixels in the window.
 With every matrix a corresponding label is encoded for storage in the training file, this label is encoded as 0.9 if the segmentation point is correct and 0.1 otherwise. Now these matrices and corresponding labels are used to train the neural network.
@@ -534,9 +534,9 @@ Translation & 70.47 & 306 \\
 
 
 \section{Future work}
-Our recognition system cannot be used for real-world applications.Every individual technique has a certain error, which increases the difficulty of the next step, e.g. if word segmentation contains mistakes, character recognition becomes much harder.
+Our recognition system cannot be used for real-world applications. Every individual technique has a certain error, which increases the difficulty of the next step, e.g. if word segmentation contains mistakes, character recognition becomes much harder.
 This results in a system which cannot correctly recognize handwritten text.
-However many improvements are still possible.
+Many improvements are still possible.
 
 Firstly, given a dataset with a higher amount of training samples, the deep neural network will be able to better recognize new characters. The same applies for the neural network of oversegmentation correction.
 
@@ -546,7 +546,7 @@ Algorithms that provide better noise reduction can be added to handle text image
 and experiments with rotations of the text can provide us with a more robust system to tackle text images containing heavily slanted text lines.
 
 The character segmentation process is inadequate as it is, and generally unable to segment words adequately so that the character recognition step can recognise the found segments.
-More postprocessing can be used through rule based filters and a more robust neural network to correct the found segmentation points, but this will never reach an optimal solution through rule based filters alone.
+More postprocessing can be used through rule based filters and a more robust neural network to correct the found segmentation points, but this will never reach an optimal solution through rule based filters alone because of the ambiguity of this problem. 
 
 Finally, other approaches can also be considered.
 State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
