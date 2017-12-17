@@ -311,8 +311,7 @@ We have created an algorithm \ref{alg:overlap} that decides when to combine two 
 \end{algorithm}
 
 \subsection{Line selection}
-As the ordening of the words % TODO, verklaar waarom die ordening weggat? 
-we place the words in lines, and orden these lines. 
+Because the contour finding algorithm has no particular order in which it saves the found contours, we have to reorder the found words in their original lines.
 Algorithm \ref{alg:linereconstr} shows the pseudocode of our line selection process.
 The algorithm reorders the words in lines and orders these lines as ordered in the original text.
 
