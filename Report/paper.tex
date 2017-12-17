@@ -326,7 +326,7 @@ With these conditions fulfilled, we combine both contours into one single contou
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Line selection}
+\subsection{Line reconstruction}
 With the words extracted from the text, the next goal is to reconstruct the original text.
 We will need to order these words into lines 
 For the line selection process, an iterative algorithm, Algorithm \ref{alg:linereconstr}, is used.
@@ -362,38 +362,37 @@ This algorithm reorders the found words in lines, and return these lines as orde
 \section{Segmentation of words into characters}
 \label{sec:segword}
 
-The next step in the process is to extract the character images from the given word images.
-Again, there is the choise between several different approaches.
-In this paper we focus solely on a word oversegmentation approach to character extraction, as can be found described here \cite{CharSegm} and \cite{CharSegmOld}.
-The purpose is to segment the words into the individual characters.
-This will be done through initial oversegmentation of the word image, followed by postprocessing steps to remove the excess separation points to recover the original character images.
+The next step in the process is to extract the character images from the found word images.
+Again, there is a choice between several different approaches.
+In this paper we focus solely on a word oversegmentation approach to character extraction, through skeletonization and using a vertical projection profile. The reasoning begind this can be found in the following papers \cite{CharSegm} and \cite{CharSegmOld}.
+
+After first oversegmenting the word, we will recover the original character through postprocessing steps combining different word segments.
 
 \subsection{Normalization} % TODO:: necessary? never taken advantage of? maybe for split points count etc???
-The first action is normalizing the word image.
-This normalization step enables us to reason about words written in different pixel scalings the same way.
-The process of normalizing the word image consists of resizing the image to a fixed height of $100px$.
+The first action is again normalizing the word image.
+We will resuze the image to a fixed height of $100px$.
+This will result in more consistency in rule-based post processing steps.
 
 \subsection{Binarization}
-Next we will again need to execute a binarization algorithm on the word image.
-Before thresholding the image, Gaussian blur is executed to reduce the noise of the word image, and to smoothen the edges of the characters.
-Afterwards we use Otsu's thresholding algorithm again to binarize the blurred word image.
-This thresholding step is essential for out skeletonization algorithm in the next step, as it requires a binarized image as input.
+The word image is binarized.
+This is again done with a combination of Gaussian blur and Otsu's thresholding algorithm.
+The binarization is needed for the next step, because we can only apply a skeletonization algorithm to a binary image.
+
 
 \subsection{Skeletonization}
-The skeletonization of the thresholded word image will allow us to ignore the thickness of the lines in further processing.
-This normalization is needed to reason about potential segmentation points between characters in the word image.
-After comparing different skeletonization algorithms, the algorithm of choise is the skeletonize function found in the scipy python library.
-This is an adaptation of the Zhang-Suen thinning algorithm, one of the most commonly used and adapted thinning algorithms.
-\cite{zsthinning}
+Now we will skeletonize our word image.
+This will normalize the thickness of the strokes to a single pixel.
+This allows us to execute our Verical projection profile and interpret the results easily.
+The skeletonization algorithm used is the scipy adaptation of the Zhang Suen thinning algorithm \cite{zsthinning}.
 
 \subsection{Vertical projection histogram}
-Now that we have the skeletonized word image, we can proceed with determining the potential segmentation points.
-We do this by taking the vertical projection histogram of this skeletonized word image.
-With the vertical projection executed, we now have the summation of every collumn of the word image.
-This is done in a way that black pixels are represented by a $1$ value, and white pixels are represented by a $0$ value.
-Now we can regard the collumns with a total pixel count of zero or one pixel as potential segmentation points, as we can interpret columns containing only a single pixel to represent a connection between different characters, and collumns without pixels to represent spacing between characters.
-With these points as our potential segmentation points, we need to separate the correct segmentation points from the incorrect ones.
-For this we will use oversegmentation correction techniques.
+Using the skeletonized word image, we now create a vertical projection histogram.
+This vertical projection histogram takes the sum of every collumn in the image, counting black pixels as a $1$ value, and white pixels as a $0$ value.
+
+We now regard the collumns with a total pixel count of zero or one pixel as potential segmentation points.
+We interpret these collumn to be the whitespace in between characters or the line connecting two characters to each other.
+This will inevitably cause oversegmentation in our word image.
+The next step will be to filter the potential segmentation points, and remove the incorrect ones through postprocessing.
 
 \begin{figure*}
     \begin{subfigure}{0.33\textwidth}
