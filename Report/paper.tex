@@ -54,17 +54,17 @@ We conclude this paper with some experimental results, the problems we encounter
 \section{Character Recognition}
 \label{sec:charrec}
 The smallest distinguishable token in a text is a character. These handwritten characters are uniquely
-written by each individual and variations even occur when written by the same individual. These variations include the inclination of characters, i.e., the slant, orientation and size.
+written by each individual and variations even occur when written by the same individual. These variations include the inclination of characters (i.e. the slant) orientation and size.
 A way of dealing with these includes removing variations from the input image using preprocessing techniques.
 We take another approach, instead of adding rules to minimize variations we made a deep neural net which can recognise any character with a certain probability. The architecture of this deep neural network is described in Section \ref{sec:dnn}.
-In order to make the deep neural network recognise characters in images with these variations, we augmented the dataset to include a bigger variety of images. We present these augmentation techniques in Section \ref{sec:preproc}.
+In order to make the deep neural network recognize characters in images with these variations, we augmented the dataset to include a bigger variety of images. We present these augmentation techniques in Section \ref{sec:preproc}.
 The dataset of handwritten characters is described in Section \ref{sec:data}.
 
 \subsection{Dataset}
 \label{sec:data}
 Before exposing the neural network to new characters, it needs to be familiar with many training samples to be able to classify any new character correctly.
-This is a why a good dataset is very important. A dataset should have many examples, much variation, and an even balance between classes. A dataset with these properties
-allow the neural network to train effectively and recognise any new character given to the network.
+This is why a good dataset is very important. A dataset should have many examples, much variation, and an even balance between classes. A dataset with these properties
+allows the neural network to train effectively and recognize any new character given to the network.
 
 We use the Chars74K dataset for this purpose. It has 3410 images with handwritten characters, each belonging to one of 62 classes (0-9, A-Z, a-z).
 This dataset contains both very easily recognisable images of characters but also characters which are even hard to recognise for humans, as shown in Figure \ref{fig:char}.
@@ -93,25 +93,25 @@ We make use of two types of preprocessing steps: normalization and augmentation 
 Theoretically feeding normalized data to the neural network returns the same output as before.
 In reality however, it is better to normalize data to avoid getting stuck in local optima and to increase training speed of the model \cite{NormGoal}.
 We normalize the data by reducing the input dimensions to (64,64,1). A simple threshold is added to improve the contrast in our image.
-This allows the foreground to be more distinguishable from the background and allows the neural network to train and recognise more easily.
+This allows the foreground to be more distinguishable from the background and allows the neural network to train and recognize characters more easily.
 
 \subsubsection{Data augmentation}
 \label{par:aug}
-Data augmentation serves two purposes. It makes the dataset more robust to different kinds of handwriting as we add variations of the original data to the input data.
-The second purpose is to increase the size of our dataset. As our dataset only contains 3410 images with handwritten characters, we need more data for the neural network to be able to function properly.
+Data augmentation serves two purposes. It makes the dataset more robust to different kinds of handwriting as we add variations of the original data to the training samples.
+The second purpose is to increase the size of our dataset. As our dataset only contains 3410 images of handwritten characters, we need more data for the neural network to be able to function properly.
 Next we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there.
 
 \paragraph{Translations of data}
-The dataset is also extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the following transformation matrix:
+The dataset is extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the following transformation matrix:
 \begin{equation}
         \begin{bmatrix}
                 1 & 0 & t_x \\
                 0 & 1 & t_y
         \end{bmatrix}
 \end{equation}
-where $t_x$ is the horizontal shift and $t_y$ is the vertical shift. The values for chosen for $t_x$ are -8, 0 and 8, the values chosen for $t_y$ are -4, 0 and 4. All combinations are used except $t_x=0$ and $t_y=0$. The translation only occurs if it does not displace the character outside of the image.
+where $t_x$ is the horizontal shift and $t_y$ is the vertical shift. The values for chosen for $t_x$ are -16, 0 and 16, the values chosen for $t_y$ are -8, 0 and 8. All combinations are used except $t_x=0$ and $t_y=0$. The translation only occurs if it does not move the character outside of the image.
 \paragraph{Rotations of data}
-Rotations of the image are added to the dataset to make the network more robust to handwritings with different orientations. This matrix is equal to:
+Rotations of the image are added to the dataset to make the network more robust to handwritings with different orientations. The transformation matrix is equal to:
 \begin{equation}
        \begin{bmatrix}
                \alpha & \beta & (1-\alpha)*center.x - \beta*center.y \\
@@ -142,7 +142,8 @@ Shearing displaces each point in a fixed direction, by an amount proportional to
 The erosion operation of images adds thinner versions of characters to the dataset. Erosion uses a kernel to convolute an image.
 The image is scanned using the kernel. The maximum pixel value of the overlapping part between the image and the kernel is computed. This pixel value of the anchor point of the kernel is replaced with the maximum pixel value.
 This causes bright regions to get thinner and dark regions to get bigger in the image.
-All of the previously discussed preprocessing techniques are also applied to the eroded image. The final dataset contains translated, orientated, sheared and scaled versions of both the original image and the eroded image. A visualitation of the augmentation of an augmented picture can be seen in Figure \ref{fig:augmented}.
+
+All of the previously discussed preprocessing techniques are also applied to the eroded image. The final dataset contains translated, orientated, sheared and scaled versions of both the original image and the eroded image. A visualitation of the augmentation of a picture can be seen in Figure \ref{fig:augmented}.
 
 \begin{figure}
 \begin{subfigure}{0.15\textwidth}
@@ -180,11 +181,10 @@ All of the previously discussed preprocessing techniques are also applied to the
 \end{figure}
 \subsection{Deep neural network}
 \label{sec:dnn}
-% TODO: make a drawing, see http://www.ais.uni-bonn.de/deep_learning/images/Convolutional_NN.jpg
 Humans have millions of connected neurons in the visual cortices which are capable of image processing.
-We can recognise most characters without any thought because of this complex neural network inside our brain.
+We can recognize most characters without any thought because of this complex neural network inside our brain.
 For computers, character recognition is a more difficult task. We could try to write rule-based systems and define how every character should look. This solution is not flexible at all and is very hard to define.
-We use a neural network, inspired by how the brain processes images. These deep neural networks contain several layers of connected perceptrons, where each connection is defined by weight and each perceptron is defined by a bias.
+We use a neural network, inspired by how the brain processes images. These deep neural networks contain several layers of connected perceptrons, where each connection is defined by a weight and each perceptron is defined by a bias.
 The perceptrons take an input and calculate an output using an activation function. This allows perceptrons to make decisions.
 Normalized images can be fed to the neural network, which then propagate through several layers and eventually produce as output the probability that the input image has a certain class, one of the possible characters.
 Now follows a detailed overview of our deep neural network. This overview is visualized in Figure \ref{fig:dnn}. A detailed explanation on how deep neural networks function is explained by \cite{nnbook}.
@@ -192,31 +192,32 @@ Now follows a detailed overview of our deep neural network. This overview is vis
 \begin{figure*}
   \centering
   \includegraphics[width=\textwidth]{images/dnn}
-  \caption{Visualization of the deep neural network for character recognition. The first row shows the shape a layer. The second row shows the visualization of that layer, the third row shows information about the layer. 'C' indicates a convolutional layer, 'MP' a max-pooling layer and 'FC' a fully-connected layer.}
+  \caption{Visualization of the deep neural network for character recognition. The first row shows the shape of a layer. The second row shows the visualization of that layer, the third row shows information about the layer. 'C' indicates a convolutional layer, 'MP' a max-pooling layer and 'FC' a fully-connected layer.}
   \label{fig:dnn}
 \end{figure*}
 
 \subsubsection{Convolutional layers}
- The input is a normalized image with one color channel. This is fed to a convolutational layer. Convolutional layers allow us to extract features by scanning the image with filters. These features might be edges, corners or any other type of shape in the image. The extracted features are called a feature map.
+ The input is a normalized image with one color channel. This is fed to a convolutional layer. Convolutional layers allow us to extract features by scanning the image with filters. These features might be edges, corners or any other type of shape in the image. The extracted features are called a feature map.
  We can apply several of those filters using one convolutional layer to extract several types of features.
- This works because images have a spatial structure: close pixels have shared information. By applying a filter, pixels in the same region will use shared biases and weights, which allows the filter to extract particular features.
+ This works because images have a spatial structure; i.e. close pixels have shared information. By applying a filter, pixels in the same region will use shared biases and weights, which allows the filter to extract particular features.
  Next we add a pooling layer, in particular a max-pooling layer. Pooling layers remove the positional information of the features in the image. This is useful because the exact location is less important than the location relative to the other features and this allows us to reduce the amount of parameters required in the next layers.
 We use three convolutional layers combined with max pooling layers in order to extract low, medium and high level features.
 \subsubsection{Fully-connected layers}
 Next we flatten the output of the last convolutional layer in order to extract a one-dimensional array from the three-dimensional feature maps. This one-dimensional array can now be fed to a fully-connected layer, which is a layer of connected perceptrons as previously discussed.
-There are three fully-connected layers each connected with a dropout layer. Dropout randomly drops units and their connections from the network during training. Dropout greatly reduces overfitting in the fully connected layers. \cite{dropout} We do not use this after the convolutional layers as they are very resistant to overfitting \cite{nnbook}.
+There are three fully-connected layers of which the first two are connected with a dropout layer and the last one is the output layer.
+Dropout randomly drops units and their connections from the network during training. Dropout greatly reduces overfitting in the fully connected layers. \cite{dropout} We do not use this after the convolutional layers as they are very resistant to overfitting \cite{nnbook}.
 The last fully connected layer has 62 output neurons, which correspond to the 62 possible output classes. We use rectified linear units in order to compute the activation function. A rectified linear unit or rectified linear neuron is a unit which uses a rectifier as linear unit. It's output is given by
 \begin{equation}
         max(0, w*x+b)
 \end{equation}
 where $x$ is the input, $w$ is the weight vector and $b$ is the bias.
 \subsubsection{Softmax layer}
- The last layer in the neural network is a softmax layer with a cross-entropy cost function. The softmax layer compute a probability distribution (a set of 62 numbers which sum up to 1) using the 62 output neurons from the previous layer. An element in the probability distribution estimates the probability of the input image to classify as a certain character.
- The cross-entropy cost function uses the actual labels to calculate the error between the actual labels and the predicted labels (the previously discussed probabilities). The closer the cross-entropy function is to zero, the better it is at classifying handwritten characters.
+ The last layer in the neural network is a softmax layer with a cross-entropy cost function. The softmax layer computes a probability distribution (i.e. a set of 62 numbers which sum up to 1) using the 62 output neurons from the previous layer. An element in the probability distribution estimates the probability of the input image to classify as a certain character.
+ The cross-entropy cost function uses the actual labels to calculate the error between the actual labels and the predicted labels (the previously discussed probabilities). The closer the cross-entropy value is to zero, the better the neural network is at classifying handwritten characters.
  \subsubsection{Weight adjustment}
 Finally, in order to actually train the neural network, we need some kind of weight adjustment. This will effectively improve the decision making of perceptrons and thus, the classification of images.
 The Adam optimizer effectively fulfills this goal. In order to explain the Adam optimizer, a few other methods have to be known, a very brief explanation of these methods follow.
-First of all, stochastic gradient descent (SGD) is an iterative method which tries to find minima. This function takes a step size, which is known as the learning rate. SGD can be used to minimize the cross-entropy function iteratively by adjusting the weights.
+First of all, stochastic gradient descent (SGD) is an iterative method that tries to find minima. This function takes a step size which is known as the learning rate. SGD can be used to minimize the cross-entropy function iteratively by adjusting the weights.
 Momentum-based gradient descent makes the correction dependent based on an average of several previous corrections to move more quickly in the correct direction.
 AdaGrad allows the learning rate to adapt based on parameters. AdaDelta solves a problem of AdaGrad, concerning the learning rate to become so small that learning becomes impossible.
 Each of these methods effectively improve the previously mentionned method.
