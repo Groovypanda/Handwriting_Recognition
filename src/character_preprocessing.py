@@ -153,7 +153,7 @@ def augmentImage(image, add_noise, add_rotations, add_translations, add_scales, 
                 images.extend(scaledImages)
     if add_shearing:
         # Shear images to make the dataset more robust to different slant when writing.
-        shearedImages = [shearImage(image, 0.2), shearImage(image), -0.2]
+        shearedImages = [shearImage(image, 0.2), shearImage(image, -0.2)]
         if(add_one):
             images.append(shearedImages[random.randrange(0, len(shearedImages))])
         else:
@@ -183,7 +183,7 @@ def preprocess_image(img, inverse=False):
     return np.reshape(img, definitions.IMG_SHAPE)
 
 
-def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_scales=True, add_shearing=True,  add_erode = True, add_one=False, confirm=True):
+def augment_data(add_noise=False, add_rotations=True, add_translations=True, add_scales=True, add_shearing=True,  add_erode = True, add_one=False, confirm=True):
     if confirm:
         inp = input("Are you sure you want to preprocess the data? Insert y(es) to continue.\n")
         if inp != 'y' and inp != 'yes':
@@ -222,6 +222,59 @@ def augment_data(add_noise=True, add_rotations=True, add_translations=True, add_
     end = t.time()
     print('\nThe execution time is {}'.format(end - start))
 
+def augment_data_fake():
+    in_file_names = open(definitions.CHARSET_INFO_PATH, 'r').read().splitlines()
+    out_file_names = open(definitions.PREPROCESSED_CHARSET_INFO_PATH, 'w')
+
+    i = 0
+    for file_name in in_file_names:
+        # Input
+        label = int(file_name.split('/')[1][-2:])
+        file_name = definitions.CHARSET_PATH + file_name
+        img = preprocess_image(read_image(file_name), inverse=True)
+        # Data augmentation
+        images = [img, img]
+        # Output
+        for aug_img in images:
+            aug_img = np.multiply(255, np.subtract(1,
+                                                   aug_img))  # Save augmented images as images without inverted color values.
+            new_file_name = definitions.PREPROCESSED_CHARSET_PATH + 'image-{}-{}.png'.format(label, i)
+            cv2.imwrite(new_file_name, aug_img)
+            out_file_names.write(new_file_name + '\n')
+            i += 1
+            # Keeping track of time...
+            if i % 250 == 0:
+                print('({}) - {}: About {} seconds have passed...'.format(file_name, i, t.time() - start))
+
+    end = t.time()
+    print('\nThe execution time is {}'.format(end - start))
+
+def reset_data():
+    in_file_names = open(definitions.CHARSET_INFO_PATH, 'r').read().splitlines()
+    out_file_names = open(definitions.PREPROCESSED_CHARSET_INFO_PATH, 'w')
+
+    i = 0
+    for file_name in in_file_names:
+        # Input
+        label = int(file_name.split('/')[1][-2:])
+        file_name = definitions.CHARSET_PATH + file_name
+        img = preprocess_image(read_image(file_name), inverse=True)
+        # Data augmentation
+        images = [img]
+        # Output
+        for aug_img in images:
+            aug_img = np.multiply(255, np.subtract(1,
+                                                   aug_img))  # Save augmented images as images without inverted color values.
+            new_file_name = definitions.PREPROCESSED_CHARSET_PATH + 'image-{}-{}.png'.format(label, i)
+            cv2.imwrite(new_file_name, aug_img)
+            out_file_names.write(new_file_name + '\n')
+            i += 1
+            # Keeping track of time...
+            if i % 250 == 0:
+                print('({}) - {}: About {} seconds have passed...'.format(file_name, i, t.time() - start))
+
+    end = t.time()
+    print('\nThe execution time is {}'.format(end - start))
 
 def show_aug_img():
     in_name = definitions.CHARSET_PATH + "Img/Sample012/img012-002.png"

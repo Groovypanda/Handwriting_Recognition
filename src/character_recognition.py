@@ -121,22 +121,22 @@ def create_neural_net(global_weights=None, train=True, base=1, filter_size=FILTE
     with tf.variable_scope('CharacterRecognition'):
         _x = tf.placeholder(tf.float32, (None, SIZE, SIZE, NUM_CHANNELS))  # batch size - height - width - channels
         _y = tf.placeholder(tf.int64, (None, NUM_CLASSES))  # batch size - classes
-        base2 = base * 1024
-        h1 = new_conv_layer(name=1, input=_x, filter_size=filter_size, num_filters=8, num_in_channels=NUM_CHANNELS,
+        h1 = new_conv_layer(name=1, input=_x, filter_size=7, num_filters=8, num_in_channels=NUM_CHANNELS,
                             use_pooling=True, global_weights=global_weights)
-        h2 = new_conv_layer(name=2, input=h1, filter_size=filter_size, num_filters=16, num_in_channels=8,
+        h2 = new_conv_layer(name=2, input=h1, filter_size=5, num_filters=16, num_in_channels=8,
                             use_pooling=True, global_weights=global_weights)
-        h3 = new_conv_layer(name=3, input=h2, filter_size=filter_size, num_filters=24, num_in_channels=16,
+
+        h3 = new_conv_layer(name=3, input=h2, filter_size=3, num_filters=24, num_in_channels=16,
                             use_pooling=True, global_weights=global_weights)
         h4 = tf.contrib.layers.flatten(h3)
         if train:
-            h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
+            h5 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=1024, global_weights=global_weights)
             h6 = tf.nn.dropout(h5, keep_prob=keep_prob)
-            h7 = new_fc_layer(name=7, input=h6, num_in=h6.shape[1], num_out=base2 / 2, global_weights=global_weights)
+            h7 = new_fc_layer(name=7, input=h6, num_in=h6.shape[1], num_out=512, global_weights=global_weights)
             h8 = tf.nn.dropout(h7, keep_prob=keep_prob)
         else:
-            h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=base2, global_weights=global_weights)
-            h8 = new_fc_layer(name=7, input=h7, num_in=h7.shape[1], num_out=base2 / 2, global_weights=global_weights)
+            h7 = new_fc_layer(name=4, input=h4, num_in=h4.shape[1], num_out=1024, global_weights=global_weights)
+            h8 = new_fc_layer(name=7, input=h7, num_in=h7.shape[1], num_out=512, global_weights=global_weights)
         h = new_fc_layer(name='final', input=h8, num_in=h8.shape[1], num_out=NUM_CLASSES, global_weights=global_weights)
         return _x, _y, h
 
@@ -165,7 +165,6 @@ def train_net(n, restore=False, min_save=1.0, iteration=1, name='all'):
     """
 
     # Some variables required for training
-    total_epochs = 0
     (x_train, y_train), (x_validation, y_validation) = get_data()
     weights = []
     _x, _y, h = create_neural_net(global_weights=weights)
