@@ -231,7 +231,7 @@ The Adam optimizer minimizes the error calculated by the cross-entropy cost func
 To be able to recognise the characters in a given text, we will first need to extract the words from the text before we can start evaluating the characters. This word extraction has many possible approaches, but in this paper we will focus solely on the word contouring approach.
 This method uses a heuristic algorithm to extract the contours of the words from a given text, and through postprocessing we can rearrange these extracted words into lines.
 The algorithm proposed is only to processes text images, and does not take into account images and other non-textual areas found in the text.
-Dependant on the situation, additional techniques for page segmentation, such as the Run-Length Smearing Algorithm, can be utilized.
+Dependant on the situation, additional techniques for page segmentation can be utilized. % , such as the Run-Length Smearing Algorithm, can be utilized.
 % TODO:: Run length Smearing Algorithm reference --> ....
 
 
@@ -548,7 +548,13 @@ However many improvements are still possible.
 
 Firstly, given a dataset with a higher amount of training samples, the deep neural network will be able to better recognize new characters. The same applies for the neural network of oversegmentation correction.
 
-Next %TODO Ruben
+The text to word segmentation process can be improved upon and made more robust. 
+Advanced text segmentation approaches can be utilized to extract the text segments from documents containing images and other unwanted elements.
+Algorithms that provide better noise reduction can be added to handle text images with more noise, 
+and experiments with rotations of the text can provide us with a more robust system to tackle text images containing heavily slanted text lines.
+
+The character segmentation process is inadequate as it is, and generally unable to segment words adequately so that the character recognition step can recognise the found segments.
+More postprocessing can be used through rule based filters and a more robust neural network to correct the found segmentation points, but this will never reach an optimal solution through rule based filters alone.
 
 Finally, other approaches can also be considered.
 State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
