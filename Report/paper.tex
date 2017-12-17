@@ -364,13 +364,12 @@ allows us to create a vertical projection profile. The skeletonization algorithm
 \subsection{Vertical projection histogram}
 \label{sec:vertproj}
 
-Using the skeletonized word image, we now create a vertical projection histogram.
-This vertical projection histogram takes the sum of every collumn in the image, counting black pixels as a $1$ value, and white pixels as a $0$ value.
-
-We now regard the collumns with a total pixel count of zero or one pixel as potential segmentation points.
-We interpret these collumn to be the whitespace in between characters or the line connecting two characters to each other.
+Using the skeletonized word image, we create a vertical projection histogram.
+This vertical projection histogram counts the black pixels of every column in the image.
+We regard the columns with a total pixel count of zero or one as potential segmentation points.
+We interpret these columns as whitespace in between characters or as a line connecting two characters to each other.
 This will inevitably cause oversegmentation in our word image.
-The next step will be to filter the potential segmentation points, and remove the incorrect ones through postprocessing.
+The next step filters incorrect segmentation points caused by oversegmentation. 
 
 \begin{figure*}
     \begin{subfigure}{0.33\textwidth}
@@ -400,7 +399,7 @@ In this section we provide techniques to verify the correctness of segmentation 
 In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
 
 \subsubsection{Rule based techniques}
-The main oversegmentation correction is handled by our neural network.
+Most of the oversegmentation correction is done by our neural network.
 However some simple preprocessing is added to remove obvious unwanted segmentation points.
 
 We first remove removes the segmentation points found at the start and the end of the word image.
