@@ -110,5 +110,3 @@ def visualise_all():
     print(max_i, accuracy[max_i])
 
 
-visualise_all()
-# visualise_experiment_configuration("batchsize", "1024")
