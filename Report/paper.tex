@@ -262,15 +262,20 @@ These contours are neglected by taking the average height of all the found conto
 We remove all of the contours with a height smaller than $average height * (2/3)$.
 
 
+
 \begin{algorithm}[tb]
     \caption{Contour combination algorithm}
-    \label{alg:overlap}
+   \label{alg:overlap}
 \begin{algorithmic}
-    \STATE {\bfseries Input:} $contour1$, $contour2$
-    \STATE $xGap =$ calculateXaxisDistance $contour1$ $contour2$
-    \STATE $yOverlap =$ calculateYoverlap $contour1$ $contour2$
-    %TODO:\IF {$xGap < averageWordWidth * (1 / (averageCharacterCount * 2)) $ {\bfseries and} $yOverlap > min(word1.height, word2.height) * requiredYaxisOverlap$}
-        \STATE combineContours $contour1$ $contour2$
+    \STATE {\bfseries Input:}  $contour1$, $contour2$, $text$
+    \STATE $xGap =$ calculateXaxisDistance $contour1$, $contour2$
+    \STATE $yOverlap =$ calculateYoverlap $contour1$, $contour2$
+    \STATE $avgWidth =$ getAverageWordWith $text$
+    \IF{ 
+    $xGap < avgWidth $ \\ $* (1 / (averageCharacterCount * 2))$ \\  {\bfseries and} \\ $yOverlap > min(contour1.height, contour2.height)$ \\ $*  requiredYaxisOverlap $ 
+    }
+    \STATE combineContours $contour1$ $contour2$
+    \ENDIF
 \end{algorithmic}
 The chosen paramters are:
 \\
@@ -278,6 +283,8 @@ $averageCharacterCount = 8$
 \\
 $requiredYaxisOverlap = 1/2$
 \end{algorithm}
+
+
 
 \subsubsection{Contour combination}
 The leftover contours are used to to reconstruct the original words from the text.
