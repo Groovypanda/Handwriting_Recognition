@@ -73,13 +73,13 @@ This dataset contains both very easily recognisable images of characters but als
 \begin{figure}
 \begin{subfigure}{.23\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{images/bad_char1}
+  \includegraphics[height=2cm]{images/bad_char1}
 \end{subfigure}
 \begin{subfigure}{.23\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{images/bad_char2}
+  \includegraphics[height=2cm]{images/bad_char2}
 \end{subfigure}
-\caption{Examples of written 'z' characters, which are hard to recognise or ambiguous.}
+\caption{Examples of written 'z' characters, which are hard to recognise or are ambiguous.}
 \label{fig:char}
 \end{figure}
 
@@ -379,28 +379,25 @@ Now we can regard the collumns with a total pixel count of zero or one pixel as 
 With these points as our potential segmentation points, we need to separate the correct segmentation points from the incorrect ones.
 For this we will use oversegmentation correction techniques.
 
-\begin{figure}
-    \begin{subfigure}{\linewidth}
+\begin{figure*}
+    \begin{subfigure}{0.33\textwidth}
     \centering
-    \includegraphics[width=.7\linewidth]{images/vpp}
-    \vspace{-5px}
+    \includegraphics[width=\textwidth]{images/vpp}
     \caption*{Vertical projection profile.}
     \end{subfigure}
-    \begin{subfigure}{\linewidth}
+    \begin{subfigure}{0.33\textwidth}
     \centering
-    \includegraphics[width=.7\linewidth]{images/rules}
-    \vspace{-5px}
+    \includegraphics[width=\textwidth]{images/rules}
     \caption*{Rule based correction.}
     \end{subfigure}
-    \begin{subfigure}{\linewidth}
+    \begin{subfigure}{0.33\textwidth}
     \centering
-    \includegraphics[width=.7\linewidth]{images/nn}
-    \vspace{-5px}
+    \includegraphics[width=\textwidth]{images/nn}
     \caption*{Correction through neural network.}
     \end{subfigure}
     \caption{Word segmentation steps}
     \label{fig:char_segm}
-\end{figure}
+\end{figure*}
 
 \subsection{Oversegmentation correction}
 In this section we provide techniques to verify the correctness of these segmentation points. 
@@ -468,11 +465,7 @@ The neural network does not only produce which character is recognised, but rath
         [.{(Ye , 0.72)} {(Yes, 0.432)} {(Ye5 , 0.288)} ]
         [.{(Yl , 0.18)} {(Yls, 0.108)} {(Yl5 , 0.072)} ]
             ]
-        \Tree [.{(T, 0.1)}
-        [.{(Te , 0.08)} {(Tes, 0.048)} {(Te5 , 0.032)} ]
-        [.{(Tl , 0.02)} {(Tls, 0.012)} {(Tl5 , 0.008)} ]
-            ]
-\caption{A list of the trees for the word 'Yes' with branching factor 2. The characters have the following probabilities: $P(Y)=0.9, P(T)=0.1, P(e)=0.8, P(l)=0.2, P(s)=0.6, P(5)=0.4$. Other characters have probabilities which are neglible.}
+\caption{The first element of a possible list of trees for the word 'Yes' with branching factor 2. The characters have the following probabilities: $P(Y)=0.9, P(T)=0.1, P(e)=0.8, P(l)=0.2, P(s)=0.6, P(5)=0.4$. Other characters have probabilities which are neglible.}
 \label{fig:wordtree}
 \end{figure}
 We make a tree, as shown in Figure \ref{fig:wordtree}, where every node is a tuple with a word (sequence of characters) and a probability (likeliness of that word based on the probabilities of individual characters). The probability is calculated as the product of probability for each character: $P(c_1, c_2,...,c_k) = \prod\limits_{i}{c_i}$ with $1 \leq i \leq k$. In order to keep the complexity low we only consider the three most probable characters. This will be the branching factor of every tree. A tree exists for every possible starting character.
