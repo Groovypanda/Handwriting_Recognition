@@ -261,7 +261,7 @@ The tool we will use to remove these incorrect contours is the bounding box we c
 This bounding box is the smallest rectangle containing said contour, and it will allow us to easily compare contour positions in the text image.
 
 Firstly we remove the contours of which the bounding box is contained by the bounding box of a second contour.
-We can do this because the text segmentation process will return the word in the image contained by its bounding box, so we will not change  % TODO:: NOTATION
+We can do this because the text segmentation process will return the word in the image contained by its biggest bounding box, so we will not change the returned word image through this step  % TODO:: NOTATION
 
 Secondly we remove contours that are too small to contain parts of a word.
 The contouring algorithm will generate contours of noise and punctuation.
@@ -368,7 +368,7 @@ In this paper we focus solely on a word oversegmentation approach to character e
 
 After first oversegmenting the word, we will recover the original character through postprocessing steps combining different word segments.
 
-\subsection{Normalization} % TODO:: necessary? never taken advantage of? maybe for split points count etc???
+\subsection{Normalization}
 The first action is again normalizing the word image.
 We will resuze the image to a fixed height of $100px$.
 This will result in more consistency in rule-based post processing steps.
@@ -415,34 +415,35 @@ The next step will be to filter the potential segmentation points, and remove th
 \end{figure*}
 
 \subsection{Oversegmentation correction}
-In this section we provide techniques to verify the correctness of these segmentation points.
+In this section we provide techniques to verify the correctness of segmentation points.
 \cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures.
 In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
 
 \subsubsection{Rule based techniques}
 The main oversegmentation correction is handled by our neural network.
-However some simple solutions can be added to remove unwanted potential segmentation points throught deterministic processing.
+However some simple preprocessing is added to remove obvious unwanted segmentation points.
 
-The first filter we utilize here, is one that removes the segmentation points at the start and the end of the word image.
-These segmentation points are an artifact of the used segmentation approach, and can be removed without information loss, as the alphabet does not contain letters that convert to a single pixel line after skeletonization.
+We first remove removes the segmentation points found at the start and the end of the word image.
+These segmentation points are an artifact of the used segmentation approach, as can be observed in Figure Figure \ref{fig:char_segm}.
+These points can be removed without information loss, as the alphabet does not contain letters that entirely convert to a single pixel line after skeletonization.
 
-A second filter groups consequent potential segmentation points.
-The occurence of these consequent points is another artifact from our segmentation approach.
-From these grouped points, the collumns beloning to these x-coordinates are checked to be empty or containing a single pixel in the vertical projection histogram.
-if the group contains collumns that are empty on the histogram, only the middle segmentation point from this group is retained as potential segmentation point.
-If none of the potential segmentation points has an empty collumn on the histogram, the retained segmentation point is the middle points from the group.
+Subsequently we group consequent segmentation points.
+The occurence of these consequent segmentation points is another artifact from our segmentation approach, as can be seen in Figure \ref{fig:char_segm}.
 
-A third filter is that groups of consequent potential segmentation points, separated by collumns containing less pixels than a certain threshold value $maxSumThresh$, are grouped together.
-The value chosen for this threshold is 3.
-This filter remedies the segmentation of slated lines between the characters.
+From these groups of points, we take the center point as the new potential segmentation points.
+However if one or more of the segmentation points in the group stems from empty collumns, the new segmentation point is chosen as the center point of the points representing the empty collumns in the word image.
 
-This value for this threshold is pretty conservative, and could be further investigated for a more optimal rule based approach.
-More rule based filter could be added for more optimal processing of the potential segmentation points.
-However the focus the segmentation correction is the neural network used to remove incorrect segmenatation points.
+Finally we aggregate groups of consequent potential segmentation points, separated by collumns containing less pixels than a certain threshold value $maxSumThresh$.
+We have chosen a conservative value of $3px$ for this threshold.
+This remedies the segmentation of slated lines inside characters, which can be an artifact of the skeletonization algirithm used.
 
 A technique was tested using the feedback of the chracter recognition network to remove incorrect segmentation points.
-However this turned out not to be an effective technique, because the neural network tends to provide random probabilities with a high degree of certainty when multiple characters were fed to the network in the same image.
-Since it is impossible to validate these responses from the neural network, this technique is not used in the final version of our oversegmentation correction.
+However this turned out not to be ineffective, because the neural network tends to provide random probabilities with a high degree of certainty when images of multiple characters together were fed to the nerual network.
+Since it is impossible to validate these responses from the neural network, this approach was abandoned and is not used in the final version.
+
+More rule based filter could be added for more optimal processing of the potential segmentation points.
+However the focus of our segmentation correction is the neural network used to remove incorrect segmenatation points.
+
 
 \subsubsection{Machine learning approach}
 The neural network we use to judge the correctness of segmentation points, is based on \cite{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points.
