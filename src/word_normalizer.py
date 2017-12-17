@@ -13,6 +13,9 @@ def normalize_word(word_image):
     difference_percentage = NORMALIZED_HEIGHT / height
     normalized_width = width * difference_percentage
 
+    if (normalized_width < 3):
+        return word_image
+
     normalized_word = cv2.resize(word_image, (int(normalized_width), NORMALIZED_HEIGHT))
 
     #norm_height, norm_width = normalized_word.shape[:2]
@@ -21,4 +24,3 @@ def normalize_word(word_image):
     #container[PADDING:norm_height+PADDING ,PADDING:norm_width+PADDING] = normalized_word
 
     return normalized_word
-

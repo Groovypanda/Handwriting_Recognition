@@ -23,9 +23,9 @@
 %  redo the preprocessing experiment and explain why some techniques increase the accuracy more than others. 
 \begin{abstract} 
 The aim of this paper is to present a complete system for off-line handwriting recognition. 
-We discuss how to segment texts with contouring. Next we present our method of segmentating words into characters. 
+We discuss how to segment texts with contouring. Next we present our method of segmentating words into characters.
 Then we describe how to recognise characters with a deep neural network approach. 
-Finally we present some postprocessing techniques to correct mispredicted text. 
+Finally we presentf postprocessing techniques to correct mispredicted text. 
 \end{abstract} 
 
 \section{Introduction}
@@ -343,7 +343,6 @@ After comparing different skeletonization algorithms, the algorithm of choise is
 This is an adaptation of the Zhang-Suen thinning algorithm, one of the most commonly used and adapted thinning algorithms.
 \cite{zsthinning}
 
-
 \subsection{Vertical projection histogram}
 Now that we have the skeletonized word image, we can proceed with determining the potential segmentation points.
 We do this by taking the vertical projection histogram of this skeletonized word image.
@@ -352,6 +351,29 @@ This is done in a way that black pixels are represented by a $1$ value, and whit
 Now we can regard the collumns with a total pixel count of zero or one pixel as potential segmentation points, as we can interpret columns containing only a single pixel to represent a connection between different characters, and collumns without pixels to represent spacing between characters.
 With these points as our potential segmentation points, we need to separate the correct segmentation points from the incorrect ones.
 For this we will use oversegmentation correction techniques.
+
+\begin{figure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=.7\linewidth]{images/vpp}
+    \vspace{-5px}
+    \caption*{Vertical projection profile.}
+    \end{subfigure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=.7\linewidth]{images/rules}
+    \vspace{-5px}
+    \caption*{Rule based correction.}
+    \end{subfigure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=.7\linewidth]{images/nn}
+    \vspace{-5px}
+    \caption*{Correction through neural network.}
+    \end{subfigure}
+    \caption{Word segmentation steps}
+    \label{fig:char_segm}
+\end{figure}
 
 \subsection{Oversegmentation correction}
 In this section we provide a method to fix the oversegmentation of the word image caused by the previous steps.
@@ -469,9 +491,20 @@ In the final dataset we use augment every image once or more with every techniqu
 \end{figure}
 
 \section{Conclusion}
+There are a lot of steps in this paper from which we can draw conclusions.
+The segregation of a text image in word images is  
+Word extraction is a problem 
+
+Character segmentation is another ..
+The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect potential segmentation points the neural network has to process.
+
+
+The neural network 
 
 \section{Future research}
-State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks. This concept is explained and applied by \cite{presham}.
+State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
+This approach does not suffer from character segmentation artifacts
+This concept is explained and applied by \cite{presham}.
 \section{Acknowledgements}
 We thank Sarah Vluymans for her comments on this paper.
 \bibliography{paper}
