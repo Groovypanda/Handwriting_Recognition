@@ -227,35 +227,29 @@ The Adam optimizer minimizes the error calculated by the cross-entropy cost func
 
 \section{Segmentation of text into words}
 \label{sec:segtext}
+In this section we explain the first step in the process of extracting individual characters from a text image: i.e. word extraction.
+Word extraction from text images has many possible approaches, but in this paper we focus solely on the word contouring approach, pointed out by following paper \cite{WordSegm} to be a successfull word extraction approach.
 
-To be able to recognise the characters in a given text, we first need to extract the words from the text before we can start evaluating the characters. Word extraction from text images has many possible approaches, but in this paper we will focus solely on the word contouring approach, pointed out by following paper \cite{WordSegm} as being a good word extraction approach.
-
-This heuristic approach will extract the contours of the words from a given text image, and through postprocessing we can rearrange these extracted words into lines.
-The proposed approach focusses solely text images, and does not take into account images and other non-textual areas found in the text.
-Dependent on the situation, additional techniques for page segmentation can be utilized. % , such as the Run-Length Smearing Algorithm, can be utilized.
-% TODO:: Run length Smearing Algorithm reference --> ....
-
+With this approach we extract the contours of the words in a given text image. Through postprocessing techniques we can rearrange these extracted words into lines.
+The proposed approach focusses solely on text images, and does not take into account non-textual areas found in the input image.
+Additional techniques for page segmentation can be utilized depending on the situation.
 
 \subsection{Binarization}
-The first preprocessing step is binarizing the text image.
-If the image is not yet greyscaled, this is done at the start of the preprocessing phase.
-The greyscaled image is converted from greyscaled into a binary image.
-This process will allows us to easily separate the text from the background.
+We start with binarizing the text image.
 
-To achieve this there are a lot of thresholding algorithms to choose from, but the one we will use throughout the paper is a combination of executing Gaussian blur in combination with OTSU's thresholding algorithm on the binary text image.
-The algorithms used are as implemented in the python opencv library. %TODO:: where do i put this????
+To achieve this there are a lot of thresholding algorithms to choose from, but the one we use is a combination of Gaussian blur in combination with Otsu's thresholding algorithm.
 
-The Gaussian blur will reduce the noise in the image, and smoothen the edges of the text.
-The smoothening of the background noise will result in less noise picked up by the chosen thresholding algorithm, so it is less likely to confuse background noise with the words from the text image.
-
-The tresholding algorithm used in this paper is OTSU's thresholding algorithm.
-This algorithm will deliver adequate result for noisy text documents.
-The choise of tresholding algorithm depends largely on intended purposes of the algorithm.
-If very noisy documents will need to be processed, additional noise removal techniques and other preprocessing techniques may be required to reduce the excess noise picked up by the tresholding algorithm.
+The Gaussian blur will smoothen the noise in the image and smoothen the edges of the text.
+%TODO:: Otsu reference
+Otsu's tresholding algorithm will deliver adequate result for noisy text documents.
+The choise of tresholding algorithm depends mostly on the intended purposes of the algorithm.
+Additional noise removal techniques and other preprocessing techniques may be required for a better result when processing very noise-heavy images.
 
 
 \subsection{Contouring}
-Our heuristic text segmentation algorithm is based on finding the contours in the text image, so we can group these contours in postprocessing stages to recover the original words from the text image.
+Our text segmentation approach is based on finding contours in the text image.
+We can find these contours using %TODO:: reference paper contouring suzuki85
+These contours in postprocessing stages to recover the original words from the text image.
 The contouring algorithm used is the one implemented in the opencv library for python.
 This algorithm generates a lot of unneeded contours, which we will filter through postprocessing.
 Also since words in handwritten text are not always connected into one piece, we will need to connect these contours in the postprocessing stages as well.
@@ -362,7 +356,7 @@ The process of normalizing the word image consists of resizing the image to a fi
 \subsection{Binarization}
 Next we will again need to execute a binarization algorithm on the word image.
 Before thresholding the image, Gaussian blur is executed to reduce the noise of the word image, and to smoothen the edges of the characters.
-Afterwards we use OTSU's thresholding algorithm again to binarize the blurred word image.
+Afterwards we use Otsu's thresholding algorithm again to binarize the blurred word image.
 This thresholding step is essential for out skeletonization algorithm in the next step, as it requires a binarized image as input.
 
 \subsection{Skeletonization}
