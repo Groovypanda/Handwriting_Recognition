@@ -5,6 +5,7 @@ import numpy as np
 from pylab import savefig
 
 from src import definitions
+import csv
 
 # from CharacterRecognition.experiments import ITERATIONS
 experiments = ['base', 'batchsize', 'decay', 'filtersize', 'keepprob', 'learningrate', 'preprocess']
@@ -94,6 +95,19 @@ def visualise_experiment_configuration(experiment_name, conf, save=False):
     visualise(accuracies, times, save=save, name='_'.join([experiment_name, conf]))
 
 
+def experiment_to_csv(experiment_name):
+    confs, accuracies, times = get_experiment_results(experiment_name)
+    out_file = open(definitions.CSV_PATH + experiment_name + '.csv', 'w')
+    writer = csv.writer(out_file, delimiter =',')
+    writer.writerow(["Configuration", "Maximum accuracy", "Execution time"])
+    for (i, conf) in enumerate(confs):
+        accuracy = 100*(np.max(accuracies[i]))
+        time = times[i][-1]
+        print("{} & {:.2f}\% & {:.0f} \\\\".format(conf, accuracy, time))
+        writer.writerow([conf, accuracy, time])
+    out_file.close()
+
+
 #for exp in experiments:
     #visualise_experiment(exp, max=True, save=True)
 #visualise_experiment_configuration("preprocess", conf="all", save=False)
@@ -110,3 +124,4 @@ def visualise_all():
     print(max_i, accuracy[max_i])
 
 
+experiment_to_csv("preprocess")
