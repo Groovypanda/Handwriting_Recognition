@@ -227,7 +227,7 @@ The Adam optimizer minimizes the error calculated by the cross-entropy cost func
 \section{Segmentation of text into words}
 \label{sec:segtext}
 
-To be able to recognise the characters in a given text, we will first need to extract the words from the text before we can start evaluating the characters. This word extraction has many possible approaches, but in this paper we will focus solely on the word contouring approach, as pointed out by following paper \cite{WordSegm} as being a good word extraction approach.
+To be able to recognise the characters in a given text, we first need to extract the words from the text before we can start evaluating the characters. This word extraction has many possible approaches, but in this paper we will focus solely on the word contouring approach, as pointed out by following paper \cite{WordSegm} as being a good word extraction approach.
 This method uses a heuristic algorithm to extract the contours of the words from a given text, and through postprocessing we can rearrange these extracted words into lines.
 The algorithm proposed is only to processes text images, and does not take into account images and other non-textual areas found in the text.
 Dependant on the situation, additional techniques for page segmentation can be utilized. % , such as the Run-Length Smearing Algorithm, can be utilized.
