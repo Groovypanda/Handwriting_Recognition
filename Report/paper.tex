@@ -411,8 +411,8 @@ The next step will be to filter the potential segmentation points, and remove th
 
 \subsection{Oversegmentation correction}
 In this section we provide techniques to verify the correctness of segmentation points.
-\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures.
-In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
+\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule-based techniques, cost function optimization based methods and machine learning based procedures.
+In this paper we discuss machine learning based approaches precedented by a few rule-based techniques.
 
 \subsubsection{Rule based techniques}
 The main oversegmentation correction is handled by our neural network.
@@ -436,7 +436,7 @@ A technique was tested using the feedback of the chracter recognition network to
 However this turned out not to be ineffective, because the neural network tends to provide random probabilities with a high degree of certainty when images of multiple characters together were fed to the nerual network.
 Since it is impossible to validate these responses from the neural network, this approach was abandoned and is not used in the final version.
 
-More rule based filter could be added for more optimal processing of the potential segmentation points.
+More rule-based filter could be added for more optimal processing of the potential segmentation points.
 However the focus of our segmentation correction is the neural network used to remove incorrect segmenatation points.
 
 
@@ -552,12 +552,11 @@ Many improvements are still possible.
 Firstly, given a dataset with a higher amount of training samples, the deep neural network will be able to better recognize new characters. The same applies for the neural network of oversegmentation correction.
 
 The text to word segmentation process can be improved upon and made more robust.
-More advanced text segmentation approaches can be utilized to extract the text segments from documents containing images and other unwanted elements. \cite{textsegm}
-Algorithms that provide better noise reduction can be added to handle text images with more noise,
-and experiments with rotations of the text can provide us with a more robust system to tackle text images containing heavily slanted text lines.
+More advanced text segmentation approaches can be utilized to extract the text segments from documents containing images and other unwanted elements. A comparison of different text segmentation techniques is done by \cite{textsegm}.
 
 The character segmentation process is insufficient as it is, and generally unable to segment words adequately so that the character recognition step can recognise the found segments.
-More postprocessing can be used through rule based techniques and a more robust neural network to correct the found segmentation points. \cite{segmtechniques}
+More postprocessing can be used through rule-based techniques and a more robust neural network to correct the found segmentation points.
+Several rule-based techniques are proposed by \cite{segmtechniques}.
 
 Finally, other approaches can also be considered.
 State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
