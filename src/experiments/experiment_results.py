@@ -104,11 +104,9 @@ def visualise_all():
     accuracy = np.loadtxt(accuracy_path)
     time = np.loadtxt(time_path)
     start = 0
-    end = 3000
+    end = 1000
     visualise([accuracy[start:end]], [time[start:end]], name='final_{}'.format(end), save=True)
     max_i = np.argmax(accuracy[start:end])
     print(max_i, accuracy[max_i])
 
 
-visualise_experiment("learningrate")
-# visualise_experiment_configuration("batchsize", "1024")

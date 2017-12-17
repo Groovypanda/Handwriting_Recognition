@@ -13,24 +13,19 @@
 \usepackage{titlesec}
 
 \begin{document} 
-\twocolumn[\icmltitle{Handwriting Recognition}
+\twocolumn[\icmltitle{An Approach to Off-line Handwriting Recognition through Segmentation Techniques and Deep Neural Networks}
 \icmlauthor{Jarre Knockaert}{Jarre.Knockaert@UGent.be}
 \icmlauthor{Ruben Dedecker}{Ruben.Dedecker@UGent.be}
 
 \vskip 0.3in
 ]
 % Notes:
-% - Add https://tel.archives-ouvertes.fr/tel-01249405/document reference, (see abstract) 
-% in order to compare results. 
-% - Disciss possible flaws. (Use images from IAM in order to do so)
-% - Update outdated parts, like neural net of splitpoint evaluation
-%  Reference datasets, Chars74K, IAM, Google n-grams
 %  redo the preprocessing experiment and explain why some techniques increase the accuracy more than others. 
 \begin{abstract} 
-The aim of this paper is to present a system for off-line handwriting recognition. 
-We discuss how to segment texts with contouring. Next we present our method of segmentating words into characters. 
+The aim of this paper is to present a complete system for off-line handwriting recognition. 
+We discuss how to segment texts with contouring. Next we present our method of segmentating words into characters.
 Then we describe how to recognise characters with a deep neural network approach. 
-Finally we present some postprocessing techniques to correct mispredicted text. 
+Finally we presentf postprocessing techniques to correct mispredicted text. 
 \end{abstract} 
 
 \section{Introduction}
@@ -47,7 +42,14 @@ First we explain how to recognise characters in Section \ref{sec:charrec}. This 
 In Section \ref{sec:segtext} we describe how to segment a text into words using a contouring algorithm with consequent postprocessing to remove unwanted noise. 
 After this we present our approach to seperating the characters from words in \ref{seg:segword}. We use vertical projections combined with postprocessing techniques including a neural network for segmentation point evaluation.
 Postprocessing steps are presented in Section \ref{seg:postproc}, we try to correct word recognition errors using an English dictionary and language models, n-gram models in particular.
-We conclude this paper with some experimental results, the problems we encountered combined with possible improvements. 
+We conclude this paper with some experimental results, the problems we encountered combined with possible improvements. A complete flow of the recognition of an image is shown in Figure \ref{fig:flow}.
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=\linewidth]{images/flow_hor}
+  \caption{All of the steps in our system to convert an image with handwritten text to digitalized text.}
+  \label{fig:flow}
+\end{figure*}
 
 \section{Character Recognition}
 \label{sec:charrec}
@@ -58,7 +60,7 @@ We take another approach, instead of adding rules to minimize variations we made
 In order to make the deep neural network recognise characters in images with these variations, we augmented the dataset to include a bigger variety of images. We present these augmentation techniques in Section \ref{sec:preproc}. 
 The dataset of handwritten characters is described in Section \ref{sec:data}.
 
-\subsection{Data}
+\subsection{Dataset}
 \label{sec:data}
 Before exposing the neural network to new characters, it needs to be familiar with many training samples to be able to classify any new character correctly. 
 This is a why a good dataset is very important. A dataset should have many examples, much variation, and an even balance between classes. A dataset with these properties 
@@ -72,14 +74,12 @@ This dataset contains both very easily recognisable images of characters but als
 \begin{subfigure}{.23\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/bad_char1}
-  \caption{Picture of a 'z' which resembles a 7.}
 \end{subfigure}
 \begin{subfigure}{.23\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/bad_char2}
-  \caption{Picture of a 'z' which resembles a 3.}
 \end{subfigure}
-\caption{Examples of written 'z' characters, which are hard to recognise.}
+\caption{Examples of written 'z' characters, which are hard to recognise or ambiguous.}
 \label{fig:char}
 \end{figure}
 
@@ -101,8 +101,6 @@ Data augmentation serves two purposes. It makes the dataset more robust to diffe
 The second purpose is to increase the size of our dataset. As our dataset only contains 3410 images with handwritten characters, we need more data for the neural network to be able to function properly. 
 Increasing the size of our dataset has great impact on the performance of the neural network as discussed in Section \ref{sec:expres}. Now we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there. 
 
-\paragraph{Adding noise to data}
-We add a variant of each image which includes noise troughout the image with the purpose of reducing overfitting of the neural network \cite{DataNoise}. This noise is taken from the Gaussian distribution with a mean of 0 and standard deviation of 0.004. The noise is summed with the original image of which the pixels are normalized between $[-1, 1]$.
 \paragraph{Translations of data}
 The dataset is also extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the following transformation matrix: 
 \begin{equation}
@@ -144,45 +142,40 @@ Shearing displaces each point in a fixed direction, by an amount proportional to
 The erosion operation of images adds thinner versions of characters to the dataset. Erosion uses a kernel to convolute an image. 
 The image is scanned using the kernel. The maximum pixel value of the overlapping part between the image and the kernel is computed. This pixel value of the anchor point of the kernel is replaced with the maximum pixel value. 
 This causes bright regions to get thinner and dark regions to get bigger in the image.  
-All of the previously discussed preprocessing techniques are also applied to the eroded image. The final dataset contains translated, orientated, sheared, scaled and noisy versions of both the original image and the eroded image. A visualitation of the augmentation of an augmented picture can be seen in Figure \ref{fig:augmented}.
+All of the previously discussed preprocessing techniques are also applied to the eroded image. The final dataset contains translated, orientated, sheared and scaled versions of both the original image and the eroded image. A visualitation of the augmentation of an augmented picture can be seen in Figure \ref{fig:augmented}.
 
 \begin{figure}
-\begin{subfigure}{0.11\textwidth}
+\begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/original}
-  \caption{Original image}
+  \caption{Original}
 \end{subfigure}
-\begin{subfigure}{0.11\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{images/noisy}
-  \caption{Noisy image}
-\end{subfigure}
-\begin{subfigure}{0.11\textwidth}
+\begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/translated}
-  \caption{Translated image}
+  \caption{Translated}
 \end{subfigure}
-\begin{subfigure}{0.11\textwidth}
+\begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/rotated}
-  \caption{Rotated image}
+  \caption{Rotated}
 \end{subfigure}
-\begin{subfigure}{0.11\textwidth}
+\begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/scaled}
-  \caption{Scaled image}
+  \caption{Scaled}
 \end{subfigure}
-\begin{subfigure}{0.11\textwidth}
+\begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/sheared}
-  \caption{Sheared image}
+  \caption{Sheared}
 \end{subfigure}
-\begin{subfigure}{0.11\textwidth}
+\begin{subfigure}{0.15\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/eroded}
-  \caption{Eroded image}
+  \caption{Eroded}
 \end{subfigure}
-\caption{All of the augmentations applied to one image.}
+\caption{An image transformed by the discussed augmentation techniques.}
 \label{fig:augmented}
 \end{figure}
 \subsection{Deep neural network}
@@ -194,12 +187,19 @@ For computers, character recognition is a more difficult task. We could try to w
 We use a neural network, inspired by how the brain processes images. These deep neural networks contain several layers of connected perceptrons, where each connection is defined by weight and each perceptron is defined by a bias. 
 The perceptrons take an input and calculate an output using an activation function. This allows perceptrons to make decisions.  
 Normalized images can be fed to the neural network, which then propagate through several layers and eventually produce as output the probability that the input image has a certain class, one of the possible characters. 
-Now follows a detailed overview of our deep neural network. A detailed explanation on how deep neural networks function is explained by \cite{nnbook}.
+Now follows a detailed overview of our deep neural network. This overview is visualized in Figure \ref{fig:dnn}. A detailed explanation on how deep neural networks function is explained by \cite{nnbook}.
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=\textwidth]{images/dnn}
+  \caption{Visualization of the deep neural network for character recognition. The first row shows the shape a layer. The second row shows the visualization of that layer, the third row shows information about the layer. 'C' indicates a convolutional layer, 'MP' a max-pooling layer and 'FC' a fully-connected layer.}
+  \label{fig:dnn}
+\end{figure*}
 
 \subsubsection{Convolutional layers}
  The input is a normalized image with one color channel. This is fed to a convolutational layer. Convolutional layers allow us to extract features by scanning the image with filters. These features might be edges, corners or any other type of shape in the image. The extracted features are called a feature map. 
  We can apply several of those filters using one convolutional layer to extract several types of features. 
- This works because images have a spatial structure: close pixels have shared information. By applying a filter, pixels in the same region will use shared biases and weights, which allows the filter to extract particular features. 
+ This works because images have a spatial structure: close pixels have shared information. By applying a filter, pixels in the same region will use shared biases and weights, which allows the filter to extract particular features.  
  Next we add a pooling layer, in particular a max-pooling layer. Pooling layers remove the positional information of the features in the image. This is useful because the exact location is less important than the location relative to the other features and this allows us to reduce the amount of parameters required in the next layers. 
 We use three convolutional layers combined with max pooling layers in order to extract low, medium and high level features. 
 \subsubsection{Fully-connected layers}
@@ -222,6 +222,7 @@ AdaGrad allows the learning rate to adapt based on parameters. AdaDelta solves a
 Each of these methods effectively improve the previously mentionned method. 
 The Adam optimizer, introduced by \cite{adam}, is an optimization of AdaDelta, which uses a distinct learning rate and momentum for every parameter. This optimizer achieves the highest accuracy in our case and will be used. 
 
+The Adam optimizer minimizes the error calculated by the cross-entropy cost function adjusted with a weight decay factor. Weight decay regulizes the neural network by penalizing big weights and promoting smaller weights. Neural networks with this constraint tend to overfit less because small weights are less sensible to small changes of the input. \cite{presham}
 \section{Segmentation of text into words}
 \ref{sec:segtext}
 
@@ -340,22 +341,44 @@ The skeletonization of the thresholded word image will allow us to ignore the th
 This normalization is needed to reason about potential segmentation points between characters in the word image.
 After comparing different skeletonization algorithms, the algorithm of choise is the skeletonize function found in the scipy python library.
 This is an adaptation of the Zhang-Suen thinning algorithm, one of the most commonly used and adapted thinning algorithms.
-%TODO:: GIVE REFERENCE TO ZHANG SUEN AND SCIPY MANUAL FOR SKELETONIZATION
-
+\cite{zsthinning}
 
 \subsection{Vertical projection histogram}
 Now that we have the skeletonized word image, we can proceed with determining the potential segmentation points.
 We do this by taking the vertical projection histogram of this skeletonized word image.
-Before calculating the projection histogram, we first have to normalize the image to contain values $1$ for black pixels and $0$ for white pixels in the image.
-When the projection vertical projection is executed, we have the summation of every collumn of the word image.
-Because the word image is skeletonized, we can regard the collumns with a total pixel count of zero or one pixel as potential segmentation points, because connections between handwritten words consist of a single stroke, or whiitespace if the word consists of multiple parts.
+With the vertical projection executed, we now have the summation of every collumn of the word image.
+This is done in a way that black pixels are represented by a $1$ value, and white pixels are represented by a $0$ value.
+Now we can regard the collumns with a total pixel count of zero or one pixel as potential segmentation points, as we can interpret columns containing only a single pixel to represent a connection between different characters, and collumns without pixels to represent spacing between characters.
+With these points as our potential segmentation points, we need to separate the correct segmentation points from the incorrect ones.
+For this we will use oversegmentation correction techniques.
 
-Now that we have our potential segmentation points, we need to decide which ones are correct segmentation points, and which ones need to be removed. This is done through correction of our oversegmentation.
+\begin{figure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=.7\linewidth]{images/vpp}
+    \vspace{-5px}
+    \caption*{Vertical projection profile.}
+    \end{subfigure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=.7\linewidth]{images/rules}
+    \vspace{-5px}
+    \caption*{Rule based correction.}
+    \end{subfigure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=.7\linewidth]{images/nn}
+    \vspace{-5px}
+    \caption*{Correction through neural network.}
+    \end{subfigure}
+    \caption{Word segmentation steps}
+    \label{fig:char_segm}
+\end{figure}
 
 \subsection{Oversegmentation correction}
-In this section we provide a method to fix the oversegmentation of the word caused by our previous steps and to decide which segmentation points to retain.
-To achieve this we first process the potential segmentation points, to remove redundant and incorrect segmentation points.
-THe final decision to which segmentation points we retain is made by a neural network.
+In this section we provide a method to fix the oversegmentation of the word image caused by the previous steps.
+To achieve this we process the potential segmentation points with a few rule based filters, to remove redundant and incorrect segmentation points.
+The final decision to which segmentation points we retain is made by a neural network.
 
 \subsubsection{rule based}
 The main oversegmentation correction is handled by our neural network.
@@ -388,8 +411,8 @@ For every of these segmentation points a pixel matrix is extracted surrounding t
 Next, small windows of equal size are extracted from the pixel matrix and for each window the density is calculated. This is the number of black pixels divided by the total amount of pixels in the window. 
 With every matrix a corresponding label is encoded for storage in the training file, this label is encoded as 0.9 if the segmentation point is correct and 0.1 otherwise. Now these matrices and corresponding labels are used to train the neural network. 
 
-We take a slightly different approach and consider a deep neural network to tackle this problem. This allows us to use convolutational layers in order to extract features, instead of manually creating features (features which show the density in this case). 
-We use one convolutional layer and three fully connected layers in our neural network. This neural network takes the actual image of the segmentation point as input (a pixel matrix of the pixels surrounding the segmentation point) and returns a one-hot encoded vector indicating if the segmentation is correct or incorrect. 
+We take a slightly different approach and consider a deep neural network to tackle this problem. This allows us to use the power of convolutational layers to extract features, instead of manually creating features (features which show the density in this case). 
+We use one convolutional layer and three fully connected layers in our neural network. This neural network takes the actual image of the segmentation point as input (a pixel matrix of the pixels surrounding the splitting point) and returns a one-hot encoded vector indicating if the splitting is correct or incorrect. 
 This method allowed us to achieve a higher accuracy than an implementation of the method described by \cite{evalsplitpointsnn}.
 Segmentation points can now be filtered if the neural network decides a segmentation point is incorrect. 
 
@@ -433,7 +456,7 @@ We use the Markov assumption here: the probability of a word in the context can 
 \begin{equation}
         P(w_i | w_{i-n},...,w_{i-1}) = \frac{count(w_{i-n},...,w_{i-1},w_{i})}{count(w_{i-n},...,w_i)}
 \end{equation}
-where $w_i$ is the word of which we want to calculate the probability and $count(w_i,...w_{i+n})$ indicates the amount of occurences of $w_i,...,w_{i+n}$. That amount is the same as counting the amount of n-grams with that sequence of words. An n-gram is a sequence of n words from a given sequence of text, denoted as $w_i,...,w_{i+n}$. \cite{ngrams} % TODO google citation% 
+where $w_i$ is the word of which we want to calculate the probability and $count(w_i,...w_{i+n})$ indicates the amount of occurences of $w_i,...,w_{i+n}$. That amount is the same as counting the amount of n-grams with that sequence of words. An n-gram is a sequence of n words from a given sequence of text, denoted as $w_i,...,w_{i+n}$. \cite{ngrams} 
 We use the n-grams from the Google dataset for this purpose. \cite{google} Querying these datasets locally takes several minutes and this happens for every word. Instead we use a Python library phrasefinder to make online queries to these corpora. This greatly increases speed but has the disadvantage of requiring internet connection. 
 Now we can make queries such as "I like dogs / cats / sheep". Using the Google corpora probabilities are calculated with n-gram models for each of the three words. This gives us a probability for every word based on the context. 
 Combining the results with the probabilities calculated in Section \ref{sec:voc}, we can 
@@ -442,59 +465,48 @@ The concludes our full system of recognising handwritten texts. In the next sect
 \section{Experimental results}
 %TODO
 \subsection{Character Recognition}
-\label{sec:expres}
-We tested a lot of different configurations for the deep neural network in order to find a good functioning neural network given the low amounts of data. A problem which arrised when trying to test many different configurations was the long time it takes to train a neural network. 
+The deep neural network can recognise characters with an accuracy of 91 \%. This neural network was trained for 1000 iterations which took 8650 seconds. We used a learning rate of $10^{-4}$, 256 as batch size, dropout layers with a keep probability of 0.5 and $10^{-3}$ as weight decay. Experimental findings led us to these values. 
+
+Comparisons are hard to find as few papers discuss off-line handwritten character recognition.
+One paper we found, \cite{charrec}, achieves an accuracy of 98.5 \%, they classify 38 classes (10 digits, 26 letters, 2 special symbols) and manually extract features for the neural network instead of using convolutional layers. 
+
+\subsection{Influence of data augmentation on character recognition}
+
+We're using the following setup for this experiment. Every experiment uses the original data in addition with the augmented data using one particular preprocessing technique. The base case without preprocessing techniques, just uses a copy of every image as augmented dataset. 
+
 In order to limit the time these experiments run we added some small constraints. We only run every experiment 200 epochs, running these experiments longer might result in different conclusions. 
-Next it is important to note that a lot of stochastic behaviour is part of these neural networks because of the dropout layers. When running the neural network twice with the same configuration, it could have completely different results. This is why we run every configuration four times. Only the result with the highest accuracy is considered. This way we can avoid outliers. 
-Another note is that some experiments might not use the finalized setup of our neural network. These experiments do use the same setup to compare different configurations. 
-\subsubsection{Experiments}
-\paragraph{Preprocessing techniques} 
-Figure \ref{fig:preprocess} shows that preprocessing techniques have great influence on the performance of the neural network. We can see that the accuracy is much higher when using all of the preprocessing techniques.  
-We achieve 72\% accuracy with all of the preprocessing techniques versus 35\% without any preprocessing techniques, which is a huge difference. 
-We can also see the individual impact of preprocessing in the figure. Adding shearing (64\%) to handle different amounts of slant, adding noise (58\%) to cope to make the recognition more robust and adding scaling (59\%) to handle different handwriting sizes was the most effective to increase performance. Adding rotations (40\%) and translations (50\%) was less effective (but still effective). Adding these preprocessing techniques increased the amount of data greatly from 3410 examples to 37000 examples. This improves the performance but also increases the training time of our network significantly. One remarkable result is that the training time of preprocessing with all techniques enabled, takes shorter time than some other results. When we look at the average however, the training time is the highest for this case. 
-\paragraph{Learning rate}
-Figure \ref{fig:learningrate} shows the impact of learning rate on the training of our neural network. 
-For this experiment we do have to note that we are using the Adam optimizer to train our neural network which computes individual learning rates for every parameter every training step. The learning rate which we pass is the initial learning rate. Choosing a high learning rate $10^{-3}$ allows the neural network to converge to a high accuracy (76 \%) very fast, but once reached the accuracy fails to grow any more.
-This in contrast to higher learning rates which reach a good accuracy more slowly but find a more optimal solution. Learning rate $10^{-4}$ reaches an accuracy of 68\% after 200 iterations but is still growing. Learning rate $10^{-5}$ only reaches an accuracy of 5\% after 200 iterations but should find a better solution eventually than the other two configurations. 
-\paragraph{Batch size}
-n Figure \ref{fig:batchsize} we can see the impact of choosing different batch sizes which are fed to the neural network. In order to increase the speed at which the neural network is trained, we feed batches of input images to the neural network instead of one image at a time. 
-Weight adjustment only occurs after feeding a complete batch to the network. In the figure we can see bigger batch sizes increase the execution speed. However these differences are quite small. The configuration with batch size executes 200 iterations in one minute less than a configuration with batch size 128. These batch sizes also have an effect on our performance. When using small batch sizes backpropagation happens more frequently, which implies our weights will be more finetuned. The configuration with batch size 128 obtains an accuracy of 10\% higher than batch size 1024.
-\paragraph{Weight decay}
-In order to regulize the neural network we add weight decay to the network loss function in order to penalize big weights. The impact of different decays can be seen in Figure \ref{fig:decay}. A high decay functions best (71\% accuracy) because we have a small amount of training examples. Without decay we only reach an accuracy of 65\%. 
-\paragraph{Dropout}
-% Maybe redo this experiment? It's not clear at all at this time whether dropout has an actual effect on the accuracy. I believe it helps find a better global solution, but often the accuracy will be lower as we're only using half of the weights. Further research is required. 
+Next it is important to note that a lot of stochastic behaviour is part of these neural networks because of the dropout layers. We run every configuration four times. Only the result with the highest accuracy is considered to avoid outliers. 
+The accuracy decreases when using preprocessing techniques because the variety of our dataset increases but these techniques allow a more robust neural network which can recognise characters which includes images with more variation. 
+
+Figure \ref{fig:preprocess} shows that augmentation techniques have great influence on the performance of the neural network. However these results might seem counterintuitive. 
+All preprocessing techniques have a lower accuracy than the base case which does not use preprocessing techniques. The amount of decrease in accuracy can be explained by how much the original image and augmented image differ. The configuration with erosion achieves the second highest accuracy, as these images resemble the original images most, the shape, position and rotation of the image remains, the density of regions in the image has only changed. A dataset with scaled images instead has much lower accuracy. As the image is completely different, the pixels are in other positions and the original shape has changed, the shape has a smaller or bigger surface depending on the kind of scaling. 
+
+In the final dataset we use augment every image once or more with every technique which causes the dataset to significantly increase in size. The accuracy of the configuration with augmented images is only higher because of the increase in data which allows more weight adjustment. Figure \ref{fig:allprep} shows the comparison of using no preprocessing techniques and all preprocessing techniques once or more. 
+
 \begin{figure}
 \centering
     \includegraphics[width=\linewidth]{../Graphs/preprocess.png}
     \caption{Impact of various preprocessing techniques.}
     \label{fig:preprocess}
 \end{figure}
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{../Graphs/learningrate.png}
-    \caption{Impact of different learning rates.}
-    \label{fig:learningrate}
-\end{figure}
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{../Graphs/batchsize.png}
-    \caption{Impact of different batch sizes.}
-    \label{fig:batchsize}
-\end{figure}
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{../Graphs/decay.png}
-    \caption{Impact of weight decay regularisation.}
-    \label{fig:decay}
-\end{figure}
-\subsubsection{Final results}
-% Add graph with several runs of the final network. Discuss which parameters we took. 
-% Maybe some more visualisation of mispredicted characters? Oh this isn't part of char recognition...
-% TODO TODO
+
 \section{Conclusion}
+There are a lot of steps in this paper from which we can draw conclusions.
+The segregation of a text image in word images is  
+Word extraction is a problem 
+
+Character segmentation is another ..
+The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect potential segmentation points the neural network has to process.
+
+
+The neural network 
 
 \section{Future research}
-
+State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
+This approach does not suffer from character segmentation artifacts
+This concept is explained and applied by \cite{presham}.
+\section{Acknowledgements}
+We thank Sarah Vluymans for her comments on this paper.
 \bibliography{paper}
 \bibliographystyle{icml2016}
 
