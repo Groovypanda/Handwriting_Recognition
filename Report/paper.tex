@@ -40,8 +40,8 @@ On-line recognition on the other hand converts text as it is written (on a touch
 
 First we explain how to recognise characters in Section \ref{sec:charrec}. This explanation involves the used dataset, preprocessing techniques and the deep neural network for classifying characters. 
 In Section \ref{sec:segtext} we describe how to segment a text into words using a contouring algorithm with consequent postprocessing to remove unwanted noise. 
-After this we present our approach to seperating the characters from words in \ref{seg:segword}. We use vertical projections combined with postprocessing techniques including a neural network for segmentation point evaluation.
-Postprocessing steps are presented in Section \ref{seg:postproc}, we try to correct word recognition errors using an English dictionary and language models, n-gram models in particular.
+After this we present our approach to seperating the characters from words in \ref{sec:segword}. We use vertical projections combined with postprocessing techniques including a neural network for segmentation point evaluation.
+Postprocessing steps are presented in Section \ref{sec:postproc}, we try to correct word recognition errors using an English dictionary and language models, n-gram models in particular.
 We conclude this paper with some experimental results, the problems we encountered combined with possible improvements. A complete flow of the recognition of an image is shown in Figure \ref{fig:flow}.
 
 \begin{figure*}
@@ -99,7 +99,7 @@ This allows the foreground to be more distinguishable from the background and al
 \label{par:aug}
 Data augmentation serves two purposes. It makes the dataset more robust to different kinds of handwriting as we add variations of the original data to the input data. 
 The second purpose is to increase the size of our dataset. As our dataset only contains 3410 images with handwritten characters, we need more data for the neural network to be able to function properly. 
-Increasing the size of our dataset has great impact on the performance of the neural network as discussed in Section \ref{sec:expres}. Now we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there. 
+Next we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there. 
 
 \paragraph{Translations of data}
 The dataset is also extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the following transformation matrix: 
@@ -223,8 +223,9 @@ Each of these methods effectively improve the previously mentionned method.
 The Adam optimizer, introduced by \cite{adam}, is an optimization of AdaDelta, which uses a distinct learning rate and momentum for every parameter. This optimizer achieves the highest accuracy in our case and will be used. 
 
 The Adam optimizer minimizes the error calculated by the cross-entropy cost function adjusted with a weight decay factor. Weight decay regulizes the neural network by penalizing big weights and promoting smaller weights. Neural networks with this constraint tend to overfit less because small weights are less sensible to small changes of the input. \cite{presham}
+
 \section{Segmentation of text into words}
-\ref{sec:segtext}
+\label{sec:segtext}
 
 To be able to recognise the characters in a given text, we will first need to extract the words from the text before we can start evaluating the characters. This word extraction has many possible approaches, but in this paper we will focus solely on the word contouring approach.
 This method uses a heuristic algorithm to extract the contours of the words from a given text, and through postprocessing we can rearrange these extracted words into lines.
@@ -318,7 +319,8 @@ Combinations of parrallel and slanted text lines however are not handled well by
 
 
 \section{Segmentation of words into characters}
-\ref{sec:segword}
+\label{sec:segword}
+
 The next step in the process is to extract the character images from the given word images.
 Again, there is the choise between several different approaches.
 In this paper we focus solely on a word oversegmentation approach to character extraction.
@@ -404,7 +406,9 @@ We end up with a $64px x 64px$ character image.
 The extra $10px$ padding is to make sure the letters do not stick to the edges, since the Chars74K dataset we work with utilizes borders around the provided characters. Should these borders be removed in the training process however, this should be reflected in this step by ignoring this new padding.
 
 \subsection{Natural language processing}
-To cope with some of the high error rates as shown in Section \ref{sec:expres}, there needs to be some kind of correction. This correction should allow the system to reproduce possibble written text even when a step of the larger system fails. 
+\label{sec:postproc}
+
+To cope with some of the errors from the previous steps, there needs to be some kind of correction. This correction should allow the system to reproduce possible written text even when a step of the larger system fails. 
 In order to do this we adapt natural language processing techniques as postprocessing steps. Natural language techniques can often be found in speech recognition, language generation and other systems. 
 As a first step we match words against a dictionary to find out if they are syntactically correct, this is discussed in Section \ref{sec:voc}. The second step checks if those given words make sense in the context, this is discussed in Section \ref{sec:lm}.
 
@@ -441,7 +445,8 @@ Combining the results with the probabilities calculated in Section \ref{sec:voc}
 calculate a new score. The word with the highest score is accepted as written word. 
 The concludes our full system of recognising handwritten texts. In the next section we will further discuss the results of these techniques and some experiments to check the performance and impact of optimizations. 
 \section{Experimental results}
-%TODO
+\label{sec:expres}
+
 \subsection{Character Recognition}
 The deep neural network can recognise characters with an accuracy of 91 \%. This neural network was trained for 1000 iterations which took 8650 seconds. We used a learning rate of $10^{-4}$, 256 as batch size, dropout layers with a keep probability of 0.5 and $10^{-3}$ as weight decay. Experimental findings led us to these values. 
 
