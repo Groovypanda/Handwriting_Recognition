@@ -402,8 +402,11 @@ This filter remedies the segmentation of slated lines between the characters.
 
 This value for this threshold is pretty conservative, and could be further investigated for a more optimal rule based approach.
 More rule based filter could be added for more optimal processing of the potential segmentation points.
-However the focus the segmentation correction is the neural network used to remove incorrect segmenatation points.
 
+A technique was tested using the feedback of the chracter recognition network to remove incorrect segmentation points.
+However this turned out not to be an effective technique, because the neural network tends to provide random probabilities with a high degree of certainty when multiple characters were fed to the network in the same image.
+Since it is impossible to validate these responses from the neural network, this technique is not used in the final version of our oversegmentation correction.
+ 
 %As our algorithm for segmentation of handwritten words splits the word into to many characters, we can use techniques to verify the correctness of these segmentation points points. 
 %\citep{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. 
 %In this paper we will only discuss the latter, machine learning based procedures, as we used this approach. 
@@ -534,7 +537,7 @@ The segregation of a text image in word images is
 Word extraction is a problem 
 
 Character segmentation is another ..
-The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect potential segmentation points the neural network has to process.
+The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect segmentation points the neural network has to process. Combinations with other approaches could also yield better results
 
 
 The neural network 
