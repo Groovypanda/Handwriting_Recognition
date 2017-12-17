@@ -13,7 +13,7 @@ for recognising characters.
 """
 
 # Increase this for actual experiments.
-ITERATIONS = 2
+ITERATIONS = 4
 EPOCHS = 200
 
 
@@ -76,10 +76,11 @@ def compare_batch_size():
         Check of feeding different batch sizes as training data.
         :return:
         """
-    sizes = [128, 256, 512, 1024]
+    # sizes = [128, 256, 512, 1024]
+    sizes = [1024]
     for x in sizes:
         print("Running experiments with batch size " + str(x))
-        run_experiment("batchsize_" + str(x), batch_size=x)
+        run_experiment("batchsize_" + str(x), batch_size=x, start=2)
 
 
 def compare_epochs():
@@ -92,7 +93,7 @@ def compare_epochs():
     epochs = [100, 250, 500, 1000]
     for x in epochs:
         print("Running experiments with " + str(x) + " iterations")
-        run_experiment("epochs_" + str(x), batch_size=x)
+        run_experiment("epochs_" + str(x), n=x)
 
 def run_experiment_with_orig_net(name):
     for i in range(ITERATIONS):
@@ -101,23 +102,16 @@ def run_experiment_with_orig_net(name):
             character_recognition.train_net(name=name, iteration=i, n=200)
 
 
-
-'''
-    character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
-                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
-    run_experiment_with_orig_net("preprocess_" + "none")
-    character_preprocessing.augment_data(add_noise=True, add_rotations=False, add_scales=False, add_translations=False,
-                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
-    run_experiment_with_orig_net("preprocess_" + "noise")
-    character_preprocessing.augment_data(add_noise=False, add_rotations=True, add_scales=False, add_translations=False,
-                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
-    run_experiment_with_orig_net("preprocess_" + "rotate")
-'''
 def compare_preprocessing_params():
     """
     Check the effect of different preprocessing steps. Each preprocessing step is tested on its own.
     :return:
     """
+    character_preprocessing.augment_data_fake()
+    run_experiment_with_orig_net("preprocess_" + "none")
+    character_preprocessing.augment_data(add_noise=False, add_rotations=True, add_scales=False, add_translations=False,
+                                         add_shearing=False, add_one=True, confirm=False, add_erode=False)
+    run_experiment_with_orig_net("preprocess_" + "rotate")
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=True, add_translations=False,
                                          add_shearing=False, add_one=True, confirm=False, add_erode=False)
     run_experiment_with_orig_net("preprocess_" + "scale")
@@ -130,29 +124,6 @@ def compare_preprocessing_params():
     character_preprocessing.augment_data(add_noise=False, add_rotations=False, add_scales=False, add_translations=False,
                                          add_shearing=False, add_erode=True, add_one=True, confirm=False)
     run_experiment_with_orig_net("preprocess_" + "erode")
-    character_preprocessing.augment_data(add_noise=True, add_rotations=True, add_scales=True, add_translations=True,
-                                         add_shearing=True, add_one=True, confirm=False, add_erode=False)
-    run_experiment_with_orig_net("preprocess_" + "all")
-
-
-def compare_image_dimensions():
-    """
-    Check the effect of working with different image dimensions
-
-    Implementing a function for  this experiment would require refactoring all of the character recognition code.
-    This will be tested manually instead.
-    :return:
-    """
-    pass
-
-
-def compare_net_depth():
-    """
-    Check the effect of working with neural nets with different amounts of layers
-    :return:
-    """
-    for (name, conf) in en.net_configurations():
-        run_experiment("net_conf_" + name, new_net_conf=conf)
 
 
 def compare_optimizer():
@@ -188,42 +159,25 @@ def save_output(name, accuracies, time, iteration=None):
     savetxt(out_path + 'time' + extension, time)
 
 
-def experiment_net(n, base, learning_rate, batch_size, filter_size, keep_prob, weight_decay, new_net_conf,
-                   training_operation_f):
+def experiment_net(n, learning_rate, batch_size, keep_prob, weight_decay):
     """
     A highly configurable function for training the neural network with all kinds of different parameters.
     All of these arguments have a default value and can be left out. Running this function without any arguments is
     equivalent to running the actual neural network as described in CharacterRecognition.py
     :param n: Amount of epochs to train the neural network.
-    :param base: A multiplier for all layer sizes.
     :param learning_rate: The learning rate of the neural network.
                           This is decremented over iterations when using the AdamOptimizer.
     :param batch_size: The batch size fed to the neural network.
-    :param filter_size: The size of the filters in the neural network.
     :param keep_prob: The probability of a connection between 2 perceptons being active in the fully connected layers.
     :param weight_decay: A regulation term to avoid overfitting. This indicates how much large weights should be penalized.
-    :param new_net_conf: A configuration for a neural network as described n experiment_nets.py for creating a new neural network, which will then be used.
-    :param training_operation_f: Operation for training the custom neural network.
     :return: An array of the time passed and the accuracy at each iteration.
     """
     # Some variables required for training
-    training_set, validation_set, test_set = character_recognition.get_data()
-    x_train = training_set[0]
-    y_train = training_set[1]
-    x_validation = validation_set[0]
-    y_validation = validation_set[1]
-    if new_net_conf is None:
-        _x, _y, h = character_recognition.create_neural_net(base=base, filter_size=filter_size,
-                                                            keep_prob=keep_prob)
-
-    else:
-        _x, _y, h = en.create_neural_net(new_net_conf)
-    if training_operation_f is None:
-        training_operation = character_recognition.create_training_operation(h, _y,
+    (x_train, y_train), (x_validation, y_validation) = character_recognition.get_data()
+    _x, _y, h = character_recognition.create_neural_net(keep_prob=keep_prob)
+    training_operation = character_recognition.create_training_operation(h, _y,
                                                                              learning_rate=learning_rate,
                                                                              decay=weight_decay)
-    else:
-        training_operation = training_operation_f(h, _y)
 
     session = character_recognition.create_session()
     # Initialize variables of neural network
@@ -250,10 +204,9 @@ def experiment_net(n, base, learning_rate, batch_size, filter_size, keep_prob, w
     return accuracy, time
 
 
-def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, base=1, learning_rate=1e-4, batch_size=512,
-                   filter_size=3,
+def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, learning_rate=1e-4, batch_size=256,
                    keep_prob=0.5,
-                   weight_decay=1e-4, new_net_conf=None, training_operation=None):
+                   weight_decay=1e-3, training_operation=None):
     """
     :param name: Name of the experiment
     :param iterations: Amount of times to run the experiment
@@ -263,14 +216,14 @@ def run_experiment(name, iterations=ITERATIONS, start=0, n=EPOCHS, base=1, learn
     for i in range(iterations):
         with tf.variable_scope("Experiment_" + name + "_" + str(i)):
             print("Experiment: " + str(i))
-            accuracy, time = experiment_net(n, base, learning_rate, batch_size, filter_size, keep_prob, weight_decay,
-                                            new_net_conf, training_operation)
+            accuracy, time = experiment_net(n, learning_rate, batch_size, keep_prob, weight_decay)
             save_output(name, accuracy, time, start + i)
 
-# compare_base()
-# compare_learning_rate()
-# compare_filter_size()
-# compare_keep_prob()
-# compare_weight_decay()
-# compare_batch_size()
+# character_preprocessing.augment_data(confirm=False)
+# character_recognition.train_net(1000)
+# character_preprocessing.reset_data()
+compare_batch_size()
+compare_learning_rate()
+compare_keep_prob()
+compare_weight_decay()
 compare_preprocessing_params()

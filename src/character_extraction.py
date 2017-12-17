@@ -1,8 +1,3 @@
-# https://github.com/bsdnoobz/zhang-suen-thinning
-# https://ac.els-cdn.com/S1877050913001464/1-s2.0-S1877050913001464-main.pdf?_tid=23580d56-d5c6-11e7-b3de-00000aab0f27&acdnat=1512043449_af48c0c94bee8350a664995a634d9317
-# https://gist.github.com/jsheedy/3913ab49d344fac4d02bcc887ba4277d
-
-
 import os
 
 import cv2
@@ -101,6 +96,10 @@ def extract_characters(word_image, sessionargs=None, postprocess=True):
 
 
 def skeletonize_thresholded_image(treshold_img):
+    """
+    Skeletonizes a tresholded image
+    :return: The skeletonized image
+    """
     # skeletonize the image. Division is to normalize white to 1 and black to 0.
     height, width = treshold_img.shape[:2]
     skel2 = skeletonize(treshold_img / 255)
