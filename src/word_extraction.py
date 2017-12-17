@@ -453,7 +453,7 @@ def preprocess_image(img, file_index = 0):
             (x, y, w, h) = rectangle
             cv2.rectangle(new_img,(x,y),(x+w,y+h),(greyscale,255,0),5)
         greyscale += color_increment
-        cv2.drawContours(new_img, [rectangles_contours[rect] for rect in rectangles_contours], 0, (120,255,0), 3)
+        #cv2.drawContours(new_img, [rectangles_contours[rect] for rect in rectangles_contours], 0, (120,255,0), 3)
 
     # Write threshold image for demonstration pirposes
     write_threshold_image(new_img, file_index)
