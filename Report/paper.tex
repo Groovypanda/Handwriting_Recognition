@@ -36,7 +36,7 @@ Finally, it takes a lot of time, effort and resources to move these documents to
 
 This paper presents an off-line handwriting recognition system. This system digitizes handwritten texts, which allows modern data processing, storage a transmission techniques to be applied to the information stored in the handwritten documents.
 We only cover off-line handwriting recognition in this paper, where we have the full handwritten text in advance. This problem is similar to Optical Character recognition (OCR). OCR digitizes printed texts, this is generally easier to recognise as it contains less variation than handwritten texts.
-On-line recognition on the other hand converts text as it is written (on a touchscreen for example). Other information is available for this problem, e.g. the exact movements of the pen. \citep{olcr} present a technology for online recognition of Japanese handwritten text with an accuracy of 94.6\%.
+On-line recognition on the other hand converts text as it is written (on a touchscreen for example). Other information is available for this problem, e.g. the exact movements of the pen. \cite{olcr} present a technology for online recognition of Japanese handwritten text with an accuracy of 94.6\%.
 
 First we explain how to recognise characters in Section \ref{sec:charrec}. This explanation involves the used dataset, preprocessing techniques and the deep neural network for classifying characters.
 In Section \ref{sec:segtext} we describe how to segment a text into words using a contouring algorithm with consequent postprocessing to remove unwanted noise.
@@ -91,7 +91,7 @@ We make use of two types of preprocessing steps: normalization and augmentation 
 \subsubsection{Normalizing data}
 \label{par:norm}
 Theoretically feeding normalized data to the neural network returns the same output as before.
-In reality however, it is better to normalize data to avoid getting stuck in local optima and to increase training speed of the model \citep{NormGoal}.
+In reality however, it is better to normalize data to avoid getting stuck in local optima and to increase training speed of the model \cite{NormGoal}.
 We normalize the data by reducing the input dimensions from (1200,900,3) to (64,64,1). A simple threshold is added to improve the contrast in our image.
 This allows the foreground to be more distinguishable from the background and allows the neural network to train and recognise more easily.
 
@@ -99,7 +99,7 @@ This allows the foreground to be more distinguishable from the background and al
 \label{par:aug}
 Data augmentation serves two purposes. It makes the dataset more robust to different kinds of handwriting as we add variations of the original data to the input data.
 The second purpose is to increase the size of our dataset. As our dataset only contains 3410 images with handwritten characters, we need more data for the neural network to be able to function properly.
-Next we will describe the data augmentation techniques we used. For these techniques we based us on \citep{DataAug}. A more thorough explanation can be found there.
+Next we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there.
 
 \paragraph{Translations of data}
 The dataset is also extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the following transformation matrix:
@@ -131,7 +131,7 @@ where $s_x$ is the horizontal scaling factor and $s_y$ is the vertical scaling f
 We use combinations of values in $[0.75, 1, 1.25, 1.5]$ for $s_x$ and $s_y$ depending on the original size of the character.
 \paragraph{Shearing of data}
 In order to deal with different kinds of slants we add sheared versions of the image to the dataset.
-Shearing displaces each point in a fixed direction, by an amount proportional to its signed distance from a line that is parallel to that direction \citep{Shear}. We used the following shear mapping to achieve this:
+Shearing displaces each point in a fixed direction, by an amount proportional to its signed distance from a line that is parallel to that direction \cite{Shear}. We used the following shear mapping to achieve this:
 \begin{equation}
         \begin{bmatrix}
                 1 & s & 0 \\
@@ -187,7 +187,7 @@ For computers, character recognition is a more difficult task. We could try to w
 We use a neural network, inspired by how the brain processes images. These deep neural networks contain several layers of connected perceptrons, where each connection is defined by weight and each perceptron is defined by a bias.
 The perceptrons take an input and calculate an output using an activation function. This allows perceptrons to make decisions.
 Normalized images can be fed to the neural network, which then propagate through several layers and eventually produce as output the probability that the input image has a certain class, one of the possible characters.
-Now follows a detailed overview of our deep neural network. This overview is visualized in Figure \ref{fig:dnn}. A detailed explanation on how deep neural networks function is explained by \citep{nnbook}.
+Now follows a detailed overview of our deep neural network. This overview is visualized in Figure \ref{fig:dnn}. A detailed explanation on how deep neural networks function is explained by \cite{nnbook}.
 
 \begin{figure*}
   \centering
@@ -204,7 +204,7 @@ Now follows a detailed overview of our deep neural network. This overview is vis
 We use three convolutional layers combined with max pooling layers in order to extract low, medium and high level features.
 \subsubsection{Fully-connected layers}
 Next we flatten the output of the last convolutional layer in order to extract a one-dimensional array from the three-dimensional feature maps. This one-dimensional array can now be fed to a fully-connected layer, which is a layer of connected perceptrons as previously discussed.
-There are three fully-connected layers each connected with a dropout layer. Dropout randomly drops units and their connections from the network during training. Dropout greatly reduces overfitting in the fully connected layers. \citep{dropout} We do not use this after the convolutional layers as they are very resistant to overfitting \cite{nnbook}.
+There are three fully-connected layers each connected with a dropout layer. Dropout randomly drops units and their connections from the network during training. Dropout greatly reduces overfitting in the fully connected layers. \cite{dropout} We do not use this after the convolutional layers as they are very resistant to overfitting \cite{nnbook}.
 The last fully connected layer has 62 output neurons, which correspond to the 62 possible output classes. We use rectified linear units in order to compute the activation function. A rectified linear unit or rectified linear neuron is a unit which uses a rectifier as linear unit. It's output is given by
 \begin{equation}
         max(0, w*x+b)
@@ -220,9 +220,9 @@ First of all, stochastic gradient descent (SGD) is an iterative method which tri
 Momentum-based gradient descent makes the correction dependent based on an average of several previous corrections to move more quickly in the correct direction.
 AdaGrad allows the learning rate to adapt based on parameters. AdaDelta solves a problem of AdaGrad, concerning the learning rate to become so small that learning becomes impossible.
 Each of these methods effectively improve the previously mentionned method.
-The Adam optimizer, introduced by \citep{adam}, is an optimization of AdaDelta, which uses a distinct learning rate and momentum for every parameter. This optimizer achieves the highest accuracy in our case and will be used.
+The Adam optimizer, introduced by \cite{adam}, is an optimization of AdaDelta, which uses a distinct learning rate and momentum for every parameter. This optimizer achieves the highest accuracy in our case and will be used.
 
-The Adam optimizer minimizes the error calculated by the cross-entropy cost function adjusted with a weight decay factor. Weight decay regulizes the neural network by penalizing big weights and promoting smaller weights. Neural networks with this constraint tend to overfit less because small weights are less sensible to small changes of the input. \citep{presham}
+The Adam optimizer minimizes the error calculated by the cross-entropy cost function adjusted with a weight decay factor. Weight decay regulizes the neural network by penalizing big weights and promoting smaller weights. Neural networks with this constraint tend to overfit less because small weights are less sensible to small changes of the input. \cite{presham}
 
 \section{Segmentation of text into words}
 \label{sec:segtext}
@@ -368,7 +368,7 @@ The skeletonization of the thresholded word image will allow us to ignore the th
 This normalization is needed to reason about potential segmentation points between characters in the word image.
 After comparing different skeletonization algorithms, the algorithm of choise is the skeletonize function found in the scipy python library.
 This is an adaptation of the Zhang-Suen thinning algorithm, one of the most commonly used and adapted thinning algorithms.
-\citep{zsthinning}
+\cite{zsthinning}
 
 \subsection{Vertical projection histogram}
 Now that we have the skeletonized word image, we can proceed with determining the potential segmentation points.
@@ -404,7 +404,7 @@ For this we will use oversegmentation correction techniques.
 
 \subsection{Oversegmentation correction}
 In this section we provide techniques to verify the correctness of these segmentation points. 
-\citep{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. [6:39]
+\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. [6:39]
 In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
 
 \subsubsection{rule based}
@@ -433,15 +433,15 @@ However this turned out not to be an effective technique, because the neural net
 Since it is impossible to validate these responses from the neural network, this technique is not used in the final version of our oversegmentation correction.
 
 \subsubsection{Neural network}
-The neural network we use to judge the potential segmentation points, is based on \citep{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points.
+The neural network we use to judge the potential segmentation points, is based on \cite{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points.
 For every of these segmentation points a pixel matrix is extracted surrounding the segmentation point. This pixel matrix is normalised in size.
 Next, small windows of equal size are extracted from the pixel matrix and for each window the density is calculated. This is the number of black pixels divided by the total amount of pixels in the window.
 With every matrix a corresponding label is encoded for storage in the training file, this label is encoded as 0.9 if the segmentation point is correct and 0.1 otherwise. Now these matrices and corresponding labels are used to train the neural network.
 
 We take a slightly different approach and consider a deep neural network to tackle this problem. This allows us to use the power of convolutational layers to extract features, instead of manually creating features (features which show the density in this case).
-We use one convolutional layer and three fully connected layers in our neural network. This neural network takes the actual image of the segmentation point as input (a pixel matrix of the pixels surrounding the splitting point) and returns a one-hot encoded vector indicating if the splitting is correct or incorrect. In order to create training data we created a small program to iterate over splitting points of handwritten words from the IAM dataset. \citep{iam}
+We use one convolutional layer and three fully connected layers in our neural network. This neural network takes the actual image of the segmentation point as input (a pixel matrix of the pixels surrounding the splitting point) and returns a one-hot encoded vector indicating if the splitting is correct or incorrect. In order to create training data we created a small program to iterate over splitting points of handwritten words from the IAM dataset. \cite{iam}
 
-This method allowed us to achieve an accuracy of 72 \%, which is still fairly low because of the difficulty of the problem and the small amount of traing data. However this is better than our accuracy with an implementation of the method described by \citep{evalsplitpointsnn}.
+This method allowed us to achieve an accuracy of 72 \%, which is still fairly low because of the difficulty of the problem and the small amount of traing data. However this is better than our accuracy with an implementation of the method described by \cite{evalsplitpointsnn}.
 Segmentation points can now be filtered if the neural network decides a segmentation point is incorrect.
 
 \subsection{Normalization}
@@ -482,12 +482,12 @@ This finalises the logic for recognising handwritten words. Next we will discuss
 \subsection{Language model}
 \label{sec:lm}
 Besides checking the syntax of words, we can also look at the context. This is were language models are useful. We can check the previous words and calculate the likeliness of a word to be the next word in the context. N-gram models are used to calculate probabilities given $n-1$ previous words. The probability is computed as $P(w_i | w_{i-n},...,w_{i-1})$.
-We use the Markov assumption here: the probability of a word in the context can be approximated by the previous $n-1$ words. \citep{markov} This probability is calculated as follows:
+We use the Markov assumption here: the probability of a word in the context can be approximated by the previous $n-1$ words. \cite{markov} This probability is calculated as follows:
 \begin{equation}
         P(w_i | w_{i-n},...,w_{i-1}) = \frac{count(w_{i-n},...,w_{i-1},w_{i})}{count(w_{i-n},...,w_i)}
 \end{equation}
-where $w_i$ is the word of which we want to calculate the probability and $count(w_i,...w_{i+n})$ indicates the amount of occurences of $w_i,...,w_{i+n}$. That amount is the same as counting the amount of n-grams with that sequence of words. An n-gram is a sequence of n words from a given sequence of text, denoted as $w_i,...,w_{i+n}$. \citep{ngrams}
-We use the n-grams from the Google dataset for this purpose. \citep{google} Querying these datasets locally takes several minutes and this happens for every word. Instead we use a Python library phrasefinder to make online queries to these corpora. This greatly increases speed but has the disadvantage of requiring internet connection.
+where $w_i$ is the word of which we want to calculate the probability and $count(w_i,...w_{i+n})$ indicates the amount of occurences of $w_i,...,w_{i+n}$. That amount is the same as counting the amount of n-grams with that sequence of words. An n-gram is a sequence of n words from a given sequence of text, denoted as $w_i,...,w_{i+n}$. \cite{ngrams}
+We use the n-grams from the Google dataset for this purpose. \cite{google} Querying these datasets locally takes several minutes and this happens for every word. Instead we use a Python library phrasefinder to make online queries to these corpora. This greatly increases speed but has the disadvantage of requiring internet connection.
 Now we can make queries such as "I like dogs / cats / sheep". Using the Google corpora probabilities are calculated with n-gram models for each of the three words. This gives us a probability for every word based on the context.
 Combining the results with the probabilities calculated in Section \ref{sec:voc}, we can
 calculate a new score. The word with the highest score is accepted as written word.
@@ -499,7 +499,7 @@ The concludes our full system of recognising handwritten texts. In the next sect
 The deep neural network can recognise characters with an accuracy of 91 \%. This neural network was trained for 1000 iterations which took 8650 seconds. We used a learning rate of $10^{-4}$, 256 as batch size, dropout layers with a keep probability of 0.5 and $10^{-3}$ as weight decay. Experimental findings led us to these values.
 
 Comparisons are hard to find as few papers discuss off-line handwritten character recognition.
-One paper we found, \citep{charrec}, achieves an accuracy of 98.5 \%, they classify 38 classes (10 digits, 26 letters, 2 special symbols) and manually extract features for the neural network instead of using convolutional layers.
+One paper we found, \cite{charrec}, achieves an accuracy of 98.5 \%, they classify 38 classes (10 digits, 26 letters, 2 special symbols) and manually extract features for the neural network instead of using convolutional layers.
 
 \subsection{Influence of data augmentation on character recognition}
 
@@ -557,20 +557,7 @@ More postprocessing can be used through rule based filters and a more robust neu
 
 Finally, other approaches can also be considered.
 State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
-This concept is explained and applied by \citep{presham}.
-%%% Dit is jouw oude tekst %%%
-There are a lot of steps in this paper from which we can draw conclusions.
-The segregation of a text image in word images is
-Word extraction is a problem
-
-Character segmentation is another ..
-The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect segmentation points the neural network has to process.
-Combinations with other approaches are also more likely provide better results.
-
-The neural network ..
-
-The neural network
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This concept is explained and applied by \cite{presham}.
 \section*{Acknowledgements}
 We thank Sarah Vluymans for her comments on this paper.
 \bibliography{paper}
