@@ -399,11 +399,11 @@ This filter remedies the segmentation of slated lines between the characters.
 
 This value for this threshold is pretty conservative, and could be further investigated for a more optimal rule based approach.
 More rule based filter could be added for more optimal processing of the potential segmentation points.
-However the focus the segmentation correction is the neural network used to remove incorrect segmenatation points.
 
-%As our algorithm for segmentation of handwritten words splits the word into to many characters, we can use techniques to verify the correctness of these segmentation points points. 
-%\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. 
-%In this paper we will only discuss the latter, machine learning based procedures, as we used this approach. 
+A technique was tested using the feedback of the chracter recognition network to remove incorrect segmentation points.
+However this turned out not to be an effective technique, because the neural network tends to provide random probabilities with a high degree of certainty when multiple characters were fed to the network in the same image.
+Since it is impossible to validate these responses from the neural network, this technique is not used in the final version of our oversegmentation correction.
+ 
 
 \subsubsection{Neural network}
 The neural network we use to judge the potential segmentation points, is based on \cite{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points. 
@@ -496,14 +496,14 @@ The segregation of a text image in word images is
 Word extraction is a problem 
 
 Character segmentation is another ..
-The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect potential segmentation points the neural network has to process.
+The proposed oversegmentation serves the intended purpose, however more rule-based postprocessing steps are needed to reduce the amount of incorrect segmentation points the neural network has to process. Combinations with other approaches could also yield better results
 
 
 The neural network 
 
 \section{Future research}
 State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
-This approach does not suffer from character segmentation artifacts
+Since this approach does not require the segmentation of a word image into character images, it allows us to focus more on optimization of the neural network without being hindered by incorrectly segmented characters.
 This concept is explained and applied by \cite{presham}.
 \section{Acknowledgements}
 We thank Sarah Vluymans for her comments on this paper.
