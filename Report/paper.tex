@@ -228,7 +228,7 @@ The Adam optimizer minimizes the error calculated by the cross-entropy cost func
 \section{Segmentation of text into words}
 \label{sec:segtext}
 
-To be able to recognise the characters in a given text, we will first need to extract the words from the text before we can start evaluating the characters. This word extraction has many possible approaches, but in this paper we will focus solely on the word contouring approach.
+To be able to recognise the characters in a given text, we will first need to extract the words from the text before we can start evaluating the characters. This word extraction has many possible approaches, but in this paper we will focus solely on the word contouring approach, as pointed out by following paper \cite{WordSegm} as being a good word extraction approach.
 This method uses a heuristic algorithm to extract the contours of the words from a given text, and through postprocessing we can rearrange these extracted words into lines.
 The algorithm proposed is only to processes text images, and does not take into account images and other non-textual areas found in the text.
 Dependant on the situation, additional techniques for page segmentation can be utilized. % , such as the Run-Length Smearing Algorithm, can be utilized.
@@ -349,7 +349,7 @@ Combinations of parrallel and slanted text lines however are not handled well by
 
 The next step in the process is to extract the character images from the given word images.
 Again, there is the choise between several different approaches.
-In this paper we focus solely on a word oversegmentation approach to character extraction.
+In this paper we focus solely on a word oversegmentation approach to character extraction, as can be found described here \cite{CharSegm} and \cite{CharSegmOld}.
 The purpose is to segment the words into the individual characters.
 This will be done through initial oversegmentation of the word image, followed by postprocessing steps to remove the excess separation points to recover the original character images.
 
@@ -405,7 +405,7 @@ For this we will use oversegmentation correction techniques.
 
 \subsection{Oversegmentation correction}
 In this section we provide techniques to verify the correctness of these segmentation points. 
-\citep{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures. [6:39]
+\citep{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures.
 In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
 
 \subsubsection{rule based}
