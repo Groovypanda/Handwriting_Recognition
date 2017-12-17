@@ -237,11 +237,11 @@ Additional techniques for page segmentation can be utilized depending on the sit
 \subsection{Binarization}
 We start with binarizing the text image.
 
-To achieve this there are a lot of thresholding algorithms to choose from, but the one we use is a combination of Gaussian blur in combination with Otsu's thresholding algorithm.
+To achieve this there are a lot of thresholding algorithms to choose from, but the one we use is a combination of Gaussian blur in combination with Otsu's method.
+More information about Otsu's method can be found in the following paper \cite{otsu}
 
 The Gaussian blur will smoothen the noise in the image and smoothen the edges of the text.
-%TODO:: Otsu reference
-Otsu's tresholding algorithm will deliver adequate result for noisy text documents.
+Otsu's method will deliver adequate result for noisy text documents.
 The choise of tresholding algorithm depends mostly on the intended purposes of the algorithm.
 Additional noise removal techniques and other preprocessing techniques may be required for a better result when processing very noise-heavy images.
 
@@ -375,7 +375,7 @@ This will result in more consistency in rule-based post processing steps.
 
 \subsection{Binarization}
 The word image is binarized.
-This is again done with a combination of Gaussian blur and Otsu's thresholding algorithm.
+This is again done with a combination of Gaussian blur and Otsu's method.
 The binarization is needed for the next step, because we can only apply a skeletonization algorithm to a binary image.
 
 
