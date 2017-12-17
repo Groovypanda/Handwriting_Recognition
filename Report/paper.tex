@@ -340,22 +340,22 @@ The skeletonization of the thresholded word image will allow us to ignore the th
 This normalization is needed to reason about potential segmentation points between characters in the word image.
 After comparing different skeletonization algorithms, the algorithm of choise is the skeletonize function found in the scipy python library.
 This is an adaptation of the Zhang-Suen thinning algorithm, one of the most commonly used and adapted thinning algorithms.
-%TODO:: GIVE REFERENCE TO ZHANG SUEN AND SCIPY MANUAL FOR SKELETONIZATION
+\cite{zsthinning}
 
 
 \subsection{Vertical projection histogram}
 Now that we have the skeletonized word image, we can proceed with determining the potential segmentation points.
 We do this by taking the vertical projection histogram of this skeletonized word image.
-Before calculating the projection histogram, we first have to normalize the image to contain values $1$ for black pixels and $0$ for white pixels in the image.
-When the projection vertical projection is executed, we have the summation of every collumn of the word image.
-Because the word image is skeletonized, we can regard the collumns with a total pixel count of zero or one pixel as potential segmentation points, because connections between handwritten words consist of a single stroke, or whiitespace if the word consists of multiple parts.
-
-Now that we have our potential segmentation points, we need to decide which ones are correct segmentation points, and which ones need to be removed. This is done through correction of our oversegmentation.
+With the vertical projection executed, we now have the summation of every collumn of the word image.
+This is done in a way that black pixels are represented by a $1$ value, and white pixels are represented by a $0$ value.
+Now we can regard the collumns with a total pixel count of zero or one pixel as potential segmentation points, as we can interpret columns containing only a single pixel to represent a connection between different characters, and collumns without pixels to represent spacing between characters.
+With these points as our potential segmentation points, we need to separate the correct segmentation points from the incorrect ones.
+For this we will use oversegmentation correction techniques.
 
 \subsection{Oversegmentation correction}
-In this section we provide a method to fix the oversegmentation of the word caused by our previous steps and to decide which segmentation points to retain.
-To achieve this we first process the potential segmentation points, to remove redundant and incorrect segmentation points.
-THe final decision to which segmentation points we retain is made by a neural network.
+In this section we provide a method to fix the oversegmentation of the word image caused by the previous steps.
+To achieve this we process the potential segmentation points with a few rule based filters, to remove redundant and incorrect segmentation points.
+The final decision to which segmentation points we retain is made by a neural network.
 
 \subsubsection{rule based}
 The main oversegmentation correction is handled by our neural network.
