@@ -1,8 +1,3 @@
-# http://blog.ayoungprogrammer.com/2013/01/equation-ocr-part-1-using-contours-to.html/
-# https://www.bytefish.de/blog/extracting_contours_with_opencv/
-# http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_contours/py_contour_features/py_contour_features.html
-# https://codereview.stackexchange.com/questions/31352/overlapping-rectangles
-
 import os
 
 import cv2
@@ -458,6 +453,8 @@ def preprocess_image(img, file_index = 0):
             (x, y, w, h) = rectangle
             cv2.rectangle(new_img,(x,y),(x+w,y+h),(greyscale,255,0),5)
         greyscale += color_increment
+        print([rectangles_contours[rect] for rect in rectangles_contours])
+        cv2.drawContours(new_img, [rectangles_contours[rect] for rect in rectangles_contours], 0, (120,255,0), 3)
 
     # Write threshold image for demonstration pirposes
     write_threshold_image(new_img, file_index)
