@@ -1,8 +1,3 @@
-# http://blog.ayoungprogrammer.com/2013/01/equation-ocr-part-1-using-contours-to.html/
-# https://www.bytefish.de/blog/extracting_contours_with_opencv/
-# http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_contours/py_contour_features/py_contour_features.html
-# https://codereview.stackexchange.com/questions/31352/overlapping-rectangles
-
 import os
 
 import cv2
@@ -32,10 +27,10 @@ def rectangle_contains_rectangle(rectangle1, rectangle2):
         return False
 
 # checks if rectangle 1 is left of rectangle right or just next to each other
-y_overlap_divisor = 2
+ALLOWED_VERTICAL_OVERLAP = 2
 def rectangle_follows_rectangle(rectangle1, rectangle2, distance):
     """
-    rectangle2 follows rectangle1 with a y-overlap of at least height / y_overlap_divisor
+    rectangle2 follows rectangle1 with a y-overlap of at least height / ALLOWED_VERTICAL_OVERLAP
     :return: boolean
     """
     ((x1, y1, w1, h1), (x2, y2, w2, h2)) = (rectangle1, rectangle2)
@@ -44,11 +39,11 @@ def rectangle_follows_rectangle(rectangle1, rectangle2, distance):
     if x1 <= x2 and (x1 + w1 - x2 >= distance):
         if y1 > y2 and y1 < y2 + h2:
             overlap = abs(y2 + h2 - y1)
-            if (overlap >= min(h1, h2) / y_overlap_divisor):
+            if (overlap >= min(h1, h2) / ALLOWED_VERTICAL_OVERLAP):
                 return True;
         if y1 <= y2 and y2 < y1 + h1:
             overlap = abs(y1 + h1 - y2)
-            if (overlap >= min(h1, h2) / y_overlap_divisor):
+            if (overlap >= min(h1, h2) / ALLOWED_VERTICAL_OVERLAP):
                 return True;
     return False
 
@@ -76,11 +71,11 @@ def vertical_overlap_rectangle(rectangle1, rectangle2):
         return False
     if y1 > y2 and y1 < y2 + h2:
         overlap = abs(y2 + h2 - y1)
-        if (overlap >= min(h1, h2) / y_overlap_divisor):
+        if (overlap >= min(h1, h2) / ALLOWED_VERTICAL_OVERLAP):
             return True;
     if y1 <= y2 and y2 < y1 + h1:
         overlap = abs(y1 + h1 - y2)
-        if (overlap >= min(h1, h2) / y_overlap_divisor):
+        if (overlap >= min(h1, h2) / ALLOWED_VERTICAL_OVERLAP):
             return True;
     return False
 
@@ -262,7 +257,7 @@ def search_multiline_contours(rectangles_contours, img):
 
 
 SPLIT_MULTILINE_MULTIPLIER = 10
-SEARCH_AREA_MULTIPLIER = 2/3
+MINIMAL_HEIGHT_MULTIPLIER = 2/3
 def split_multiline_contours(probable_multiline_rectangles, average_height, img):
     """
     We split the words based on the minimum value in the horizontal row-projection histogram
@@ -285,7 +280,7 @@ def split_multiline_contours(probable_multiline_rectangles, average_height, img)
 
                 # Extract the row which is the most likely split points
                 center = len(row_summation) // 2
-                search_size = int(SEARCH_AREA_MULTIPLIER * average_height)
+                search_size = int(MINIMAL_HEIGHT_MULTIPLIER * average_height)
                 (min_row, min_val) = min( [ (index, element) for index, element in enumerate( row_summation[ int(center - search_size):int(center + search_size) ] ) ], key = lambda t: t[1] )
                 min_row += int(center - search_size) # re-add the offset of the list splicing of the previous line
 
@@ -458,6 +453,7 @@ def preprocess_image(img, file_index = 0):
             (x, y, w, h) = rectangle
             cv2.rectangle(new_img,(x,y),(x+w,y+h),(greyscale,255,0),5)
         greyscale += color_increment
+        cv2.drawContours(new_img, [rectangles_contours[rect] for rect in rectangles_contours], 0, (120,255,0), 3)
 
     # Write threshold image for demonstration pirposes
     write_threshold_image(new_img, file_index)
