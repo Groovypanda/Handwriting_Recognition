@@ -429,14 +429,14 @@ Secondly padding of $10px$ is added on all sides of the character image to creat
 We end up with a $64px x 64px$ character image.
 The extra $10px$ padding is to make sure the letters do not stick to the edges, since the Chars74K dataset we work with utilizes borders around the provided characters. Should these borders be removed in the training process however, this should be reflected in this step by ignoring this new padding.
 
-\subsection{Natural language processing}
+\section{Natural language processing}
 \label{sec:postproc}
 
 To cope with some of the errors from the previous steps, there needs to be some kind of correction. This correction should allow the system to reproduce possible written text even when a step of the larger system fails. 
 In order to do this we adapt natural language processing techniques as postprocessing steps. Natural language techniques can often be found in speech recognition, language generation and other systems. 
 As a first step we match words against a dictionary to find out if they are syntactically correct, this is discussed in Section \ref{sec:voc}. The second step checks if those given words make sense in the context, this is discussed in Section \ref{sec:lm}.
 
-\subsubsection{Vocabularium}
+\subsection{Vocabularium}
 \label{sec:voc}
 The neural network does not only produce which character is recognised, but rather a list of probabilities indicating the likelihood of an image to be a certain character. We can use all of this information in this postprocessing step instead of throwing that information away and naively returning the most likely character as the actual character. 
 \begin{figure}
@@ -455,7 +455,7 @@ We make a tree, as shown in Figure \ref{fig:wordtree}, where every node is a tup
 Now we have a list of possible words and their probabilities (every leaf). The closest matches in the dictionary for each word are calculated using the function \textbf{get\_close\_matches} from the python library difflib. \textbf{get\_close\_matches} finds close matches in the English dictionary and their corresponding score. 
 We multiply this score with our previously calculated probability. This leaves us with a list of correct English words and a score for every word. If we only want to convert the image of one word into text, we can just return the word with the highest score. 
 This finalises the logic for recognising handwritten words. Next we will discuss a postprocessing technique which is useful when the word is part of a bigger context.
-\subsubsection{Language model}
+\subsection{Language model}
 \label{sec:lm}
 Besides checking the syntax of words, we can also look at the context. This is were language models are useful. We can check the previous words and calculate the likeliness of a word to be the next word in the context. N-gram models are used to calculate probabilities given $n-1$ previous words. The probability is computed as $P(w_i | w_{i-n},...,w_{i-1})$. 
 We use the Markov assumption here: the probability of a word in the context can be approximated by the previous $n-1$ words. \citep{markov} This probability is calculated as follows: 
@@ -516,7 +516,19 @@ Translation & 70.47 & 306 \\
 \end{table} 
 
 
-\section{Conclusion}
+\section{Future work}
+Our recognition system cannot be used for real-world applications.Every individual technique has a certain error, which increases the difficulty of the next step, e.g. if word segmentation contains mistakes, character recognition becomes much harder. 
+This results in a system which cannot correctly recognize handwritten text. 
+However many improvements are still possible. 
+
+Firstly, given a dataset with a higher amount of training samples, the deep neural network will be able to better recognize new characters. The same applies for the neural network of oversegmentation correction. 
+
+Next %TODO Ruben
+
+Finally, other approaches can also be considered. 
+State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
+This concept is explained and applied by \citep{presham}.
+%%% Dit is jouw oude tekst %%% 
 There are a lot of steps in this paper from which we can draw conclusions.
 The segregation of a text image in word images is  
 Word extraction is a problem 
@@ -526,12 +538,8 @@ The proposed oversegmentation serves the intended purpose, however more rule-bas
 
 
 The neural network 
-
-\section{Future research}
-State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
-This approach does not suffer from character segmentation artifacts
-This concept is explained and applied by \citep{presham}.
-\section{Acknowledgements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Acknowledgements}
 We thank Sarah Vluymans for her comments on this paper.
 \bibliography{paper}
 \bibliographystyle{icml2016}
