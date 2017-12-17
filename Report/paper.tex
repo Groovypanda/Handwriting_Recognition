@@ -13,7 +13,7 @@
 \usepackage{titlesec}
 
 \begin{document} 
-\twocolumn[\icmltitle{Handwriting Recognition}
+\twocolumn[\icmltitle{An Approach to Off-line Handwriting Recognition through Segmentation Techniques and Deep Neural Networks}
 \icmlauthor{Jarre Knockaert}{Jarre.Knockaert@UGent.be}
 \icmlauthor{Ruben Dedecker}{Ruben.Dedecker@UGent.be}
 
@@ -23,7 +23,6 @@
 % - Add https://tel.archives-ouvertes.fr/tel-01249405/document reference, (see abstract) 
 % in order to compare results. 
 % - Disciss possible flaws. (Use images from IAM in order to do so)
-% - Update outdated parts, like neural net of splitpoint evaluation
 %  Reference datasets, Chars74K, IAM, Google n-grams
 %  redo the preprocessing experiment and explain why some techniques increase the accuracy more than others. 
 \begin{abstract} 
@@ -101,8 +100,6 @@ Data augmentation serves two purposes. It makes the dataset more robust to diffe
 The second purpose is to increase the size of our dataset. As our dataset only contains 3410 images with handwritten characters, we need more data for the neural network to be able to function properly. 
 Increasing the size of our dataset has great impact on the performance of the neural network as discussed in Section \ref{sec:expres}. Now we will describe the data augmentation techniques we used. For these techniques we based us on \cite{DataAug}. A more thorough explanation can be found there. 
 
-\paragraph{Adding noise to data}
-We add a variant of each image which includes noise troughout the image with the purpose of reducing overfitting of the neural network \cite{DataNoise}. This noise is taken from the Gaussian distribution with a mean of 0 and standard deviation of 0.004. The noise is summed with the original image of which the pixels are normalized between $[-1, 1]$.
 \paragraph{Translations of data}
 The dataset is also extended with variations in padding of characters in images. For this purpose we multiply every coordinate of the original image with the following transformation matrix: 
 \begin{equation}
@@ -144,18 +141,13 @@ Shearing displaces each point in a fixed direction, by an amount proportional to
 The erosion operation of images adds thinner versions of characters to the dataset. Erosion uses a kernel to convolute an image. 
 The image is scanned using the kernel. The maximum pixel value of the overlapping part between the image and the kernel is computed. This pixel value of the anchor point of the kernel is replaced with the maximum pixel value. 
 This causes bright regions to get thinner and dark regions to get bigger in the image.  
-All of the previously discussed preprocessing techniques are also applied to the eroded image. The final dataset contains translated, orientated, sheared, scaled and noisy versions of both the original image and the eroded image. A visualitation of the augmentation of an augmented picture can be seen in Figure \ref{fig:augmented}.
+All of the previously discussed preprocessing techniques are also applied to the eroded image. The final dataset contains translated, orientated, sheared and scaled versions of both the original image and the eroded image. A visualitation of the augmentation of an augmented picture can be seen in Figure \ref{fig:augmented}.
 
 \begin{figure}
 \begin{subfigure}{0.11\textwidth}
   \centering
   \includegraphics[width=\linewidth]{images/original}
   \caption{Original image}
-\end{subfigure}
-\begin{subfigure}{0.11\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{images/noisy}
-  \caption{Noisy image}
 \end{subfigure}
 \begin{subfigure}{0.11\textwidth}
   \centering
@@ -235,7 +227,7 @@ For every of these splitting points a pixel matrix is extracted surrounding the 
 Next, small windows of equal size are extracted from the pixel matrix and for each window the density is calculated. This is the number of black pixels divided by the total amount of pixels in the window. 
 With every matrix a corresponding label is encoded for storage in the training file, this label is encoded as 0.9 if the splitting point is correct and 0.1 otherwise. Now these matrices and corresponding labels are used to train the neural network. 
 
-We take a slightly different approach and consider a deep neural network to tackle this problem. This allows us to use convolutational layers in order to extract features, instead of manually creating features (features which show the density in this case). 
+We take a slightly different approach and consider a deep neural network to tackle this problem. This allows us to use the power of convolutational layers to extract features, instead of manually creating features (features which show the density in this case). 
 We use one convolutional layer and three fully connected layers in our neural network. This neural network takes the actual image of the splitting point as input (a pixel matrix of the pixels surrounding the splitting point) and returns a one-hot encoded vector indicating if the splitting is correct or incorrect. 
 This method allowed us to achieve a higher accuracy than an implementation of the method described by \cite{evalsplitpointsnn}.
 Splitting points can now be filtered if the neural network decides a splitting point is incorrect. 
@@ -285,12 +277,17 @@ The concludes our full system of recognising handwritten texts. In the next sect
 We tested a lot of different configurations for the deep neural network in order to find a good functioning neural network given the low amounts of data. A problem which arrised when trying to test many different configurations was the long time it takes to train a neural network. 
 In order to limit the time these experiments run we added some small constraints. We only run every experiment 200 epochs, running these experiments longer might result in different conclusions. 
 Next it is important to note that a lot of stochastic behaviour is part of these neural networks because of the dropout layers. When running the neural network twice with the same configuration, it could have completely different results. This is why we run every configuration four times. Only the result with the highest accuracy is considered. This way we can avoid outliers. 
-Another note is that some experiments might not use the finalized setup of our neural network. These experiments do use the same setup to compare different configurations. 
+Finally, a non augmented dataset is used to increase the speed at which experiments execute. These experiments do use the same setup to compare different configurations unless when mentionned otherwise. 
 \subsubsection{Experiments}
 \paragraph{Preprocessing techniques} 
-Figure \ref{fig:preprocess} shows that preprocessing techniques have great influence on the performance of the neural network. We can see that the accuracy is much higher when using all of the preprocessing techniques.  
-We achieve 72\% accuracy with all of the preprocessing techniques versus 35\% without any preprocessing techniques, which is a huge difference. 
-We can also see the individual impact of preprocessing in the figure. Adding shearing (64\%) to handle different amounts of slant, adding noise (58\%) to cope to make the recognition more robust and adding scaling (59\%) to handle different handwriting sizes was the most effective to increase performance. Adding rotations (40\%) and translations (50\%) was less effective (but still effective). Adding these preprocessing techniques increased the amount of data greatly from 3410 examples to 37000 examples. This improves the performance but also increases the training time of our network significantly. One remarkable result is that the training time of preprocessing with all techniques enabled, takes shorter time than some other results. When we look at the average however, the training time is the highest for this case. 
+Figure \ref{fig:preprocess} shows that preprocessing techniques have great influence on the performance of the neural network. However these results might seem counterintuitive. 
+Adding preprocessing techniques lowers the accuracy of the neural network. In order to explain this, it has to be noted that every experiment uses the original data in addition with the augmented data using a preprocessing technique. The base case without preprocessing techniques, just uses a copy of every image as augmented dataset. This way every experiment uses the same amount of images. 
+The accuracy decreases when using preprocessing techniques because the variety of our dataset increases but these techniques allow a more robust neural network which can recognise characters which includes images with more variation. 
+
+Now we will explain the variance between several preprocessing techniques. All preprocessing techniques have a lower accuracy than using no preprocessing techniques. The amount of decrease in accuracy can be explained by how much the original image and augmented image differ. The configuration with erosion achieves the second highest accuracy, as these images resemble the original images most, the shape, position and rotation of the image remains, the density of regions in the image has only changed. A dataset with scaled images instead has much lower accuracy. As the image is completely different, the pixels are in other positions and the original shape has changed, the shape has a smaller or bigger surface depending on the kind of scaling. 
+
+In the final dataset we use augment every image once or more with every technique which causes the dataset to significantly increase in size. The accuracy of the configuration with augmented images is only higher because of the increase in data which allows more weight adjustment. Figure \ref{fig:allprep} shows the comparison of using no preprocessing techniques and all preprocessing techniques once or more. 
+
 \paragraph{Learning rate}
 Figure \ref{fig:learningrate} shows the impact of learning rate on the training of our neural network. 
 For this experiment we do have to note that we are using the Adam optimizer to train our neural network which computes individual learning rates for every parameter every training step. The learning rate which we pass is the initial learning rate. Choosing a high learning rate $10^{-3}$ allows the neural network to converge to a high accuracy (76 \%) very fast, but once reached the accuracy fails to grow any more.
