@@ -361,12 +361,12 @@ The next step in the process is to extract the character images from the found w
 Again, there is a choice between several different approaches.
 In this paper we focus solely on a word oversegmentation approach to character extraction, through skeletonization and using a vertical projection profile. The reasoning begind this can be found in the following papers \cite{CharSegm} and \cite{CharSegmOld}.
 
-After first oversegmenting the word, we will recover the original character through postprocessing steps combining different word segments.
+After first oversegmenting the word, we recover the original character through postprocessing steps combining different word segments.
 
 \subsection{Normalization}
 The first action is again normalizing the word image.
-We will resuze the image to a fixed height of $100px$.
-This will result in more consistency in rule-based post processing steps.
+We resize the image to a fixed height of $100px$.
+This result in more consistency in rule-based postprocessing steps.
 
 \subsection{Binarization}
 The word image is binarized.
@@ -375,8 +375,8 @@ The binarization is needed for the next step, because we can only apply a skelet
 
 
 \subsection{Skeletonization}
-Now we will skeletonize our word image.
-This will normalize the thickness of the strokes to a single pixel.
+Now we skeletonize our word image.
+This normalizes the thickness of the strokes to a single pixel.
 This allows us to execute our Verical projection profile and interpret the results easily.
 The skeletonization algorithm used is the Zhang Suen thinning algorithm \cite{zsthinning}.
 
