@@ -263,26 +263,30 @@ Secondly we remove contours that are too small to contain possible word parts. T
 These contours are neglected by taking the average height of all the found contours in the text.
 We remove all of the contours with a height smaller than $average height * (2/3)$.
 
+
+\begin{algorithm}[tb]
+    \caption{Contour combination algorithm}
+    \label{alg:overlap}
+\begin{algorithmic}
+    \STATE {\bfseries Input:} $contour1$, $contour2$
+    \STATE $xGap$ = calculateXaxisDistance $contour1$ $contour2$
+    \STATE $yOverlap$ = calculateYoverlap $contour1$ $contour2$
+    %TODO ::\IF {$xGap < averageWordWidth * (1 / (averageCharacterCount * 2)) $ {\bfseries and} $yOverlap > min(word1.height, word2.height) * requiredYaxisOverlap$}
+    \STATE combineContours $contour1$ $contour2$
+\end{algorithmic}
+The chosen paramters are:
+\\
+$averageCharacterCount = 8$ 
+\\
+$requiredYaxisOverlap = 1/2$
+\end{algorithm}
+
 \subsubsection{Contour combination}
 The leftover contours are used to to reconstruct the original words from the text.
 This is done by combining multiple contours which consist of parts of words belonging to the same word. 
-We have created an algorithm that combines word segments. It is uses the overlap between the bounding box of their contours to find possible combinations.
+We have created an algorithm \ref{alg:overlap} that decides when to combine two word segments into a single word. 
 
-% Hoe heet die parameter? Wat is de waarde van de parameter. Plaats de namen, de waardes en hun uitleg samen, plaats hier geen algoritme/formule tussen. 
-We have a parameter for the allowed gap between parts of the same word, and one for the minimal y-axis overlap of both their boundingboxes.
 
-\begin{equation} %TODO:: FIX INDENTATION, Plaats zoiets in algorithmic
-    if \\ 
-        wordXaxisGap < \\
-            averageWordWidth * (1 / (averageCharacterCount * 2) )\\
-        and \\
-        wordYaxisOverlap > \\
-        min(word1.height, word2.height) * requiredYaxisOverlap\\
-    then \\
-        combineWords
-\end{equation}
-The optimal parameters we found are $averageCharacterCount=8$ and $requiredYaxisOverlap=1/2$
-Given that these conditions are fulfilled, we can combine both contours into one single contour, containing the found word.
 
 \begin{algorithm}[tb]
    \caption{Algorithm for line reconstruction}
@@ -309,8 +313,7 @@ Given that these conditions are fulfilled, we can combine both contours into one
 \end{algorithm}
 
 \subsection{Line selection}
-As the ordening of the words % TODO, verklaar waarom die ordening weggat? 
-we place the words in lines, and orden these lines. 
+Because the contour finding algorithm has no particular order in which it saves the found contours, we have to reorder the found words in their original lines.
 Algorithm \ref{alg:linereconstr} shows the pseudocode of our line selection process.
 The algorithm reorders the words in lines and orders these lines as ordered in the original text.
 
