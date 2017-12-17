@@ -269,7 +269,7 @@ We remove all of the contours with a height smaller than $average height * (2/3)
     \STATE {\bfseries Input:} $contour1$, $contour2$
     \STATE $xGap =$ calculateXaxisDistance $contour1$ $contour2$
     \STATE $yOverlap =$ calculateYoverlap $contour1$ $contour2$
-    \IF {$xGap < averageWordWidth * (1 / (averageCharacterCount * 2)) $ {\bfseries and} $yOverlap > min(word1.height, word2.height) * requiredYaxisOverlap$}
+    %TODO:\IF {$xGap < averageWordWidth * (1 / (averageCharacterCount * 2)) $ {\bfseries and} $yOverlap > min(word1.height, word2.height) * requiredYaxisOverlap$}
         \STATE combineContours $contour1$ $contour2$
 \end{algorithmic}
 The chosen paramters are:
@@ -365,7 +365,7 @@ The binarization is needed for the next step, because we can only apply a skelet
 Now we will skeletonize our word image.
 This will normalize the thickness of the strokes to a single pixel.
 This allows us to execute our Verical projection profile and interpret the results easily.
-The skeletonization algorithm used is the scipy adaptation of the Zhang Suen thinning algorithm \cite{zsthinning}.
+The skeletonization algorithm used is the Zhang Suen thinning algorithm \cite{zsthinning}.
 
 \subsection{Vertical projection histogram}
 Using the skeletonized word image, we now create a vertical projection histogram.
