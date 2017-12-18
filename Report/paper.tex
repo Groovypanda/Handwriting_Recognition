@@ -234,6 +234,8 @@ The proposed approach focusses solely on text images, and does not take into acc
 Additional techniques for page segmentation can be utilized depending on the situation.
 
 \subsection{Binarization}
+\label{sec:binartext}
+
 We start with binarizing the text image. To achieve this there are a lot of thresholding algorithms to choose from, but the one we use is a combination of Gaussian blur in combination with Otsu's thresholding algorithm. \cite{Otsu79} 
 The Gaussian blur will smoothen the noise in the image and smoothen the edges of the text.
 Otsu's tresholding algorithm will deliver adequate result for noisy text documents.
@@ -268,29 +270,15 @@ We remove all of the contours with a height smaller than $average height * (2/3)
     \label{alg:overlap}
 \begin{algorithmic}
     \STATE {\bfseries Input:}  $contour1$, $contour2$, $text$
-    \STATE $xGap =$ XAxisDistance $contour1$, $contour2$
-    \STATE $yOverlap =$ YAxisOverlap $contour1$, $contour2$
+    \STATE $xGap =$ calculateXaxisDistance $contour1$, $contour2$
+    \STATE $yOverlap =$ calculateYoverlap $contour1$, $contour2$
+    \STATE $avgWidth =$ getAverageWordWith $text$
     \IF{ 
-    \\ 
-    \hspace{8px} $xGap < text$.averageWordWith 
-    \\
-    \hspace{8px} $* $ \hspace{2px} $(1 / (averageCharacterCount * 2))$ 
-    \\
-    {\bfseries and} 
-    \\ 
-    \hspace{8px} $yOverlap > min(contour1.height, contour2.height)$ 
-    \\
-    \hspace{8px} $* $ \hspace{2px} $  requiredYaxisOverlap $ 
+    $xGap < avgWidth * (1 / 8 * 2)$ \\  {\bfseries and} \\ $yOverlap > min(contour1.height, contour2.height) / 2 $ 
     }
-    \vspace{4px}
     \STATE combineContours $contour1$ $contour2$
     \ENDIF
 \end{algorithmic}
-The chosen paramters are:
-\\
-$averageCharacterCount = 8$ 
-\\
-$requiredYaxisOverlap = 1/2$
 \end{algorithm}
 
 
@@ -308,16 +296,19 @@ We have created an algorithm \ref{alg:overlap} that decides when to combine two 
 \begin{algorithmic}
    \STATE {\bfseries Input:} $extractedWords$, $textlines$
    \REPEAT
-        \STATE $newline = [ $wordWithHighestYPosition$ ]$
-        \STATE $avgY= newline$.averageYPosition
+        \STATE $highestWord = findHighestWord $
+        \STATE $newline = [highestWord]$
+        \STATE Initialize $noChange = true$.
+        \STATE $avgY= newline$.findAverageYpos
         \REPEAT
             \FOR{$word$ {\bfseries in} $extractedWords$}
             \STATE $boundRect = word.contour.boundingRect$
             \IF{ $avgY > word.y$ {\bfseries and} $avgY < word.y + word.h$ }
             \STATE $line$.add $word$
+            \STATE $noChange = false$
             \ENDIF
         \ENDFOR
-        \UNTIL{NotChangedLastIteration $line$}
+        \UNTIL{$noChange = true$}
         \STATE $textlines$.add $newline$
    \UNTIL{$words$.empty $= true$}
 \end{algorithmic}
@@ -358,36 +349,29 @@ The algorithm reorders the words in lines and orders these lines as ordered in t
 \label{sec:segword}
 
 The next step in the process is to extract the character images from the found word images.
-Again, there is a choice between several different approaches.
-In this paper we focus solely on a word oversegmentation approach to character extraction, through skeletonization and using a vertical projection profile. The reasoning begind this can be found in the following papers \cite{CharSegm} and \cite{CharSegmOld}.
+Possible approaches and their advantages are discussed by \cite{CharSegm} and \cite{CharSegmOld}.
+We choose the word oversegmentation approach for character extraction. Word oversegmentation is achieved through skeletonization and using a vertical projection profile which is discussed in consequently \ref{sec:skel} and \ref{sec:vertproj}. 
+After oversegmenting the word, we find the actual splitpoints by removing unnecessary splitpoints as explained in \ref{sec:postprocesscharseg}
 
-After first oversegmenting the word, we recover the original character through postprocessing steps combining different word segments.
-
-\subsection{Normalization}
-The first action is again normalizing the word image.
-We resize the image to a fixed height of $100px$.
-This result in more consistency in rule-based postprocessing steps.
-
-\subsection{Binarization}
-The word image is binarized.
-This is again done with a combination of Gaussian blur and Otsu's method.
-The binarization is needed for the next step, because we can only apply a skeletonization algorithm to a binary image.
-
+\subsection{Preprocessing}
+We resize the image to a fixed height of 100 pixels. 
+Next we binarize the image using a combination of Gaussian blur and Otsu's method. 
+The binarization method is identical to \ref{sec:binartext} but included to allow segmentation of words which are not part of a text. Binarization is essential as it is necessary for skeletonization.
 
 \subsection{Skeletonization}
-Now we skeletonize our word image.
-This normalizes the thickness of the strokes to a single pixel.
-This allows us to execute our Verical projection profile and interpret the results easily.
-The skeletonization algorithm used is the Zhang Suen thinning algorithm \cite{zsthinning}.
+\label{sec:skel}
+Next we skeletonize the word. This normalizes the thickness of the strokes to a single pixel and
+allows us to create a vertical projection profile. We use the skeletonization algorithm of \cite{zsthinning}. 
 
 \subsection{Vertical projection histogram}
-Using the skeletonized word image, we now create a vertical projection histogram.
-This vertical projection histogram takes the sum of every collumn in the image, counting black pixels as a $1$ value, and white pixels as a $0$ value.
+\label{sec:vertproj}
 
-We now regard the collumns with a total pixel count of zero or one pixel as potential segmentation points.
-We interpret these collumn to be the whitespace in between characters or the line connecting two characters to each other.
+Using the skeletonized word image, we create a vertical projection histogram.
+This vertical projection histogram counts the black pixels of every column in the image.
+We regard the columns with a total pixel count of zero or one as potential segmentation points.
+We interpret these columns as whitespace in between characters or as a line connecting two characters to each other.
 This will inevitably cause oversegmentation in our word image.
-The next step will be to filter the potential segmentation points, and remove the incorrect ones through postprocessing.
+The next step filters incorrect segmentation points caused by oversegmentation. 
 
 \begin{figure*}
     \begin{subfigure}{0.33\textwidth}
@@ -410,35 +394,24 @@ The next step will be to filter the potential segmentation points, and remove th
 \end{figure*}
 
 \subsection{Oversegmentation correction}
+\label{sec:postprocesscharseg}
+
 In this section we provide techniques to verify the correctness of segmentation points.
-\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule-based techniques, cost function optimization based methods and machine learning based procedures.
-In this paper we discuss machine learning based approaches precedented by a few rule-based techniques.
+\cite{evalsplitpoints} discusses three approaches to evaluate segmentation point correctness: rule based techniques, cost function optimization based methods and machine learning based procedures.
+In this paper we discuss machine learning based approaches precedented by a few rule based techniques.
+An example of applying these correction techniques to an image is shown in \ref{fig:char_segm}.
 
 \subsubsection{Rule based techniques}
-The main oversegmentation correction is handled by our neural network.
-However some simple preprocessing is added to remove obvious unwanted segmentation points.
 
-We first remove removes the segmentation points found at the start and the end of the word image.
-These segmentation points are an artifact of the used segmentation approach, as can be observed in Figure Figure \ref{fig:char_segm}.
+First we remove segmentation points found at the start and the end of the word image.
 These points can be removed without information loss, as the alphabet does not contain letters that entirely convert to a single pixel line after skeletonization.
+Next consequent segmentation points are grouped. The center of these points is considered as segmentation point.
+Unless if one or more of the segmentation points in the group stems from empty columns, the new segmentation point is chosen as the center of the points representing the empty columns in the word image.
+Finally we aggregate groups of consequent potential segmentation points, separated by columns containing less pixels than a threshold value 3.
+This remedies the segmentation of slanted lines inside characters.
 
-Subsequently we group consequent segmentation points.
-The occurence of these consequent segmentation points is another artifact from our segmentation approach, as can be seen in Figure \ref{fig:char_segm}.
-
-From these groups of points, we take the center point as the new potential segmentation points.
-However if one or more of the segmentation points in the group stems from empty collumns, the new segmentation point is chosen as the center point of the points representing the empty collumns in the word image.
-
-Finally we aggregate groups of consequent potential segmentation points, separated by collumns containing less pixels than a certain threshold value $maxSumThresh$.
-We have chosen a conservative value of $3px$ for this threshold.
-This remedies the segmentation of slated lines inside characters, which can be an artifact of the skeletonization algirithm used.
-
-A technique was tested using the feedback of the chracter recognition network to remove incorrect segmentation points.
-However this turned out not to be ineffective, because the neural network tends to provide random probabilities with a high degree of certainty when images of multiple characters together were fed to the nerual network.
-Since it is impossible to validate these responses from the neural network, this approach was abandoned and is not used in the final version.
-
-More rule-based filter could be added for more optimal processing of the potential segmentation points.
-However the focus of our segmentation correction is the neural network used to remove incorrect segmenatation points.
-
+A technique was tested using the output of the character recognition network to remove incorrect segmentation points.
+This turned out to be ineffective because the neural network tends to provide high probabilities given images containing multiple characters. These probabilities are not meaningful and cannot be used as feedback for segmentation correctness. 
 
 \subsubsection{Machine learning approach}
 The neural network we use to judge the correctness of segmentation points, is based on \cite{evalsplitpointsnn}. The paper explains how to use neural networks to classify the correctness of segmentation points. The discussed algorithm is as follows. Manual classification of segmentation points creates training data with two classes, correct and incorrect segmentation points.
@@ -545,21 +518,20 @@ Translation & 70.47 & 306 \\
 
 
 \section{Future work}
-Our recognition system cannot be used for real-world applications. Every individual technique has a certain error, which increases the difficulty of the next step, e.g. if word segmentation contains mistakes, character recognition becomes much harder.
+Our recognition system cannot be used for real-world applications. Every individual technique has a certain error, which increases the difficulty of the next step; e.g. if word segmentation contains mistakes, character recognition becomes much harder.
 This results in a system which cannot correctly recognize handwritten text.
 Many improvements are still possible.
 
 Firstly, given a dataset with a higher amount of training samples, the deep neural network will be able to better recognize new characters. The same applies for the neural network of oversegmentation correction.
 
 The text to word segmentation process can be improved upon and made more robust.
-More advanced text segmentation approaches can be utilized to extract the text segments from documents containing images and other unwanted elements. A comparison of different text segmentation techniques is done by \cite{textsegm}.
+Advanced text segmentation approaches can be utilized to extract the text segments from documents containing images and other unwanted elements.
+A comparison of different text segmentation techniques is done by \cite{textsegm}.
 
-The character segmentation process is insufficient as it is, and generally unable to segment words adequately so that the character recognition step can recognise the found segments.
-More postprocessing can be used through rule-based techniques and a more robust neural network to correct the found segmentation points.
-Several rule-based techniques are proposed by \cite{segmtechniques}.
+The character segmentation process can be improved upon by increasing the accuracy of the used neural network, and by adding more techniques to remove incorrect segmentations. Several such rule-based techniques are explored in \cite{segmtechniques}.
 
 Finally, other approaches can also be considered.
-State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks.
+State-of-the-art systems currently use segmentation-free approaches, this involves handwriting recognition without explicitly splitting words into characters. These methods are mostly based on hidden Markov models and neural networks. Due to the ambiguous nature of the word segmentation problem, a segmentation-free approach results in much better results.
 This concept is explained and applied by \cite{presham}.
 \section*{Acknowledgements}
 We thank Sarah Vluymans for her comments on this paper.
