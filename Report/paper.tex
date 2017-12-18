@@ -40,7 +40,7 @@ On-line recognition on the other hand converts text as it is written (on a touch
 
 First we explain how to recognise characters in Section \ref{sec:charrec}. This explanation involves the used dataset, preprocessing techniques and the deep neural network for classifying characters.
 In Section \ref{sec:segtext} we describe how to segment a text into words using a contouring algorithm with consequent post processing to remove unwanted noise.
-After this we present our approach to separating the characters from words in \ref{sec:segword}. We use vertical projections combined with post processing techniques including a neural network for segmentation point evaluation.
+After this we present our approach to separating the characters from words in Section \ref{sec:segword}. We use vertical projections combined with post processing techniques including a neural network for segmentation point evaluation.
 Post processing steps are presented in Section \ref{sec:postproc}, we try to correct word recognition errors using an English dictionary and language models, n-gram models in particular.
 We conclude this paper with some experimental results, the problems we encountered combined with possible improvements. A complete flow of the recognition of an image is shown in Figure \ref{fig:flow}.
 
@@ -231,16 +231,15 @@ In this section we explain the first step in the process of extracting individua
 Word extraction from text images has many possible approaches, but in this paper we focus solely on the word contouring approach, pointed out by following paper \cite{WordSegm} to be a successful word extraction method.
 With this method we extract the contours of the words in a given text image. Through post processing techniques we can rearrange these extracted words into lines.
 The proposed approach focusses solely on text images, and does not take into account non-textual areas found in the input image.
-Additional techniques for page segmentation can be utilized depending on the situation.
+Additional techniques for page segmentation can be utilized depending on the situation, of which several are listed in \cite{textsegm}.
 
 \subsection{Binarization}
 \label{sec:binartext}
 
 We start with binarizing the text image. To achieve this there are a lot of thresholding algorithms to choose from, but the one we use is a combination of Gaussian blur in combination with Otsu's thresholding algorithm. \cite{Otsu79} 
-The Gaussian blur will smoothen the noise in the image and the edges of the text.
-Otsu's thresholding algorithm will deliver adequate result for noisy text documents.
-The choise of thresholding algorithm depends mostly on the intended purposes of the algorithm.
-Additional noise removal techniques and other preprocessing techniques may be required for a better result when processing images with much noise. 
+The application of Gaussian blur to the image smoothens the noise and the edges of the text.
+Applying Otsu's thresholding algorithm on this image delivers an adequate result for noisy text documents, 
+although for very noise-heavy text images this binarization approach alone may not be sufficient.
 
 
 \subsection{Contouring}
@@ -254,7 +253,7 @@ Next we reconnect words that are split because they are not written in a single 
 
 \subsubsection{Contour removal}
 The contouring algorithm can create incorrect contours because of left-over noise in the image.
-The tool we will use to remove these contours is the bounding box drawn around the contours.
+The tool we use to remove these contours is the bounding box drawn around the contours.
 This bounding box is the smallest rectangle containing the contour. It allows us to easily compare positions of contours in the text image.
 
 Firstly we remove the contours of which the bounding box is inside the box of another contour.
@@ -262,7 +261,7 @@ This is possible as text segmentation returns the word in the image contained by
 
 Secondly we remove contours that are too small to contain possible word parts. These contours consist of noise and punctuation.
 These contours are neglected by taking the average height of all the found contours in the text.
-We remove all of the contours with a height smaller than $average height * (2/3)$.
+We remove all of the contours with a height smaller than $averageHeight * (2/3)$.
 
 
 
@@ -288,7 +287,7 @@ We remove all of the contours with a height smaller than $average height * (2/3)
 
 \subsubsection{Contour combination}
 The leftover contours are used to to reconstruct the original words from the text.
-This is done by combining multiple contours which consist of parts of words belonging to the same word. 
+This is done by combining multiple contours that consist of parts of words belonging to the same word. 
 For this task we have created Algorithm \ref{alg:overlap}, which decides when to combine two word segments into a single word. 
 
 
@@ -301,50 +300,48 @@ For this task we have created Algorithm \ref{alg:overlap}, which decides when to
    \REPEAT
         \STATE $highestWord = findHighestWord $
         \STATE $newline = [highestWord]$
-        \STATE Initialize $noChange = true$.
         \STATE $avgY= newline$.findAverageYpos
         \REPEAT
+            \STATE $wordAdded = false$
             \FOR{$word$ {\bfseries in} $extractedWords$}
             \STATE $boundRect = word.contour.boundingRect$
             \IF{ $avgY > word.y$ {\bfseries and} $avgY < word.y + word.h$ }
-            \STATE $line$.add $word$
-            \STATE $noChange = false$
+            \STATE $line$.add $word$ {\bfseries and} $wordAdded = true$
             \ENDIF
-        \ENDFOR
-        \UNTIL{$noChange = true$}
+            \ENDFOR
+        \UNTIL{$wordAdded == true$}
         \STATE $textlines$.add $newline$
    \UNTIL{$words$.empty $= true$}
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Line selection}
+\subsection{Line reconstruction}
 Because the contour finding algorithm has no particular order in which it saves the found contours, we have to reorder the found words in their original lines.
-Algorithm \ref{alg:linereconstr} shows the pseudocode of our line selection process.
+Algorithm \ref{alg:linereconstr} shows the pseudocode of our line reconstruction process.
 The algorithm reorders the words in lines and orders these lines as ordered in the original text.
 
 \begin{figure}
     \begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=.7\linewidth]{images/text}
-    \vspace{-5px}
     \caption*{Original text image.}
+    \vspace{-7px}
+    \includegraphics[width=.7\linewidth]{images/text}
     \end{subfigure}
     \begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=.7\linewidth]{images/cont}
-    \vspace{-5px}
     \caption*{Contouring algorithm.}
+    \vspace{-7px}
+    \includegraphics[width=.7\linewidth]{images/cont}
     \end{subfigure}
     \begin{subfigure}{\linewidth}
     \centering
+    \caption*{Post processing and line reconstruction.}
+    \vspace{-7px}
     \includegraphics[width=.7\linewidth]{images/lines}
-    \vspace{-5px}
-    \caption*{Post processing and line selection.}
     \end{subfigure}
-    \vspace{-10px}
+    \vspace{-5px}
     \caption{Text segmentation steps}
     \label{fig:text_segm}
-    \vspace{-20px}
 \end{figure}
 
 
@@ -352,29 +349,27 @@ The algorithm reorders the words in lines and orders these lines as ordered in t
 \label{sec:segword}
 
 The next step in the process is to extract the character images from the found word images.
-Possible approaches and their advantages are discussed by \cite{CharSegm} and \cite{CharSegmOld}.
-We choose the word oversegmentation approach for character extraction. Word oversegmentation is achieved through skeletonization and using a vertical projection profile which is discussed in consequently \ref{sec:skel} and \ref{sec:vertproj}. 
-After oversegmenting the word, we remove all unnecessary segmentation points as explained in \ref{sec:postprocesscharseg}
+In this paper we use the word oversegmentation approach for character extraction, as worked out in \cite{CharSegm} and \cite{CharSegmOld}. Word oversegmentation is achieved through skeletonization and the use of a vertical projection profile, as discussed in Sections \ref{sec:skel} and \ref{sec:vertproj}. 
+After oversegmenting the word, all unnecessary segmentation points are removed as explained in Section \ref{sec:postprocesscharseg}.
 
 \subsection{Preprocessing}
-We resize the image to a fixed height of 100 pixels. 
+We resize the word image to a fixed height of 100 pixels. 
 Next we binarize the image using a combination of Gaussian blur and Otsu's method. 
-The binarization method is identical to \ref{sec:binartext} but included to allow segmentation of words which are not part of a text. Binarization of the word image is essential because the skeletonization algorithm requires a binary image as input.
+The binarization method is identical to the one in Section \ref{sec:binartext}. Binarization of the word image is essential because the skeletonization algorithm requires a binary image as input.
 
 \subsection{Skeletonization}
 \label{sec:skel}
-Next we skeletonize the word. This normalizes the thickness of the strokes to a single pixel and
-allows us to create a vertical projection profile. We use the skeletonization algorithm of \cite{zsthinning}. 
+Next we skeletonize the word image. This normalizes the thickness of the strokes to a single pixel. This allows us interpret the results from the vertical projection histogram we make of the word image in Section \ref{sec:vertproj}. The skeletonization algorithm we use is proposed in \cite{zsthinning}. 
 
 \subsection{Vertical projection histogram}
 \label{sec:vertproj}
 
-Using the skeletonized word image, we create a vertical projection histogram.
+Using the skeletonized word image, we create the vertical projection histogram.
 This vertical projection histogram counts the black pixels of every column in the image.
 We regard the columns with a total pixel count of zero or one as potential segmentation points.
 We interpret these columns as white space in between characters or as a line connecting two characters to each other.
-This will inevitably cause oversegmentation in our word image.
-The next step filters incorrect segmentation points caused by oversegmentation. 
+This will inevitably cause oversegmentation in our word image, meaning that this approach is likely to also generate incorrect segmentation points.
+In the next section (Section \ref{sec:vertproj}) we present our solution to remove these incorrect segmentation points. 
 
 \begin{figure*}
     \begin{subfigure}{0.33\textwidth}
@@ -476,7 +471,7 @@ One paper we found, \cite{charrec}, achieves an accuracy of 98.5 \%, they classi
 
 We use the following setup for this experiment. Every experiment uses the original data in addition with the augmented data using one particular preprocessing technique. The base case without preprocessing techniques, just uses a copy of every image as augmented dataset.
 
-In order to limit the time these experiments run we added some small constraints. We only run every experiment 200 epochs, running these experiments longer might result in different conclusions.
+In order to limit the time these experiments run we add some small constraints. We only run every experiment 200 epochs, running these experiments longer might result in different conclusions.
 Next it is important to note that a lot of stochastic behaviour is part of these neural networks because of the dropout layers. We run every configuration four times. Only the result with the highest accuracy is considered to avoid outliers.
 The accuracy decreases when using preprocessing techniques because the variety of our dataset increases but these techniques allow a more robust neural network which can recognise characters which includes images with more variation.
 
@@ -512,8 +507,8 @@ Translation & 70.47 & 306 \\
 
 
 \section{Future work}
-Our recognition system cannot be used for real-world applications. Every individual technique has a certain error, which increases the difficulty of the next step; e.g. if word segmentation contains mistakes, character recognition becomes much harder.
-This results in a system which cannot correctly recognize handwritten text.
+In its current state our recognition system is not ready for real-world applications. In every individual step errors can be added, which increases the difficulty of the next step; e.g. if word segmentation contains mistakes, character recognition becomes much harder.
+The result is a system that cannot correctly recognize handwritten text.
 Many improvements are still possible to our approach.
 
 Firstly, given a dataset with a higher amount of training samples, the deep neural network will be able to better recognize new characters. The same applies for the neural network of oversegmentation correction.
